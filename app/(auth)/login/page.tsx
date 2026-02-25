@@ -1,5 +1,5 @@
-import { LoginForm } from "@/components/tactical/login-form"
-import { TacticalFooter } from "@/components/tactical/tactical-footer"
+import { LoginForm } from "@/components/auth/login-form"
+import { TacticalFooter } from "@/components/auth/tactical-footer"
 import { Ticket } from "lucide-react"
 
 export default function LoginPage() {

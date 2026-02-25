@@ -1,5 +1,4 @@
-import { ForestBackground } from "@/components/campfire/forest-background"
-import { CampfireHeader } from "@/components/campfire/campfire-header"
+import { CampfireHeader } from "@/components/landings/campfire-header"
 
 export default function CampfireLayout({
   children,
@@ -8,7 +7,6 @@ export default function CampfireLayout({
 }) {
   return (
     <div className="relative min-h-screen bg-campfire-deep overflow-hidden">
-      <ForestBackground />
       <CampfireHeader />
       {children}
     </div>

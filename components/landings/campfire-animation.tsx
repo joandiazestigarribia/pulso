@@ -5,10 +5,13 @@ import { motion } from "framer-motion"
 export function CampfireAnimation() {
   return (
     <div className="relative flex flex-col items-center justify-center">
-      <div className="absolute bottom-0 w-32 h-32 rounded-full bg-campfire-orange/20 blur-2xl" />
+      <div className="absolute bottom-2 h-36 w-36 rounded-full bg-campfire-orange/25 blur-3xl" />
+      <div className="absolute -top-1 z-20 rounded-full border-2 border-campfire-orange/70 bg-neon-yellow/90 px-4 py-1 text-4xl font-black text-carbon shadow-[0_0_24px_rgba(255,102,0,0.4)]">
+        VS
+      </div>
 
       <motion.div
-        className="relative w-24 h-28"
+        className="relative h-44 w-32"
         animate={{ scaleY: [1, 1.08, 1], scaleX: [1, 0.96, 1] }}
         transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
       >
@@ -48,22 +51,10 @@ export function CampfireAnimation() {
         </motion.svg>
 
         <motion.div
-          className="absolute bottom-4 left-1/2 -translate-x-1/2 w-8 h-10 rounded-full bg-neon-yellow/80 blur-sm"
+          className="absolute bottom-7 left-1/2 h-12 w-10 -translate-x-1/2 rounded-full bg-neon-yellow/80 blur-sm"
           animate={{ opacity: [0.6, 1, 0.6], scale: [0.8, 1.1, 0.8] }}
           transition={{ duration: 0.8, repeat: Infinity }}
         />
-      </motion.div>
-
-      <motion.div
-        className="absolute top-1/2 -translate-y-1/2 font-mono font-black text-3xl tracking-wider z-10"
-        style={{
-          textShadow: "0 0 10px #ff6600, 0 0 30px #ff00ff, 0 0 60px #ff6600",
-          color: "#ffea00",
-        }}
-        animate={{ scale: [1, 1.05, 1] }}
-        transition={{ duration: 2, repeat: Infinity }}
-      >
-        VS
       </motion.div>
 
       {[...Array(6)].map((_, i) => (
@@ -89,11 +80,11 @@ export function CampfireAnimation() {
         />
       ))}
 
-      <div className="relative mt-1">
-        <svg width="80" height="24" viewBox="0 0 80 24" fill="none" className="opacity-80">
-          <ellipse cx="22" cy="18" rx="18" ry="6" fill="#4a2c1a" />
-          <ellipse cx="58" cy="18" rx="18" ry="6" fill="#3d2215" />
-          <ellipse cx="40" cy="14" rx="16" ry="5" fill="#5a3520" />
+      <div className="relative mt-2">
+        <svg width="110" height="32" viewBox="0 0 110 32" fill="none" className="opacity-90">
+          <ellipse cx="34" cy="23" rx="24" ry="8" fill="#4a2c1a" />
+          <ellipse cx="76" cy="23" rx="24" ry="8" fill="#3d2215" />
+          <ellipse cx="55" cy="18" rx="22" ry="7" fill="#5a3520" />
         </svg>
       </div>
     </div>

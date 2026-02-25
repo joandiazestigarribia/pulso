@@ -1,5 +1,5 @@
-import { ScanlineGrid } from "@/components/tactical/scanline-grid"
-import { TacticalHeader } from "@/components/tactical/tactical-header"
+import { ScanlineGrid } from "@/components/auth/scanline-grid"
+import { TacticalHeader } from "@/components/auth/tactical-header"
 
 export default function TacticalLayout({
   children,

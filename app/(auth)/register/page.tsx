@@ -1,5 +1,5 @@
-import { RegisterForm } from "@/components/tactical/register-form"
-import { TacticalFooter } from "@/components/tactical/tactical-footer"
+import { RegisterForm } from "@/components/auth/register-form"
+import { TacticalFooter } from "@/components/auth/tactical-footer"
 
 export default function RegisterPage() {
   return (
