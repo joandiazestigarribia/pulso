@@ -1,3 +1,5 @@
+export type BattleState = "PENDING" | "COMPLETED"
+
 export interface Track {
   id: string
   name: string
@@ -16,7 +18,11 @@ export interface Battle {
   id: string
   trackA: Track
   trackB: Track
+  userId: string
+  status: BattleState
   winnerId: string | null
+  createdAt: string
+  completedAt: string | null
 }
 
 export const MOCK_TRACKS: Track[] = [
@@ -25,7 +31,7 @@ export const MOCK_TRACKS: Track[] = [
     name: "Midnight City",
     artist: "M83",
     albumImage: "/images/album-midnight-city.jpg",
-    previewUrl: null,
+    previewUrl: "https://interactive-examples.mdn.mozilla.net/media/cc0-audio/t-rex-roar.mp3",
     eloScore: 1520,
     battlesCount: 34,
     bpm: 105,
@@ -38,7 +44,7 @@ export const MOCK_TRACKS: Track[] = [
     name: "Running Up That Hill",
     artist: "Kate Bush",
     albumImage: "/images/album-running-up.jpg",
-    previewUrl: null,
+    previewUrl: "https://interactive-examples.mdn.mozilla.net/media/cc0-audio/t-rex-roar.mp3",
     eloScore: 1510,
     battlesCount: 28,
     bpm: 103,
@@ -51,7 +57,7 @@ export const MOCK_TRACKS: Track[] = [
     name: "One More Time",
     artist: "Daft Punk",
     albumImage: "/images/album-one-more-time.jpg",
-    previewUrl: null,
+    previewUrl: "https://interactive-examples.mdn.mozilla.net/media/cc0-audio/t-rex-roar.mp3",
     eloScore: 1550,
     battlesCount: 42,
     bpm: 122,
@@ -77,7 +83,7 @@ export const MOCK_TRACKS: Track[] = [
     name: "Smells Like Teen Spirit",
     artist: "Nirvana",
     albumImage: "/images/album-teen-spirit.jpg",
-    previewUrl: null,
+    previewUrl: "https://interactive-examples.mdn.mozilla.net/media/cc0-audio/t-rex-roar.mp3",
     eloScore: 1530,
     battlesCount: 45,
     bpm: 117,
@@ -99,24 +105,3 @@ export const MOCK_TRACKS: Track[] = [
     year: 2022,
   },
 ]
-
-export function getRandomBattle(): Battle {
-  const shuffled = [...MOCK_TRACKS].sort(() => Math.random() - 0.5)
-  return {
-    id: Math.random().toString(36).substring(7),
-    trackA: shuffled[0],
-    trackB: shuffled[1],
-    winnerId: null,
-  }
-}
-
-export function calculateElo(
-  winnerElo: number,
-  loserElo: number,
-  K = 32
-): { newWinnerElo: number; newLoserElo: number } {
-  const expectedScore = 1 / (1 + Math.pow(10, (loserElo - winnerElo) / 400))
-  const newWinnerElo = Math.round(winnerElo + K * (1 - expectedScore))
-  const newLoserElo = Math.round(loserElo + K * (0 - (1 - expectedScore)))
-  return { newWinnerElo, newLoserElo }
-}

@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion"
 import { Play, Pause } from "lucide-react"
+import Image from "next/image"
 import { useState } from "react"
 import type { Track } from "@/lib/mock-data"
 
@@ -70,12 +71,15 @@ export function TrackCard({ track, side, onVote, isVoting, voteResult }: TrackCa
           </div>
         )}
 
-        <div className="relative aspect-square rounded-xl overflow-hidden mb-3 bg-carbon">
-            <img
+        <div className="relative mb-3 aspect-square overflow-hidden rounded-xl bg-carbon">
+          <Image
             src={track.albumImage}
             alt={`${track.name} by ${track.artist}`}
-            className="w-full h-full object-cover"
+            fill
+            sizes="(max-width: 768px) 100vw, 320px"
+            className="h-full w-full object-cover"
             crossOrigin="anonymous"
+            unoptimized
           />
           <button
             onClick={() => setIsPlaying(!isPlaying)}

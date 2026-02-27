@@ -1,60 +1,66 @@
+import { z } from "zod"
 import { NextResponse } from "next/server"
-import { MOCK_TRACKS } from "@/lib/mock-data"
-import { calculateElo } from "@/lib/elo"
+import { DEFAULT_USER_ID } from "@/lib/constants"
+import {
+  createPendingBattle,
+  ensureBattleCatalog,
+  completeBattleVote,
+  VoteError,
+} from "@/lib/battle-store"
 
-const tracks = MOCK_TRACKS.map((t) => ({ ...t }))
-
-export async function GET() {
-  const shuffled = [...tracks].sort(() => Math.random() - 0.5)
-  
-  const sorted = shuffled.sort(
-    (a, b) => Math.abs(a.eloScore - 1500) - Math.abs(b.eloScore - 1500)
-  )
-
-  const maxIdx = Math.max(0, sorted.length - 2)
-  const startIdx = Math.floor(Math.random() * (maxIdx + 1))
-  const trackA = sorted[startIdx]
-  const trackB = sorted[startIdx + 1] || sorted[0]
-
-  if (trackA.id === trackB.id) {
-    const alt = sorted.find((t) => t.id !== trackA.id)
-    if (alt) {
-      return NextResponse.json({
-        id: Math.random().toString(36).substring(7),
-        trackA,
-        trackB: alt,
-        winnerId: null,
-      })
-    }
-  }
-
-  return NextResponse.json({
-    id: Math.random().toString(36).substring(7),
-    trackA,
-    trackB,
-    winnerId: null,
+const voteRequestSchema = z
+  .object({
+    battleId: z.string().min(1),
+    winnerId: z.string().min(1),
+    loserId: z.string().min(1),
+    userId: z.string().min(1).optional(),
   })
+  .refine((payload) => payload.winnerId !== payload.loserId, {
+    message: "winnerId and loserId must be different",
+    path: ["winnerId"],
+  })
+
+export async function GET(request: Request) {
+  await ensureBattleCatalog()
+
+  const { searchParams } = new URL(request.url)
+  const userId = searchParams.get("userId") ?? DEFAULT_USER_ID
+  return NextResponse.json(createPendingBattle(userId))
 }
 
 export async function POST(request: Request) {
-  const { winnerId, loserId } = await request.json()
+  const payload = voteRequestSchema.safeParse(await request.json())
 
-  const winner = tracks.find((t) => t.id === winnerId)
-  const loser = tracks.find((t) => t.id === loserId)
-
-  if (!winner || !loser) {
-    return NextResponse.json({ error: "Track not found" }, { status: 404 })
+  if (!payload.success) {
+    return NextResponse.json(
+      { error: payload.error.flatten().fieldErrors },
+      { status: 400 }
+    )
   }
 
-  const { newWinnerElo, newLoserElo } = calculateElo(winner.eloScore, loser.eloScore)
+  try {
+    const result = completeBattleVote({
+      battleId: payload.data.battleId,
+      winnerId: payload.data.winnerId,
+      loserId: payload.data.loserId,
+      userId: payload.data.userId ?? DEFAULT_USER_ID,
+    })
 
-  winner.eloScore = newWinnerElo
-  winner.battlesCount += 1
-  loser.eloScore = newLoserElo
-  loser.battlesCount += 1
+    return NextResponse.json(result)
+  } catch (error) {
+    if (error instanceof VoteError) {
+      const statusByCode: Record<VoteError["code"], number> = {
+        battle_not_found: 404,
+        battle_already_completed: 409,
+        battle_forbidden_user: 403,
+        vote_does_not_match_battle: 400,
+        track_not_found: 404,
+        vote_same_track: 400,
+      }
 
-  return NextResponse.json({
-    winner: { id: winner.id, name: winner.name, newElo: newWinnerElo, eloChange: newWinnerElo - (newWinnerElo - (newWinnerElo - winner.eloScore)) },
-    loser: { id: loser.id, name: loser.name, newElo: newLoserElo },
-  })
+      return NextResponse.json({ error: error.message }, { status: statusByCode[error.code] })
+    }
+
+    return NextResponse.json({ error: "Unexpected vote failure" }, { status: 500 })
+  }
 }

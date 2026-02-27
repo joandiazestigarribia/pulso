@@ -3,9 +3,20 @@
 import { motion } from "framer-motion"
 import { Lock, Zap } from "lucide-react"
 import Link from "next/link"
+import useSWR from "swr"
+
+const fetcher = (url: string) => fetch(url).then((response) => response.json())
+
+interface BattleStatsResponse {
+  completedBattlesCount: number
+}
 
 export default function ProfilePage() {
-  const battlesCompleted = 4
+  const { data: stats } = useSWR<BattleStatsResponse>("/api/battle/stats?userId=guest", fetcher, {
+    revalidateOnFocus: false,
+  })
+
+  const battlesCompleted = stats?.completedBattlesCount ?? 0
   const battlesRequired = 10
 
   return (
@@ -43,7 +54,11 @@ export default function ProfilePage() {
           </h2>
 
           <p className="font-sans text-sm text-foreground/60 mb-6 leading-relaxed">
-            Complete <span className="text-campfire-pink font-bold">{battlesRequired - battlesCompleted} more battles</span> to unlock your unique Music DNA archetype and sonic profile.
+            Complete{" "}
+            <span className="text-campfire-pink font-bold">
+              {Math.max(0, battlesRequired - battlesCompleted)} more battles
+            </span>{" "}
+            to unlock your unique Music DNA archetype and sonic profile.
           </p>
 
           <div className="mb-6">
