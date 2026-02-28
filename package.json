@@ -8,10 +8,17 @@
     "start": "next start",
     "lint": "eslint .",
     "type-check": "tsc --noEmit",
-    "test": "tsc -p tsconfig.test-build.json && node -e \"const fs=require('node:fs');const files=['elo','mock-data','spotify','battle-store'];fs.mkdirSync('.tmp-test/node_modules/@/lib',{recursive:true});for(const file of files){const fromLib='.tmp-test/lib/'+file+'.js';const fromRoot='.tmp-test/'+file+'.js';const from=fs.existsSync(fromLib)?fromLib:fromRoot;fs.copyFileSync(from,'.tmp-test/node_modules/@/lib/'+file+'.js');}\" && node --test tests/**/*.test.js"
+    "db:up": "docker compose up -d postgres",
+    "db:down": "docker compose stop postgres",
+    "db:logs": "docker compose logs -f postgres",
+    "test": "tsc -p tsconfig.test-build.json && node -e \"const fs=require('node:fs');const files=['constants','elo','mock-data','spotify','battle-store','db'];fs.mkdirSync('.tmp-test/node_modules/@/lib',{recursive:true});for(const file of files){const fromLib='.tmp-test/lib/'+file+'.js';const fromRoot='.tmp-test/'+file+'.js';const from=fs.existsSync(fromLib)?fromLib:fromRoot;fs.copyFileSync(from,'.tmp-test/node_modules/@/lib/'+file+'.js');}\" && node --test --test-concurrency=1 tests/**/*.test.js",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:seed": "prisma db seed"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
+    "@prisma/client": "^6.16.3",
     "@radix-ui/react-accordion": "1.2.12",
     "@radix-ui/react-alert-dialog": "1.1.15",
     "@radix-ui/react-aspect-ratio": "1.1.8",
@@ -51,6 +58,7 @@
     "lucide-react": "^0.564.0",
     "next": "16.1.6",
     "next-themes": "^0.4.6",
+    "prisma": "^6.16.3",
     "react": "19.2.4",
     "react-day-picker": "9.13.2",
     "react-dom": "19.2.4",
@@ -62,6 +70,9 @@
     "tailwind-merge": "^3.3.1",
     "vaul": "^1.1.2",
     "zod": "^3.24.1"
+  },
+  "prisma": {
+    "seed": "node prisma/seed.js"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.2.0",

@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 const test = require("node:test")
 const assert = require("node:assert/strict")
-const { calculateElo, calculateExpectedScore, ELO_K_FACTOR } = require("../.tmp-test/elo")
+const { calculateElo, calculateExpectedScore, ELO_K_FACTOR } = require("../.tmp-test/lib/elo")
 
 test("calculateExpectedScore returns 0.5 for equal ratings", () => {
   const expected = calculateExpectedScore(1500, 1500)

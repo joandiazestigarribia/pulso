@@ -9,7 +9,10 @@
     "jsx": "react-jsx"
   },
   "include": [
+    "app/api/battle/route.ts",
+    "lib/constants.ts",
     "lib/elo.ts",
+    "lib/db.ts",
     "lib/mock-data.ts",
     "lib/spotify.ts",
     "lib/battle-store.ts"

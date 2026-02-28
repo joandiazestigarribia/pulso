@@ -8,7 +8,30 @@ import Image from "next/image"
 import { EloFeedback } from "@/components/landings/elo-feedback"
 import type { Battle, Track } from "@/lib/mock-data"
 
-const fetcher = (url: string) => fetch(url).then((response) => response.json())
+function isBattle(value: unknown): value is Battle {
+  if (!value || typeof value !== "object") {
+    return false
+  }
+
+  const candidate = value as Partial<Battle>
+  return (
+    typeof candidate.id === "string" &&
+    typeof candidate.userId === "string" &&
+    candidate.trackA !== undefined &&
+    candidate.trackB !== undefined
+  )
+}
+
+const fetcher = async (url: string): Promise<Battle> => {
+  const response = await fetch(url)
+  const payload: unknown = await response.json()
+
+  if (!response.ok || !isBattle(payload)) {
+    throw new Error("Unable to fetch battle")
+  }
+
+  return payload
+}
 
 function formatAudioTime(value: number): string {
   if (!Number.isFinite(value) || value < 0) {
@@ -219,7 +242,7 @@ function BattleSide({
 }
 
 export default function BattlePage() {
-  const { data: battle, mutate } = useSWR<Battle>("/api/battle", fetcher, {
+  const { data: battle, error: battleError, mutate } = useSWR<Battle>("/api/battle", fetcher, {
     revalidateOnFocus: false,
   })
 
@@ -298,6 +321,16 @@ export default function BattlePage() {
     },
     [battle, isVoting, mutate]
   )
+
+  if (battleError) {
+    return (
+      <main className="relative z-10 flex min-h-screen items-center justify-center bg-black px-4">
+        <div className="w-full max-w-xl rounded-lg border border-red-500/40 bg-red-900/20 p-4 text-sm text-red-100">
+          Battle service unavailable. Configure server database (`DATABASE_URL`) and retry.
+        </div>
+      </main>
+    )
+  }
 
   if (!battle) {
     return (

@@ -1,6 +1,7 @@
 import { z } from "zod"
 import { NextResponse } from "next/server"
 import { DEFAULT_USER_ID } from "@/lib/constants"
+import { MissingDatabaseUrlError } from "@/lib/db"
 import {
   createPendingBattle,
   ensureBattleCatalog,
@@ -21,11 +22,23 @@ const voteRequestSchema = z
   })
 
 export async function GET(request: Request) {
-  await ensureBattleCatalog()
+  try {
+    await ensureBattleCatalog()
 
-  const { searchParams } = new URL(request.url)
-  const userId = searchParams.get("userId") ?? DEFAULT_USER_ID
-  return NextResponse.json(createPendingBattle(userId))
+    const { searchParams } = new URL(request.url)
+    const userId = searchParams.get("userId") ?? DEFAULT_USER_ID
+    const battle = await createPendingBattle(userId)
+    return NextResponse.json(battle)
+  } catch (error) {
+    if (error instanceof MissingDatabaseUrlError) {
+      return NextResponse.json(
+        { error: "Server database is not configured (missing DATABASE_URL)." },
+        { status: 503 }
+      )
+    }
+
+    return NextResponse.json({ error: "Unexpected battle fetch failure" }, { status: 500 })
+  }
 }
 
 export async function POST(request: Request) {
@@ -39,7 +52,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const result = completeBattleVote({
+    const result = await completeBattleVote({
       battleId: payload.data.battleId,
       winnerId: payload.data.winnerId,
       loserId: payload.data.loserId,
@@ -48,6 +61,13 @@ export async function POST(request: Request) {
 
     return NextResponse.json(result)
   } catch (error) {
+    if (error instanceof MissingDatabaseUrlError) {
+      return NextResponse.json(
+        { error: "Server database is not configured (missing DATABASE_URL)." },
+        { status: 503 }
+      )
+    }
+
     if (error instanceof VoteError) {
       const statusByCode: Record<VoteError["code"], number> = {
         battle_not_found: 404,

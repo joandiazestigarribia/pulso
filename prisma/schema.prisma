@@ -1,0 +1,78 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum BattleState {
+  PENDING
+  COMPLETED
+}
+
+model User {
+  id           String       @id
+  battles      Battle[]
+  musicProfile MusicProfile?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+}
+
+model Track {
+  id           String   @id
+  name         String
+  artist       String
+  albumImage   String
+  previewUrl   String?
+  eloScore     Int      @default(1500)
+  battlesCount Int      @default(0)
+  bpm          Int
+  duration     String
+  genre        String
+  year         Int
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  battlesAsA Battle[] @relation("BattleTrackA")
+  battlesAsB Battle[] @relation("BattleTrackB")
+}
+
+model Battle {
+  id               String      @id @default(cuid())
+  userId           String
+  trackAId         String
+  trackBId         String
+  winnerId         String?
+  loserId          String?
+  winnerEloChange  Int?
+  loserEloChange   Int?
+  status           BattleState @default(PENDING)
+  createdAt        DateTime    @default(now())
+  completedAt      DateTime?
+  user             User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  trackA           Track       @relation("BattleTrackA", fields: [trackAId], references: [id], onDelete: Restrict)
+  trackB           Track       @relation("BattleTrackB", fields: [trackBId], references: [id], onDelete: Restrict)
+
+  @@index([userId, status, createdAt])
+  @@index([trackAId, createdAt])
+  @@index([trackBId, createdAt])
+  @@index([status, createdAt])
+}
+
+model MusicProfile {
+  id                  String   @id @default(cuid())
+  userId              String   @unique
+  summary             String?
+  dominantGenre       String?
+  genreVarietyScore   Float?
+  averageEnergy       Float?
+  averageValence      Float?
+  averageDanceability Float?
+  decadeDistribution  Json?
+  generatedFromVotes  Int      @default(0)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}

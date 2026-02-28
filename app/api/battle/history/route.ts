@@ -1,6 +1,7 @@
 import { z } from "zod"
 import { NextResponse } from "next/server"
 import { DEFAULT_USER_ID } from "@/lib/constants"
+import { MissingDatabaseUrlError } from "@/lib/db"
 import { getBattleHistory } from "@/lib/battle-store"
 
 const historyQuerySchema = z.object({
@@ -24,6 +25,17 @@ export async function GET(request: Request) {
     )
   }
 
-  const history = getBattleHistory(parsed.data)
-  return NextResponse.json(history)
+  try {
+    const history = await getBattleHistory(parsed.data)
+    return NextResponse.json(history)
+  } catch (error) {
+    if (error instanceof MissingDatabaseUrlError) {
+      return NextResponse.json(
+        { error: "Server database is not configured (missing DATABASE_URL)." },
+        { status: 503 }
+      )
+    }
+
+    return NextResponse.json({ error: "Unexpected history fetch failure" }, { status: 500 })
+  }
 }
