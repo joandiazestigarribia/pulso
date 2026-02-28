@@ -12,10 +12,17 @@ enum BattleState {
   COMPLETED
 }
 
+enum MergeAuditStatus {
+  MERGED
+  NOOP
+  INVALID_SOURCE
+}
+
 model User {
   id           String       @id
   battles      Battle[]
   musicProfile MusicProfile?
+  mergeAudits  MergeAudit[]
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
 }
@@ -75,4 +82,17 @@ model MusicProfile {
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
   user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model MergeAudit {
+  id                String           @id @default(cuid())
+  sourceAnonymousId String?
+  targetUserId      String
+  movedBattles      Int              @default(0)
+  status            MergeAuditStatus
+  createdAt         DateTime         @default(now())
+  user              User             @relation(fields: [targetUserId], references: [id], onDelete: Cascade)
+
+  @@index([targetUserId, createdAt])
+  @@index([sourceAnonymousId, createdAt])
 }

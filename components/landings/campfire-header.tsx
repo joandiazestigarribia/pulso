@@ -1,6 +1,7 @@
 "use client"
 
 import { Home, User as UserIcon } from "lucide-react"
+import { SignOutButton } from "@/components/auth/sign-out-button"
 
 export function CampfireHeader() {
   return (
@@ -15,6 +16,8 @@ export function CampfireHeader() {
       </div>
 
       <div className="flex items-center gap-4">
+        <SignOutButton />
+
         <div className="hidden md:flex flex-col items-end mr-2">
           <span className="font-mono text-[10px] tracking-wider uppercase text-campfire-orange">
             Next Reward

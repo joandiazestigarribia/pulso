@@ -15,7 +15,9 @@
     "lib/db.ts",
     "lib/mock-data.ts",
     "lib/spotify.ts",
-    "lib/battle-store.ts"
+    "lib/battle-store.ts",
+    "lib/identity.ts",
+    "lib/auth.ts"
   ],
   "exclude": [
     "node_modules",

@@ -24,11 +24,15 @@ export function assertDatabaseConfigured(): void {
 export const prisma =
   global.prisma ??
   new PrismaClient({
-    datasources: {
-      db: {
-        url: resolvedDatabaseUrl,
-      },
-    },
+    ...(resolvedDatabaseUrl
+      ? {
+          datasources: {
+            db: {
+              url: resolvedDatabaseUrl,
+            },
+          },
+        }
+      : {}),
     log: process.env.NODE_ENV === "development" ? ["warn", "error"] : ["error"],
   })
 

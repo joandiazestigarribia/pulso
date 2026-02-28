@@ -3,6 +3,12 @@ import { NextResponse } from "next/server"
 import { DEFAULT_USER_ID } from "@/lib/constants"
 import { MissingDatabaseUrlError } from "@/lib/db"
 import {
+  ANON_SESSION_COOKIE,
+  buildAnonSessionId,
+  resolveRequestIdentity,
+  shouldUseSecureCookies,
+} from "@/lib/identity"
+import {
   createPendingBattle,
   ensureBattleCatalog,
   completeBattleVote,
@@ -26,9 +32,23 @@ export async function GET(request: Request) {
     await ensureBattleCatalog()
 
     const { searchParams } = new URL(request.url)
-    const userId = searchParams.get("userId") ?? DEFAULT_USER_ID
+    const identity = resolveRequestIdentity(request)
+    const userId =
+      searchParams.get("userId") ?? identity.userId ?? identity.anonymousId ?? buildAnonSessionId()
     const battle = await createPendingBattle(userId)
-    return NextResponse.json(battle)
+    const response = NextResponse.json(battle)
+
+    if (!identity.userId && !identity.anonymousId) {
+      response.cookies.set(ANON_SESSION_COOKIE, userId, {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: shouldUseSecureCookies(request),
+        path: "/",
+        maxAge: 60 * 60 * 24 * 30,
+      })
+    }
+
+    return response
   } catch (error) {
     if (error instanceof MissingDatabaseUrlError) {
       return NextResponse.json(
@@ -52,11 +72,14 @@ export async function POST(request: Request) {
   }
 
   try {
+    const identity = resolveRequestIdentity(request)
+    const actorId = identity.userId ?? identity.anonymousId ?? payload.data.userId ?? DEFAULT_USER_ID
+
     const result = await completeBattleVote({
       battleId: payload.data.battleId,
       winnerId: payload.data.winnerId,
       loserId: payload.data.loserId,
-      userId: payload.data.userId ?? DEFAULT_USER_ID,
+      userId: actorId,
     })
 
     return NextResponse.json(result)

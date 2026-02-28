@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:clean": "powershell -NoProfile -ExecutionPolicy Bypass -Command \"$procs=Get-CimInstance Win32_Process | Where-Object { $_.Name -eq 'node.exe' -and ( $_.CommandLine -like '*next*dev*' -or $_.CommandLine -like '*next*start*' -or $_.CommandLine -like '*start-server.js*' ) }; if($procs){$procs | ForEach-Object { Stop-Process -Id $_.ProcessId -Force }}; npm run dev -- --port 3000\"",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
@@ -11,7 +12,7 @@
     "db:up": "docker compose up -d postgres",
     "db:down": "docker compose stop postgres",
     "db:logs": "docker compose logs -f postgres",
-    "test": "tsc -p tsconfig.test-build.json && node -e \"const fs=require('node:fs');const files=['constants','elo','mock-data','spotify','battle-store','db'];fs.mkdirSync('.tmp-test/node_modules/@/lib',{recursive:true});for(const file of files){const fromLib='.tmp-test/lib/'+file+'.js';const fromRoot='.tmp-test/'+file+'.js';const from=fs.existsSync(fromLib)?fromLib:fromRoot;fs.copyFileSync(from,'.tmp-test/node_modules/@/lib/'+file+'.js');}\" && node --test --test-concurrency=1 tests/**/*.test.js",
+    "test": "tsc -p tsconfig.test-build.json && node -e \"const fs=require('node:fs');const files=['constants','elo','mock-data','spotify','battle-store','db','identity','auth'];fs.mkdirSync('.tmp-test/node_modules/@/lib',{recursive:true});for(const file of files){const fromLib='.tmp-test/lib/'+file+'.js';const fromRoot='.tmp-test/'+file+'.js';const from=fs.existsSync(fromLib)?fromLib:fromRoot;fs.copyFileSync(from,'.tmp-test/node_modules/@/lib/'+file+'.js');}\" && node --test --test-concurrency=1 tests/**/*.test.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:seed": "prisma db seed"
@@ -57,6 +58,7 @@
     "input-otp": "1.4.2",
     "lucide-react": "^0.564.0",
     "next": "16.1.6",
+    "next-auth": "^4.24.13",
     "next-themes": "^0.4.6",
     "prisma": "^6.16.3",
     "react": "19.2.4",

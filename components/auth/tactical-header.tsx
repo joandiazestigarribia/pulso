@@ -1,6 +1,7 @@
 "use client"
 
 import { Music } from "lucide-react"
+import { SignOutButton } from "@/components/auth/sign-out-button"
 
 export function TacticalHeader() {
   return (
@@ -14,11 +15,14 @@ export function TacticalHeader() {
         </span>
       </div>
 
-      <div className="flex items-center gap-2 bg-carbon-lighter/80 backdrop-blur-sm border border-carbon-lighter rounded-full px-4 py-2">
-        <span className="w-2 h-2 rounded-full bg-neon-green animate-pulse" />
-        <span className="font-mono text-xs tracking-wider text-foreground uppercase">
-          Festival Gates: Open
-        </span>
+      <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 bg-carbon-lighter/80 backdrop-blur-sm border border-carbon-lighter rounded-full px-4 py-2">
+          <span className="w-2 h-2 rounded-full bg-neon-green animate-pulse" />
+          <span className="font-mono text-xs tracking-wider text-foreground uppercase">
+            Festival Gates: Open
+          </span>
+        </div>
+        <SignOutButton />
       </div>
     </header>
   )

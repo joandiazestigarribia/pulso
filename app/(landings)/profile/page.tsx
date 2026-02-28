@@ -11,8 +11,19 @@ interface BattleStatsResponse {
   completedBattlesCount: number
 }
 
+interface AuthSessionResponse {
+  isAuthenticated: boolean
+  userId: string | null
+  anonymousId: string | null
+  spotifyConnected: boolean
+  spotifyTokenError: string | null
+}
+
 export default function ProfilePage() {
-  const { data: stats } = useSWR<BattleStatsResponse>("/api/battle/stats?userId=guest", fetcher, {
+  const { data: stats } = useSWR<BattleStatsResponse>("/api/battle/stats", fetcher, {
+    revalidateOnFocus: false,
+  })
+  const { data: session } = useSWR<AuthSessionResponse>("/api/identity/session", fetcher, {
     revalidateOnFocus: false,
   })
 
@@ -54,11 +65,9 @@ export default function ProfilePage() {
           </h2>
 
           <p className="font-sans text-sm text-foreground/60 mb-6 leading-relaxed">
-            Complete{" "}
-            <span className="text-campfire-pink font-bold">
-              {Math.max(0, battlesRequired - battlesCompleted)} more battles
-            </span>{" "}
-            to unlock your unique Music DNA archetype and sonic profile.
+            {session?.isAuthenticated
+              ? "Your progress is linked to your account. Keep battling to unlock full Music DNA."
+              : "You can battle without login. Sign in later to sync your progress across devices and unlock export flows."}
           </p>
 
           <div className="mb-6">
@@ -76,17 +85,43 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          <Link href="/battle">
-            <motion.div
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
-              className="w-full py-3.5 rounded-2xl font-mono font-black text-sm uppercase tracking-wider text-carbon bg-gradient-to-r from-campfire-lime to-neon-green flex items-center justify-center gap-2 cursor-pointer"
-              style={{ boxShadow: "0 4px 20px rgba(57, 255, 20, 0.2)" }}
-            >
-              Continue Battling
-              <Zap className="w-4 h-4" />
-            </motion.div>
-          </Link>
+          <div className="flex flex-col gap-3">
+            <Link href="/battle">
+              <motion.div
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+                className="w-full py-3.5 rounded-2xl font-mono font-black text-sm uppercase tracking-wider text-carbon bg-gradient-to-r from-campfire-lime to-neon-green flex items-center justify-center gap-2 cursor-pointer"
+                style={{ boxShadow: "0 4px 20px rgba(57, 255, 20, 0.2)" }}
+              >
+                Continue Battling
+                <Zap className="w-4 h-4" />
+              </motion.div>
+            </Link>
+
+            {!session?.isAuthenticated && (
+              <Link href="/login">
+                <motion.div
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
+                  className="w-full py-3.5 rounded-2xl font-mono font-black text-sm uppercase tracking-wider text-foreground border border-campfire-purple/40 bg-carbon-lighter/70 flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  Save Progress
+                </motion.div>
+              </Link>
+            )}
+
+            {session?.isAuthenticated && (
+              <Link href="/profile/full">
+                <motion.div
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
+                  className="w-full py-3.5 rounded-2xl font-mono font-black text-sm uppercase tracking-wider text-foreground border border-campfire-purple/40 bg-carbon-lighter/70 flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  Open Full Profile
+                </motion.div>
+              </Link>
+            )}
+          </div>
         </div>
       </motion.div>
     </main>

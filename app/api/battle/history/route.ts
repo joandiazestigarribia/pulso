@@ -2,6 +2,7 @@ import { z } from "zod"
 import { NextResponse } from "next/server"
 import { DEFAULT_USER_ID } from "@/lib/constants"
 import { MissingDatabaseUrlError } from "@/lib/db"
+import { resolveRequestIdentity } from "@/lib/identity"
 import { getBattleHistory } from "@/lib/battle-store"
 
 const historyQuerySchema = z.object({
@@ -12,8 +13,10 @@ const historyQuerySchema = z.object({
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
+  const identity = resolveRequestIdentity(request)
   const parsed = historyQuerySchema.safeParse({
-    userId: searchParams.get("userId") ?? DEFAULT_USER_ID,
+    userId:
+      searchParams.get("userId") ?? identity.userId ?? identity.anonymousId ?? DEFAULT_USER_ID,
     trackId: searchParams.get("trackId") ?? undefined,
     limit: searchParams.get("limit") ?? undefined,
   })
