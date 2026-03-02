@@ -14,6 +14,32 @@ interface BattleStatsResponse {
   completedBattlesCount: number
 }
 
+interface ProfileInsightsResponse {
+  ok: boolean
+  code?: string
+  message?: string
+  data?: {
+    unlockThreshold: number
+    completedBattlesCount: number
+    unlocked: boolean
+    teaser: {
+      hint: string
+      completedBattlesCount: number
+      unlockThreshold: number
+      remainingBattles: number
+      topGenres: Array<{ genre: string; count: number }>
+      averageEnergy: number | null
+      averageValence: number | null
+      averageDanceability: number | null
+    }
+    hasCachedProfile: boolean
+    error: {
+      code: "PROFILE_GENERATION_FAILED"
+      message: string
+    } | null
+  }
+}
+
 interface AuthSessionResponse {
   isAuthenticated: boolean
   userId: string | null
@@ -26,12 +52,19 @@ export default function ProfilePage() {
   const { data: stats } = useSWR<BattleStatsResponse>("/api/battle/stats", fetcher, {
     revalidateOnFocus: false,
   })
+  const { data: insights } = useSWR<ProfileInsightsResponse>("/api/profile/insights", fetcher, {
+    revalidateOnFocus: false,
+  })
   const { data: session } = useSWR<AuthSessionResponse>("/api/identity/session", fetcher, {
     revalidateOnFocus: false,
   })
 
-  const battlesCompleted = stats?.completedBattlesCount ?? 0
-  const battlesRequired = 10
+  const battlesCompleted = insights?.data?.completedBattlesCount ?? stats?.completedBattlesCount ?? 0
+  const battlesRequired = insights?.data?.unlockThreshold ?? 10
+  const teaserHint = insights?.data?.teaser.hint ?? "Battle more tracks to unlock your full Music DNA profile."
+  const teaserTopGenres = insights?.data?.teaser.topGenres ?? []
+  const insightsError = !insights?.ok ? insights?.message : insights?.data?.error?.message
+  const hasUnlocked = Boolean(insights?.data?.unlocked ?? battlesCompleted >= battlesRequired)
   const [hasTrackedTeaserView, setHasTrackedTeaserView] = useState(false)
   const [authConfirmation, setAuthConfirmation] = useState<{
     movedBattles: number
@@ -117,7 +150,7 @@ export default function ProfilePage() {
             Music DNA
           </h1>
           <h2 className="font-mono font-bold text-sm uppercase tracking-widest text-campfire-purple mb-6">
-            Profile Locked
+            {hasUnlocked ? "Profile Ready" : "Profile Locked"}
           </h2>
 
           <p className="font-sans text-sm text-foreground/60 mb-6 leading-relaxed">
@@ -135,10 +168,29 @@ export default function ProfilePage() {
               <motion.div
                 className="h-full bg-gradient-to-r from-campfire-pink to-campfire-purple rounded-full"
                 initial={{ width: 0 }}
-                animate={{ width: `${(battlesCompleted / battlesRequired) * 100}%` }}
+                animate={{ width: `${Math.min(100, (battlesCompleted / battlesRequired) * 100)}%` }}
                 transition={{ duration: 1, delay: 0.5 }}
               />
             </div>
+          </div>
+
+          <div className="mb-6 rounded-xl border border-white/10 bg-carbon-lighter/60 p-3 text-left">
+            <div className="font-mono text-[10px] uppercase tracking-widest text-campfire-purple/80">
+              Early Insight
+            </div>
+            <p className="mt-2 text-xs leading-relaxed text-foreground/75">{teaserHint}</p>
+            {teaserTopGenres.length > 0 && (
+              <p className="mt-2 text-[11px] text-foreground/70">
+                Top genres:
+                {" "}
+                {teaserTopGenres.map((entry) => `${entry.genre} (${entry.count})`).join(" · ")}
+              </p>
+            )}
+            {insightsError && (
+              <p className="mt-2 text-xs text-campfire-pink">
+                {insightsError}
+              </p>
+            )}
           </div>
 
           <div className="flex flex-col gap-3">
@@ -178,7 +230,7 @@ export default function ProfilePage() {
                   </motion.div>
                 </Link>
 
-                {battlesCompleted >= battlesRequired && (
+                {hasUnlocked && (
                   <Link
                     href="/login?next=%2Fprofile%2Ffull"
                     onClick={() => {

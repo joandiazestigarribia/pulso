@@ -13,6 +13,7 @@ import { getActiveArtistDenylist, isArtistBlocked } from "@/lib/catalog-policy"
 
 const MATCHMAKING_ELO_THRESHOLD = 200
 const SPOTIFY_REFRESH_MS = 1000 * 60 * 30
+const EXTERNAL_PREVIEW_TRACK_THRESHOLD = 8
 const LEGACY_PLACEHOLDER_PREVIEW_URL = "https://interactive-examples.mdn.mozilla.net/media/cc0-audio/t-rex-roar.mp3"
 const BLOCKED_PREVIEW_URL_FRAGMENTS = ["cdn.example.com", "tests.invalid", ".invalid/"]
 const PREVIEW_BACKFILL_BATCH_SIZE = 50
@@ -173,6 +174,17 @@ function buildDefaultMatchmakingContext(): MatchmakingContext {
     globalArtistExposure: new Map(),
     globalTitleExposure: new Map(),
   }
+}
+
+async function countExternalPreviewTracks(): Promise<number> {
+  return prisma.track.count({
+    where: {
+      previewUrl: { not: null },
+      previewSource: {
+        in: ["spotify", "itunes"],
+      },
+    },
+  })
 }
 
 function countTrackArtistExposure(track: Track, exposureMap: Map<string, number>): number {
@@ -681,8 +693,12 @@ function triggerPreviewBackfillInBackground(): void {
 function selectBattlePair(
   tracks: Track[],
   artistDenylist: Set<string>,
-  context: MatchmakingContext
+  context: MatchmakingContext,
+  options?: {
+    applyCooldownFilters?: boolean
+  }
 ): { trackA: Track; trackB: Track } {
+  const applyCooldownFilters = options?.applyCooldownFilters ?? true
   const curatedPreviewTracks = tracks.filter(
     (track) =>
       hasPreview(track) &&
@@ -693,7 +709,9 @@ function selectBattlePair(
     curatedPreviewTracks.length >= 2
       ? curatedPreviewTracks
       : tracks.filter((track) => hasPreview(track) && !isTrackBlockedByCurationHeuristics(track))
-  const previewTracks = applyExposureFilter(applyUserCooldownFilter(basePreviewTracks, context), context)
+  const previewTracks = applyCooldownFilters
+    ? applyExposureFilter(applyUserCooldownFilter(basePreviewTracks, context), context)
+    : basePreviewTracks
 
   if (previewTracks.length >= 2) {
     if (Math.random() < THEMATIC_DUEL_PROBABILITY) {
@@ -737,15 +755,8 @@ export async function ensureBattleCatalog(): Promise<void> {
   await sanitizeLegacyPlaceholderPreviews()
   triggerPreviewBackfillInBackground()
   const artistDenylist = await getActiveArtistDenylist()
-  const externalPreviewTrackCount = await prisma.track.count({
-    where: {
-      previewUrl: { not: null },
-      previewSource: {
-        in: ["spotify", "itunes"],
-      },
-    },
-  })
-  const hasHealthyExternalCatalog = externalPreviewTrackCount >= 8
+  const externalPreviewTrackCount = await countExternalPreviewTracks()
+  const hasHealthyExternalCatalog = externalPreviewTrackCount >= EXTERNAL_PREVIEW_TRACK_THRESHOLD
 
   if (Date.now() - lastSpotifySyncAt < SPOTIFY_REFRESH_MS && hasHealthyExternalCatalog) {
     return
@@ -844,7 +855,11 @@ export async function createPendingBattle(userId: string): Promise<Battle> {
   await seedCatalogIfEmpty()
   await ensureUser(userId)
   const artistDenylist = await getActiveArtistDenylist(true)
-  const matchmakingContext = await buildMatchmakingContext(userId)
+  const externalPreviewTrackCount = await countExternalPreviewTracks()
+  const hasHealthyExternalCatalog = externalPreviewTrackCount >= EXTERNAL_PREVIEW_TRACK_THRESHOLD
+  const matchmakingContext = hasHealthyExternalCatalog
+    ? await buildMatchmakingContext(userId)
+    : buildDefaultMatchmakingContext()
 
   const trackRows = await prisma.track.findMany()
   if (trackRows.length < 2) {
@@ -852,7 +867,9 @@ export async function createPendingBattle(userId: string): Promise<Battle> {
   }
 
   const tracks = trackRows.map(toTrack)
-  const { trackA, trackB } = selectBattlePair(tracks, artistDenylist, matchmakingContext)
+  const { trackA, trackB } = selectBattlePair(tracks, artistDenylist, matchmakingContext, {
+    applyCooldownFilters: hasHealthyExternalCatalog,
+  })
   const battle = await prisma.battle.create({
     data: {
       userId,

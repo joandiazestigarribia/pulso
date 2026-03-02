@@ -66,6 +66,65 @@ async function seedBaselineTracks() {
   }
 }
 
+async function cleanupSyntheticTracks() {
+  const baselineIds = MOCK_TRACKS.map((track) => track.id)
+  await prisma.battle.deleteMany()
+  await prisma.musicProfile.deleteMany()
+  await prisma.track.deleteMany({
+    where: {
+      OR: [
+        { id: { in: baselineIds } },
+        { id: { startsWith: "ratio_" } },
+        { id: { startsWith: "f9_" } },
+        { id: { startsWith: "theme_" } },
+        { id: { startsWith: "external_health_" } },
+      ],
+    },
+  })
+}
+
+async function ensureHealthyExternalPreviewCatalog() {
+  await prisma.track.updateMany({
+    data: {
+      previewUrl: "https://p.scdn.co/mp3-preview/pulso-test.mp3",
+      previewSource: "spotify",
+    },
+  })
+
+  const externalCount = await prisma.track.count({
+    where: {
+      previewUrl: { not: null },
+      previewSource: { in: ["spotify", "itunes"] },
+    },
+  })
+
+  const requiredExtraTracks = Math.max(0, 8 - externalCount)
+  for (let index = 0; index < requiredExtraTracks; index += 1) {
+    await prisma.track.upsert({
+      where: { id: `external_health_${index}` },
+      create: {
+        id: `external_health_${index}`,
+        catalogBucket: "pop",
+        name: `External Health ${index}`,
+        artist: `External Artist ${index}`,
+        albumImage: "/placeholder.jpg",
+        previewUrl: "https://p.scdn.co/mp3-preview/pulso-health.mp3",
+        previewSource: "spotify",
+        eloScore: 1500,
+        battlesCount: 0,
+        bpm: 120,
+        duration: "03:00",
+        genre: "Pop",
+        year: 2024,
+      },
+      update: {
+        previewUrl: "https://p.scdn.co/mp3-preview/pulso-health.mp3",
+        previewSource: "spotify",
+      },
+    })
+  }
+}
+
 test.before(async () => {
   try {
     await prisma.$connect()
@@ -393,11 +452,7 @@ test("createPendingBattle applies dynamic artist denylist rules from database", 
 
 test("createPendingBattle applies user cooldown to avoid recently seen artist and title", async () => {
   await seedBaselineTracks()
-  await prisma.track.updateMany({
-    data: {
-      previewUrl: "https://tests.invalid/cooldown-preview.mp3",
-    },
-  })
+  await ensureHealthyExternalPreviewCatalog()
 
   const firstBattle = await createPendingBattle("cooldown-user")
   await completeBattleVote({
@@ -419,11 +474,7 @@ test("createPendingBattle applies user cooldown to avoid recently seen artist an
 
 test("createPendingBattle controls artist and title overexposure in matchmaking", async () => {
   await seedBaselineTracks()
-  await prisma.track.updateMany({
-    data: {
-      previewUrl: "https://tests.invalid/exposure-preview.mp3",
-    },
-  })
+  await ensureHealthyExternalPreviewCatalog()
 
   for (let index = 0; index < 10; index += 1) {
     const userId = `exposure-anchor-${index}`
@@ -560,6 +611,6 @@ test("createPendingBattle can trigger thematic duel rock vs urbano", async () =>
 })
 
 test.after(async () => {
-  await seedBaselineTracks()
+  await cleanupSyntheticTracks()
   await prisma.$disconnect()
 })

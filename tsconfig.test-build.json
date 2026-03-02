@@ -18,7 +18,8 @@
     "lib/battle-store.ts",
     "lib/identity.ts",
     "lib/auth.ts",
-    "lib/conversion-events.ts"
+    "lib/conversion-events.ts",
+    "lib/music-profile.ts"
   ],
   "exclude": [
     "node_modules",

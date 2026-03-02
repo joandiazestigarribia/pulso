@@ -38,6 +38,17 @@ async function seedBaselineTracks() {
   }
 }
 
+async function cleanupSyntheticTracks() {
+  const baselineIds = MOCK_TRACKS.map((track) => track.id)
+  await prisma.battle.deleteMany()
+  await prisma.musicProfile.deleteMany()
+  await prisma.track.deleteMany({
+    where: {
+      id: { in: baselineIds },
+    },
+  })
+}
+
 test.before(async () => {
   try {
     await prisma.$connect()
@@ -94,5 +105,6 @@ test("POST /api/battle accepts first vote and rejects concurrent second vote", a
 })
 
 test.after(async () => {
+  await cleanupSyntheticTracks()
   await prisma.$disconnect()
 })
