@@ -1,9 +1,12 @@
 "use client"
 
+import { useEffect, useMemo, useState } from "react"
 import { motion } from "framer-motion"
 import { Lock, Zap } from "lucide-react"
 import Link from "next/link"
 import useSWR from "swr"
+import { resolveConversionExperiment } from "@/lib/conversion-experiments"
+import { trackClientEvent } from "@/lib/client-events"
 
 const fetcher = (url: string) => fetch(url).then((response) => response.json())
 
@@ -29,6 +32,40 @@ export default function ProfilePage() {
 
   const battlesCompleted = stats?.completedBattlesCount ?? 0
   const battlesRequired = 10
+  const [hasTrackedTeaserView, setHasTrackedTeaserView] = useState(false)
+  const [authConfirmation, setAuthConfirmation] = useState<{
+    movedBattles: number
+  } | null>(null)
+  const identitySeed = session?.userId ?? session?.anonymousId ?? "guest"
+  const experiment = useMemo(() => resolveConversionExperiment(identitySeed), [identitySeed])
+
+  useEffect(() => {
+    const url = new URL(window.location.href)
+    if (url.searchParams.get("auth") !== "done") {
+      return
+    }
+
+    const movedBattles = Number.parseInt(url.searchParams.get("mergedBattles") ?? "0", 10)
+    setAuthConfirmation({
+      movedBattles: Number.isFinite(movedBattles) ? Math.max(0, movedBattles) : 0,
+    })
+  }, [])
+
+  useEffect(() => {
+    if (hasTrackedTeaserView) {
+      return
+    }
+
+    setHasTrackedTeaserView(true)
+    void trackClientEvent({
+      eventName: "profile_teaser_viewed",
+      variant: experiment.key,
+      metadata: {
+        completedBattles: battlesCompleted,
+        isAuthenticated: Boolean(session?.isAuthenticated),
+      },
+    })
+  }, [battlesCompleted, experiment.key, hasTrackedTeaserView, session?.isAuthenticated])
 
   return (
     <main className="relative z-10 flex flex-col items-center justify-center min-h-screen px-4 pt-16 pb-8">
@@ -39,6 +76,25 @@ export default function ProfilePage() {
         transition={{ duration: 0.6 }}
       >
         <div className="bg-carbon-light/80 backdrop-blur-xl border border-campfire-purple/30 rounded-3xl p-8 text-center">
+          {authConfirmation && (
+            <div className="mb-5 rounded-xl border border-neon-cyan/30 bg-neon-cyan/10 px-3 py-2 text-left">
+              <p className="text-xs text-neon-cyan">
+                Progress linked.
+                {" "}
+                {authConfirmation.movedBattles > 0
+                  ? `${authConfirmation.movedBattles} anonymous battles were preserved after login.`
+                  : "Your current progress now syncs with your account."}
+              </p>
+              <button
+                type="button"
+                onClick={() => setAuthConfirmation(null)}
+                className="mt-2 text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-neon-cyan/80 hover:text-neon-cyan"
+              >
+                Dismiss
+              </button>
+            </div>
+          )}
+
           <div className="relative mx-auto w-32 h-32 mb-6">
             <motion.div
               className="absolute inset-0 rounded-full border-2 border-campfire-purple/40"
@@ -99,15 +155,53 @@ export default function ProfilePage() {
             </Link>
 
             {!session?.isAuthenticated && (
-              <Link href="/login">
-                <motion.div
-                  whileHover={{ scale: 1.03 }}
-                  whileTap={{ scale: 0.97 }}
-                  className="w-full py-3.5 rounded-2xl font-mono font-black text-sm uppercase tracking-wider text-foreground border border-campfire-purple/40 bg-carbon-lighter/70 flex items-center justify-center gap-2 cursor-pointer"
+              <>
+                <Link
+                  href="/login?next=%2Fprofile"
+                  onClick={() => {
+                    void trackClientEvent({
+                      eventName: "auth_prompt_shown",
+                      variant: experiment.key,
+                      metadata: {
+                        trigger: "profile_locked_save_progress",
+                        completedBattles: battlesCompleted,
+                      },
+                    })
+                  }}
                 >
-                  Save Progress
-                </motion.div>
-              </Link>
+                  <motion.div
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.97 }}
+                    className="w-full py-3.5 rounded-2xl font-mono font-black text-sm uppercase tracking-wider text-foreground border border-campfire-purple/40 bg-carbon-lighter/70 flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    Save Progress
+                  </motion.div>
+                </Link>
+
+                {battlesCompleted >= battlesRequired && (
+                  <Link
+                    href="/login?next=%2Fprofile%2Ffull"
+                    onClick={() => {
+                      void trackClientEvent({
+                        eventName: "auth_prompt_shown",
+                        variant: experiment.key,
+                        metadata: {
+                          trigger: "playlist_generation_prompt",
+                          completedBattles: battlesCompleted,
+                        },
+                      })
+                    }}
+                  >
+                    <motion.div
+                      whileHover={{ scale: 1.03 }}
+                      whileTap={{ scale: 0.97 }}
+                      className="w-full py-3.5 rounded-2xl font-mono font-black text-sm uppercase tracking-wider text-carbon bg-gradient-to-r from-neon-cyan to-neon-green flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      Login to Generate Playlist
+                    </motion.div>
+                  </Link>
+                )}
+              </>
             )}
 
             {session?.isAuthenticated && (

@@ -1,11 +1,12 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 import { Smile, KeyRound, Zap } from "lucide-react"
 import { signIn } from "next-auth/react"
 import { getSafeNextPath } from "@/lib/safe-redirect"
+import { trackClientEvent } from "@/lib/client-events"
 
 export function LoginForm() {
   const router = useRouter()
@@ -14,6 +15,16 @@ export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    void trackClientEvent({
+      eventName: "auth_prompt_shown",
+      variant: "login_form",
+      metadata: {
+        trigger: "login_page",
+      },
+    })
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -39,7 +50,16 @@ export function LoginForm() {
         return
       }
 
-      router.push(nextPath)
+      const payload = (await response.json()) as {
+        merge?: {
+          movedBattles?: number
+        }
+      }
+      const movedBattles = payload.merge?.movedBattles ?? 0
+      const separator = nextPath.includes("?") ? "&" : "?"
+      const redirectedPath = `${nextPath}${separator}auth=done&mergedBattles=${movedBattles}`
+
+      router.push(redirectedPath)
       router.refresh()
     } catch {
       setError("Network error while starting your session.")
@@ -154,6 +174,13 @@ export function LoginForm() {
           onClick={() => {
             const nextPath = getSafeNextPath(new URL(window.location.href).searchParams.get("next"))
             const spotifyCallbackUrl = `/complete?next=${encodeURIComponent(nextPath)}`
+            void trackClientEvent({
+              eventName: "auth_prompt_shown",
+              variant: "spotify_login_button",
+              metadata: {
+                trigger: "login_spotify_click",
+              },
+            })
             void signIn("spotify", { callbackUrl: spotifyCallbackUrl })
           }}
           className="mt-3 flex w-full items-center justify-center rounded-2xl border border-neon-green/40 bg-neon-green/10 py-3 text-sm font-mono font-bold uppercase tracking-wider text-neon-green transition-colors hover:bg-neon-green/20"

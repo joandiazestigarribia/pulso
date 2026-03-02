@@ -18,32 +18,71 @@ enum MergeAuditStatus {
   INVALID_SOURCE
 }
 
+enum CatalogCurationRuleType {
+  ARTIST
+}
+
+enum ConversionEventName {
+  battle_started
+  vote_submitted
+  profile_teaser_viewed
+  profile_unlock_reached
+  auth_prompt_shown
+  auth_completed
+  merge_completed
+  export_started
+  export_completed
+}
+
 model User {
   id           String       @id
   battles      Battle[]
   musicProfile MusicProfile?
   mergeAudits  MergeAudit[]
+  conversionEvents ConversionEvent[]
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
 }
 
 model Track {
   id           String   @id
+  spotifyTrackId String?  @unique
+  catalogBucket String   @default("general")
   name         String
   artist       String
   albumImage   String
   previewUrl   String?
+  previewSource String?
+  previewCheckedAt DateTime?
+  spotifyPopularity Int?
+  spotifyExplicit Boolean?
+  spotifyPreviewAvailable Boolean?
   eloScore     Int      @default(1500)
   battlesCount Int      @default(0)
   bpm          Int
   duration     String
   genre        String
   year         Int
+  energy       Float?
+  valence      Float?
+  danceability Float?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
   battlesAsA Battle[] @relation("BattleTrackA")
   battlesAsB Battle[] @relation("BattleTrackB")
+}
+
+model CatalogCurationRule {
+  id        String                  @id @default(cuid())
+  type      CatalogCurationRuleType
+  pattern   String
+  isActive  Boolean                 @default(true)
+  createdAt DateTime                @default(now())
+  updatedAt DateTime                @updatedAt
+
+  @@index([type, isActive])
+  @@unique([type, pattern])
 }
 
 model Battle {
@@ -95,4 +134,20 @@ model MergeAudit {
 
   @@index([targetUserId, createdAt])
   @@index([sourceAnonymousId, createdAt])
+}
+
+model ConversionEvent {
+  id          String              @id @default(cuid())
+  eventName   ConversionEventName
+  userId      String?
+  anonymousId String?
+  battleId    String?
+  variant     String?
+  metadata    Json?
+  createdAt   DateTime            @default(now())
+  user        User?               @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([eventName, createdAt])
+  @@index([userId, createdAt])
+  @@index([anonymousId, createdAt])
 }

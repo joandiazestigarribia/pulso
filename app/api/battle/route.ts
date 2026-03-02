@@ -9,11 +9,14 @@ import {
   shouldUseSecureCookies,
 } from "@/lib/identity"
 import {
+  BattleCatalogError,
   createPendingBattle,
   ensureBattleCatalog,
   completeBattleVote,
+  getUserBattleStats,
   VoteError,
 } from "@/lib/battle-store"
+import { trackConversionEventSafe } from "@/lib/conversion-events"
 
 const voteRequestSchema = z
   .object({
@@ -37,6 +40,18 @@ export async function GET(request: Request) {
       searchParams.get("userId") ?? identity.userId ?? identity.anonymousId ?? buildAnonSessionId()
     const battle = await createPendingBattle(userId)
     const response = NextResponse.json(battle)
+    const source = searchParams.get("source") ?? "direct"
+
+    await trackConversionEventSafe({
+      eventName: "battle_started",
+      request,
+      userId: identity.userId,
+      anonymousId: identity.userId ? null : userId,
+      battleId: battle.id,
+      metadata: {
+        source,
+      },
+    })
 
     if (!identity.userId && !identity.anonymousId) {
       response.cookies.set(ANON_SESSION_COOKIE, userId, {
@@ -55,6 +70,10 @@ export async function GET(request: Request) {
         { error: "Server database is not configured (missing DATABASE_URL)." },
         { status: 503 }
       )
+    }
+
+    if (error instanceof BattleCatalogError) {
+      return NextResponse.json({ error: error.message }, { status: 503 })
     }
 
     return NextResponse.json({ error: "Unexpected battle fetch failure" }, { status: 500 })
@@ -81,6 +100,33 @@ export async function POST(request: Request) {
       loserId: payload.data.loserId,
       userId: actorId,
     })
+
+    await trackConversionEventSafe({
+      eventName: "vote_submitted",
+      request,
+      userId: identity.userId,
+      anonymousId: identity.userId ? null : actorId,
+      battleId: payload.data.battleId,
+      metadata: {
+        winnerId: payload.data.winnerId,
+        loserId: payload.data.loserId,
+      },
+    })
+
+    const stats = await getUserBattleStats(actorId)
+    if (stats.completedBattlesCount >= 10) {
+      await trackConversionEventSafe({
+        eventName: "profile_unlock_reached",
+        request,
+        userId: identity.userId,
+        anonymousId: identity.userId ? null : actorId,
+        battleId: payload.data.battleId,
+        metadata: {
+          completedBattlesCount: stats.completedBattlesCount,
+          threshold: 10,
+        },
+      })
+    }
 
     return NextResponse.json(result)
   } catch (error) {

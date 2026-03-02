@@ -7,6 +7,7 @@ import {
   resolveRequestIdentity,
   shouldUseSecureCookies,
 } from "@/lib/identity"
+import { trackConversionEventSafe } from "@/lib/conversion-events"
 
 const mergeRequestSchema = z.object({
   userId: z
@@ -41,6 +42,21 @@ export async function POST(request: Request) {
   const result = await mergeAnonymousBattlesToUser({
     anonymousId: identity.anonymousId,
     targetUserId,
+  })
+
+  await trackConversionEventSafe({
+    eventName: "merge_completed",
+    request,
+    userId: targetUserId,
+    anonymousId: identity.anonymousId,
+    metadata: {
+      sourceAnonymousId: result.sourceAnonymousId,
+      movedBattles: result.movedBattles,
+      merged: result.merged,
+      status: result.status,
+      auditId: result.auditId,
+      method: "identity_merge_endpoint",
+    },
   })
 
   const response = NextResponse.json({ ok: true, merge: result })

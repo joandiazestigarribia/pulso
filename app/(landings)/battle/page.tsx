@@ -5,8 +5,11 @@ import useSWR from "swr"
 import { AnimatePresence, motion } from "framer-motion"
 import { PartyPopper, Play, Square, Users, Volume2 } from "lucide-react"
 import Image from "next/image"
+import Link from "next/link"
 import { EloFeedback } from "@/components/landings/elo-feedback"
 import type { Battle, Track } from "@/lib/mock-data"
+import { resolveConversionExperiment } from "@/lib/conversion-experiments"
+import { trackClientEvent } from "@/lib/client-events"
 
 function isBattle(value: unknown): value is Battle {
   if (!value || typeof value !== "object") {
@@ -26,11 +29,31 @@ const fetcher = async (url: string): Promise<Battle> => {
   const response = await fetch(url)
   const payload: unknown = await response.json()
 
-  if (!response.ok || !isBattle(payload)) {
+  if (!response.ok) {
+    const message =
+      payload &&
+      typeof payload === "object" &&
+      "error" in payload &&
+      typeof (payload as { error?: unknown }).error === "string"
+        ? (payload as { error: string }).error
+        : "Unable to fetch battle"
+    throw new Error(message)
+  }
+
+  if (!isBattle(payload)) {
     throw new Error("Unable to fetch battle")
   }
 
   return payload
+}
+
+const jsonFetcher = async <T,>(url: string): Promise<T> => {
+  const response = await fetch(url)
+  if (!response.ok) {
+    throw new Error("Unable to fetch resource")
+  }
+
+  return (await response.json()) as T
 }
 
 function formatAudioTime(value: number): string {
@@ -54,6 +77,18 @@ interface VoteTrackResult {
 interface VoteResponse {
   winner: VoteTrackResult
   loser: VoteTrackResult
+}
+
+interface BattleStatsResponse {
+  completedBattlesCount: number
+}
+
+interface AuthSessionResponse {
+  isAuthenticated: boolean
+  userId: string | null
+  anonymousId: string | null
+  spotifyConnected: boolean
+  spotifyTokenError: string | null
 }
 
 interface BattleSideProps {
@@ -242,7 +277,15 @@ function BattleSide({
 }
 
 export default function BattlePage() {
-  const { data: battle, error: battleError, mutate } = useSWR<Battle>("/api/battle", fetcher, {
+  const [battleApiUrl, setBattleApiUrl] = useState("/api/battle")
+
+  const { data: battle, error: battleError, mutate } = useSWR<Battle>(battleApiUrl, fetcher, {
+    revalidateOnFocus: false,
+  })
+  const { data: stats } = useSWR<BattleStatsResponse>("/api/battle/stats", jsonFetcher, {
+    revalidateOnFocus: false,
+  })
+  const { data: session } = useSWR<AuthSessionResponse>("/api/identity/session", jsonFetcher, {
     revalidateOnFocus: false,
   })
 
@@ -254,10 +297,64 @@ export default function BattlePage() {
   )
   const [voteError, setVoteError] = useState<string | null>(null)
   const [activePreviewTrackId, setActivePreviewTrackId] = useState<string | null>(null)
+  const [hasTrackedPromptShown, setHasTrackedPromptShown] = useState(false)
+  const [authConfirmation, setAuthConfirmation] = useState<{
+    movedBattles: number
+  } | null>(null)
+
+  const identitySeed = session?.userId ?? session?.anonymousId ?? "guest"
+  const experiment = resolveConversionExperiment(identitySeed)
+  const completedBattles = stats?.completedBattlesCount ?? 0
+  const isAuthenticated = Boolean(session?.isAuthenticated)
+  const shouldShowAuthPrompt = !isAuthenticated && completedBattles >= experiment.votePromptThreshold
+  const hasReachedUnlockThreshold = completedBattles >= 10
 
   useEffect(() => {
     setActivePreviewTrackId(null)
   }, [battle?.id])
+
+  useEffect(() => {
+    const source = new URL(window.location.href).searchParams.get("source")
+    const auth = new URL(window.location.href).searchParams.get("auth")
+    const mergedBattlesRaw = new URL(window.location.href).searchParams.get("mergedBattles")
+
+    if (!source) {
+      if (auth === "done") {
+        const movedBattles = Number.parseInt(mergedBattlesRaw ?? "0", 10)
+        setAuthConfirmation({
+          movedBattles: Number.isFinite(movedBattles) ? Math.max(0, movedBattles) : 0,
+        })
+      }
+      return
+    }
+
+    setBattleApiUrl(`/api/battle?source=${encodeURIComponent(source)}`)
+
+    if (auth === "done") {
+      const movedBattles = Number.parseInt(mergedBattlesRaw ?? "0", 10)
+      setAuthConfirmation({
+        movedBattles: Number.isFinite(movedBattles) ? Math.max(0, movedBattles) : 0,
+      })
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!shouldShowAuthPrompt || hasTrackedPromptShown || !battle) {
+      return
+    }
+
+    setHasTrackedPromptShown(true)
+    void trackClientEvent({
+      eventName: "auth_prompt_shown",
+      battleId: battle.id,
+      variant: experiment.key,
+      metadata: {
+        timingVariant: experiment.timingVariant,
+        copyVariant: experiment.copyVariant,
+        completedBattles,
+      },
+    })
+  }, [battle, completedBattles, experiment, hasTrackedPromptShown, shouldShowAuthPrompt])
 
   const handleTogglePreview = useCallback((track: Track) => {
     if (!track.previewUrl) {
@@ -326,7 +423,9 @@ export default function BattlePage() {
     return (
       <main className="relative z-10 flex min-h-screen items-center justify-center bg-black px-4">
         <div className="w-full max-w-xl rounded-lg border border-red-500/40 bg-red-900/20 p-4 text-sm text-red-100">
-          Battle service unavailable. Configure server database (`DATABASE_URL`) and retry.
+          {battleError instanceof Error
+            ? battleError.message
+            : "Battle service unavailable. Configure server database (`DATABASE_URL`) and retry."}
         </div>
       </main>
     )
@@ -386,6 +485,58 @@ export default function BattlePage() {
         <div className="relative z-20 mx-auto mt-2 w-[min(95%,520px)] rounded-lg border border-red-500/40 bg-red-900/30 px-4 py-2 text-sm text-red-100">
           {voteError}
         </div>
+      )}
+
+      {authConfirmation && (
+        <section className="relative z-20 mx-auto mt-3 w-[min(96%,760px)] rounded-2xl border-2 border-[#00F0FF]/30 bg-[#091a26]/90 px-4 py-3 text-white">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-sm text-white/90">
+              Progress linked successfully.
+              {" "}
+              {authConfirmation.movedBattles > 0
+                ? `${authConfirmation.movedBattles} battle records were preserved after login.`
+                : "Your current progress is now attached to your account."}
+            </p>
+            <button
+              type="button"
+              onClick={() => setAuthConfirmation(null)}
+              className="rounded border border-white/30 px-2 py-1 text-xs font-black uppercase tracking-wide text-white hover:bg-white hover:text-black"
+            >
+              Dismiss
+            </button>
+          </div>
+        </section>
+      )}
+
+      {shouldShowAuthPrompt && (
+        <section className="relative z-20 mx-auto mt-3 w-[min(96%,760px)] rounded-2xl border-2 border-[#00FF66]/30 bg-[#0f1f15]/90 px-4 py-3 text-white">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div>
+              <div className="font-mono text-[11px] uppercase tracking-[0.15em] text-[#00FF66]">
+                {hasReachedUnlockThreshold ? "Music DNA unlocked" : "Save your progress"}
+              </div>
+              <p className="text-sm text-white/85">
+                {experiment.copyVariant === "unlock_dna"
+                  ? "Sign in now to sync your battle streak and unlock full Music DNA insights."
+                  : "Keep battling as guest, then sign in to keep progress across devices and prepare playlist export."}
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <Link
+                href="/profile"
+                className="rounded-lg border border-white/25 px-3 py-2 text-xs font-black uppercase tracking-wide text-white hover:bg-white hover:text-black"
+              >
+                View Progress
+              </Link>
+              <Link
+                href="/login?next=%2Fbattle"
+                className="rounded-lg border-2 border-black bg-[#00FF66] px-3 py-2 text-xs font-black uppercase tracking-wide text-black shadow-[0_6px_0_0_rgba(0,0,0,0.25)] hover:brightness-110"
+              >
+                Save With Login
+              </Link>
+            </div>
+          </div>
+        </section>
       )}
 
       <section className="relative z-10 flex flex-1 flex-col gap-4 overflow-hidden p-4 md:p-6 lg:flex-row lg:gap-6">

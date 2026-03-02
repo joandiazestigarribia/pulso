@@ -37,6 +37,9 @@ export default function CompleteAuthPage() {
 
         const payload = (await response.json()) as {
           spotifyTokenError?: string | null
+          merge?: {
+            movedBattles?: number
+          }
         }
 
         if (payload.spotifyTokenError) {
@@ -44,7 +47,11 @@ export default function CompleteAuthPage() {
           return
         }
 
-        router.replace(nextPath)
+        const movedBattles = payload.merge?.movedBattles ?? 0
+        const separator = nextPath.includes("?") ? "&" : "?"
+        const redirectedPath = `${nextPath}${separator}auth=done&mergedBattles=${movedBattles}`
+
+        router.replace(redirectedPath)
         router.refresh()
       } catch {
         setError("Network error while finalizing Spotify login.")

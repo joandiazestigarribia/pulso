@@ -13,20 +13,48 @@ const {
   VoteError,
 } = require("../.tmp-test/lib/battle-store")
 
+let hasCatalogRuleTable = null
+
+async function catalogRuleTableExists() {
+  if (typeof hasCatalogRuleTable === "boolean") {
+    return hasCatalogRuleTable
+  }
+
+  try {
+    await prisma.$queryRaw`SELECT 1 FROM "CatalogCurationRule" LIMIT 1`
+    hasCatalogRuleTable = true
+  } catch {
+    hasCatalogRuleTable = false
+  }
+
+  return hasCatalogRuleTable
+}
+
 async function seedBaselineTracks() {
+  if (await catalogRuleTableExists()) {
+    await prisma.$executeRawUnsafe('DELETE FROM "CatalogCurationRule"')
+  }
   await prisma.battle.deleteMany()
   await prisma.musicProfile.deleteMany()
   await prisma.user.deleteMany()
   await prisma.track.deleteMany()
 
   for (const track of MOCK_TRACKS) {
+    const previewUrl =
+      track.id === "1"
+        ? "https://tests.invalid/preview-a.mp3"
+        : track.id === "2"
+          ? "https://tests.invalid/preview-b.mp3"
+          : track.previewUrl
+
     await prisma.track.create({
       data: {
         id: track.id,
+        catalogBucket: track.catalogBucket ?? "general",
         name: track.name,
         artist: track.artist,
         albumImage: track.albumImage,
-        previewUrl: track.previewUrl,
+        previewUrl,
         eloScore: track.eloScore,
         battlesCount: track.battlesCount,
         bpm: track.bpm,
@@ -176,6 +204,362 @@ test("leaderboard returns tracks sorted by elo desc", async () => {
   }
 })
 
+test("createPendingBattle prioritizes tracks with preview when enough are available", async () => {
+  await seedBaselineTracks()
+
+  await prisma.track.updateMany({
+    where: {
+      id: {
+        in: ["1", "2"],
+      },
+    },
+    data: {
+      previewUrl: "https://tests.invalid/sample-preview.mp3",
+    },
+  })
+
+  await prisma.track.updateMany({
+    where: {
+      id: {
+        in: ["3", "4", "5", "6"],
+      },
+    },
+    data: {
+      previewUrl: null,
+    },
+  })
+
+  const battle = await createPendingBattle("user-preview-priority")
+  assert.equal(Boolean(battle.trackA.previewUrl), true)
+  assert.equal(Boolean(battle.trackB.previewUrl), true)
+
+  await prisma.track.updateMany({
+    where: {
+      id: {
+        in: ["1", "2"],
+      },
+    },
+    data: {
+      previewUrl: null,
+    },
+  })
+})
+
+test("createPendingBattle keeps hybrid ratio within tolerance with thematic overrides", async () => {
+  await seedBaselineTracks()
+  await prisma.battle.deleteMany()
+  await prisma.track.deleteMany()
+
+  const ratioTracks = [
+    { id: "ratio_pop_1", bucket: "pop", name: "Pop One", artist: "Artist A" },
+    { id: "ratio_pop_2", bucket: "pop", name: "Pop Two", artist: "Artist B" },
+    { id: "ratio_rock_1", bucket: "rock", name: "Rock One", artist: "Artist C" },
+    { id: "ratio_rock_2", bucket: "rock", name: "Rock Two", artist: "Artist D" },
+    { id: "ratio_urbano_1", bucket: "urbano", name: "Urbano One", artist: "Artist E" },
+    { id: "ratio_urbano_2", bucket: "urbano", name: "Urbano Two", artist: "Artist F" },
+    { id: "ratio_electronic_1", bucket: "electronic", name: "Electro One", artist: "Artist G" },
+    { id: "ratio_electronic_2", bucket: "electronic", name: "Electro Two", artist: "Artist H" },
+  ]
+
+  for (const track of ratioTracks) {
+    await prisma.track.create({
+      data: {
+        id: track.id,
+        catalogBucket: track.bucket,
+        name: track.name,
+        artist: track.artist,
+        albumImage: "/placeholder.jpg",
+        previewUrl: "https://tests.invalid/f9-ratio.mp3",
+        eloScore: 1500,
+        battlesCount: 0,
+        bpm: 120,
+        duration: "03:30",
+        genre: "Pop",
+        year: 2020,
+      },
+    })
+  }
+
+  const totalBattles = 120
+  let intraBucketPairs = 0
+
+  for (let index = 0; index < totalBattles; index += 1) {
+    const battle = await createPendingBattle("ratio-user")
+    if (battle.trackA.catalogBucket === battle.trackB.catalogBucket) {
+      intraBucketPairs += 1
+    }
+  }
+
+  const ratio = intraBucketPairs / totalBattles
+  assert.ok(ratio >= 0.3 && ratio <= 0.75)
+})
+
+test("createPendingBattle filters likely instrumental and cover candidates when alternatives exist", async () => {
+  await seedBaselineTracks()
+
+  await prisma.battle.deleteMany()
+  await prisma.track.deleteMany()
+
+  const curatedTracks = [
+    {
+      id: "f9_clean_1",
+      catalogBucket: "rock",
+      name: "Everlong",
+      artist: "Foo Fighters",
+      albumImage: "/placeholder.jpg",
+      previewUrl: "https://tests.invalid/everlong.mp3",
+      eloScore: 1500,
+      battlesCount: 0,
+      bpm: 158,
+      duration: "04:10",
+      genre: "Alternative Rock",
+      year: 1997,
+    },
+    {
+      id: "f9_clean_2",
+      catalogBucket: "pop",
+      name: "Levitating",
+      artist: "Dua Lipa",
+      albumImage: "/placeholder.jpg",
+      previewUrl: "https://tests.invalid/levitating.mp3",
+      eloScore: 1500,
+      battlesCount: 0,
+      bpm: 103,
+      duration: "03:24",
+      genre: "Pop",
+      year: 2020,
+    },
+    {
+      id: "f9_filtered_instrumental",
+      catalogBucket: "electronic",
+      name: "Sunset Dreams (Instrumental)",
+      artist: "Calm Producer",
+      albumImage: "/placeholder.jpg",
+      previewUrl: "https://tests.invalid/instrumental.mp3",
+      eloScore: 1500,
+      battlesCount: 0,
+      bpm: 90,
+      duration: "03:50",
+      genre: "Electronic",
+      year: 2024,
+    },
+    {
+      id: "f9_filtered_cover",
+      catalogBucket: "pop",
+      name: "Blinding Lights (Cover)",
+      artist: "Tribute Artist",
+      albumImage: "/placeholder.jpg",
+      previewUrl: "https://tests.invalid/cover.mp3",
+      eloScore: 1500,
+      battlesCount: 0,
+      bpm: 120,
+      duration: "03:21",
+      genre: "Pop",
+      year: 2023,
+    },
+  ]
+
+  for (const track of curatedTracks) {
+    await prisma.track.create({ data: track })
+  }
+
+  for (let index = 0; index < 12; index += 1) {
+    const battle = await createPendingBattle("heuristics-user")
+    assert.equal(battle.trackA.id.includes("f9_filtered"), false)
+    assert.equal(battle.trackB.id.includes("f9_filtered"), false)
+  }
+})
+
+test("createPendingBattle applies dynamic artist denylist rules from database", async () => {
+  await seedBaselineTracks()
+  await prisma.track.updateMany({
+    data: {
+      previewUrl: "https://tests.invalid/denylist-preview.mp3",
+    },
+  })
+
+  if (!(await catalogRuleTableExists())) {
+    return
+  }
+
+  await prisma.$executeRaw`INSERT INTO "CatalogCurationRule" ("id", "type", "pattern", "isActive", "createdAt", "updatedAt") VALUES ('rule_m83', 'ARTIST', 'M83', true, NOW(), NOW())`
+
+  for (let index = 0; index < 10; index += 1) {
+    const battle = await createPendingBattle("denylist-user")
+    assert.equal(battle.trackA.artist.includes("M83"), false)
+    assert.equal(battle.trackB.artist.includes("M83"), false)
+  }
+})
+
+test("createPendingBattle applies user cooldown to avoid recently seen artist and title", async () => {
+  await seedBaselineTracks()
+  await prisma.track.updateMany({
+    data: {
+      previewUrl: "https://tests.invalid/cooldown-preview.mp3",
+    },
+  })
+
+  const firstBattle = await createPendingBattle("cooldown-user")
+  await completeBattleVote({
+    battleId: firstBattle.id,
+    winnerId: firstBattle.trackA.id,
+    loserId: firstBattle.trackB.id,
+    userId: "cooldown-user",
+  })
+
+  const secondBattle = await createPendingBattle("cooldown-user")
+  const recentArtists = new Set([firstBattle.trackA.artist, firstBattle.trackB.artist])
+  const recentTitles = new Set([firstBattle.trackA.name, firstBattle.trackB.name])
+
+  assert.equal(recentArtists.has(secondBattle.trackA.artist), false)
+  assert.equal(recentArtists.has(secondBattle.trackB.artist), false)
+  assert.equal(recentTitles.has(secondBattle.trackA.name), false)
+  assert.equal(recentTitles.has(secondBattle.trackB.name), false)
+})
+
+test("createPendingBattle controls artist and title overexposure in matchmaking", async () => {
+  await seedBaselineTracks()
+  await prisma.track.updateMany({
+    data: {
+      previewUrl: "https://tests.invalid/exposure-preview.mp3",
+    },
+  })
+
+  for (let index = 0; index < 10; index += 1) {
+    const userId = `exposure-anchor-${index}`
+    await prisma.user.upsert({
+      where: { id: userId },
+      create: { id: userId },
+      update: {},
+    })
+
+    await prisma.battle.create({
+      data: {
+        userId,
+        trackAId: "1",
+        trackBId: "2",
+        status: "COMPLETED",
+        winnerId: "1",
+        loserId: "2",
+        winnerEloChange: 16,
+        loserEloChange: -16,
+        completedAt: new Date(),
+      },
+    })
+  }
+
+  let sawOverexposedTrack = false
+  for (let index = 0; index < 10; index += 1) {
+    const battle = await createPendingBattle(`exposure-check-user-${index}`)
+    if (
+      battle.trackA.artist.includes("M83") ||
+      battle.trackB.artist.includes("M83") ||
+      battle.trackA.name === "Midnight City" ||
+      battle.trackB.name === "Midnight City"
+    ) {
+      sawOverexposedTrack = true
+      break
+    }
+  }
+
+  assert.equal(sawOverexposedTrack, false)
+})
+
+test("createPendingBattle can trigger thematic duel rock vs urbano", async () => {
+  await seedBaselineTracks()
+  await prisma.battle.deleteMany()
+  await prisma.track.deleteMany()
+
+  const thematicTracks = [
+    {
+      id: "theme_rock_1",
+      catalogBucket: "rock",
+      name: "Rock Theme 1",
+      artist: "Rock Artist A",
+      albumImage: "/placeholder.jpg",
+      previewUrl: "https://tests.invalid/theme-rock-1.mp3",
+      eloScore: 1500,
+      battlesCount: 0,
+      bpm: 122,
+      duration: "03:30",
+      genre: "Rock",
+      year: 2020,
+      energy: 0.7,
+      valence: 0.6,
+      danceability: 0.5,
+    },
+    {
+      id: "theme_rock_2",
+      catalogBucket: "indie_alt",
+      name: "Rock Theme 2",
+      artist: "Rock Artist B",
+      albumImage: "/placeholder.jpg",
+      previewUrl: "https://tests.invalid/theme-rock-2.mp3",
+      eloScore: 1498,
+      battlesCount: 0,
+      bpm: 124,
+      duration: "03:40",
+      genre: "Alternative",
+      year: 2019,
+      energy: 0.72,
+      valence: 0.58,
+      danceability: 0.52,
+    },
+    {
+      id: "theme_urbano_1",
+      catalogBucket: "urbano",
+      name: "Urbano Theme 1",
+      artist: "Urbano Artist A",
+      albumImage: "/placeholder.jpg",
+      previewUrl: "https://tests.invalid/theme-urbano-1.mp3",
+      eloScore: 1501,
+      battlesCount: 0,
+      bpm: 126,
+      duration: "03:20",
+      genre: "Urbano latino",
+      year: 2021,
+      energy: 0.74,
+      valence: 0.62,
+      danceability: 0.74,
+    },
+    {
+      id: "theme_urbano_2",
+      catalogBucket: "pop",
+      name: "Urbano Theme 2",
+      artist: "Urbano Artist B",
+      albumImage: "/placeholder.jpg",
+      previewUrl: "https://tests.invalid/theme-urbano-2.mp3",
+      eloScore: 1502,
+      battlesCount: 0,
+      bpm: 120,
+      duration: "03:12",
+      genre: "Pop en español",
+      year: 2022,
+      energy: 0.71,
+      valence: 0.64,
+      danceability: 0.69,
+    },
+  ]
+
+  for (const track of thematicTracks) {
+    await prisma.track.create({ data: track })
+  }
+
+  const originalRandom = Math.random
+  Math.random = () => 0
+
+  try {
+    const battle = await createPendingBattle("theme-user")
+    const leftIsRock = ["rock", "indie_alt"].includes(battle.trackA.catalogBucket ?? "")
+    const rightIsUrbano = ["urbano", "pop", "cumbia_latina"].includes(battle.trackB.catalogBucket ?? "")
+    assert.equal(leftIsRock, true)
+    assert.equal(rightIsUrbano, true)
+  } finally {
+    Math.random = originalRandom
+  }
+})
+
 test.after(async () => {
+  await seedBaselineTracks()
   await prisma.$disconnect()
 })

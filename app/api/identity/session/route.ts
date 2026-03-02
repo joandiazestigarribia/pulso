@@ -9,6 +9,7 @@ import {
   shouldUseSecureCookies,
 } from "@/lib/identity"
 import { authOptions } from "@/lib/next-auth"
+import { trackConversionEventSafe } from "@/lib/conversion-events"
 
 const sessionRequestSchema = z.object({
   userId: z
@@ -49,6 +50,30 @@ export async function POST(request: Request) {
   const mergeResult = await mergeAnonymousBattlesToUser({
     anonymousId: identity.anonymousId,
     targetUserId,
+  })
+
+  await trackConversionEventSafe({
+    eventName: "auth_completed",
+    request,
+    userId: targetUserId,
+    anonymousId: identity.anonymousId,
+    metadata: {
+      method: "callsign_session",
+    },
+  })
+
+  await trackConversionEventSafe({
+    eventName: "merge_completed",
+    request,
+    userId: targetUserId,
+    anonymousId: identity.anonymousId,
+    metadata: {
+      sourceAnonymousId: mergeResult.sourceAnonymousId,
+      movedBattles: mergeResult.movedBattles,
+      merged: mergeResult.merged,
+      status: mergeResult.status,
+      auditId: mergeResult.auditId,
+    },
   })
 
   const response = NextResponse.json({

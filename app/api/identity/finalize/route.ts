@@ -10,6 +10,7 @@ import {
 } from "@/lib/identity"
 import { authOptions } from "@/lib/next-auth"
 import { MissingDatabaseUrlError } from "@/lib/db"
+import { trackConversionEventSafe } from "@/lib/conversion-events"
 
 export async function GET() {
   return NextResponse.json(
@@ -38,6 +39,30 @@ export async function POST(request: Request) {
     const merge = await mergeAnonymousBattlesToUser({
       anonymousId: identity.anonymousId,
       targetUserId: appUserId,
+    })
+
+    await trackConversionEventSafe({
+      eventName: "auth_completed",
+      request,
+      userId: appUserId,
+      anonymousId: identity.anonymousId,
+      metadata: {
+        method: "spotify_oauth",
+      },
+    })
+
+    await trackConversionEventSafe({
+      eventName: "merge_completed",
+      request,
+      userId: appUserId,
+      anonymousId: identity.anonymousId,
+      metadata: {
+        sourceAnonymousId: merge.sourceAnonymousId,
+        movedBattles: merge.movedBattles,
+        merged: merge.merged,
+        status: merge.status,
+        auditId: merge.auditId,
+      },
     })
 
     const response = NextResponse.json({

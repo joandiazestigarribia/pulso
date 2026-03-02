@@ -13,13 +13,20 @@ async function seedBaselineTracks() {
   await prisma.track.deleteMany()
 
   for (const track of MOCK_TRACKS) {
+    const previewUrl =
+      track.id === "1"
+        ? "https://tests.invalid/preview-a.mp3"
+        : track.id === "2"
+          ? "https://tests.invalid/preview-b.mp3"
+          : track.previewUrl
+
     await prisma.track.create({
       data: {
         id: track.id,
         name: track.name,
         artist: track.artist,
         albumImage: track.albumImage,
-        previewUrl: track.previewUrl,
+        previewUrl,
         eloScore: track.eloScore,
         battlesCount: track.battlesCount,
         bpm: track.bpm,

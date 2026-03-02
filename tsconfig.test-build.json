@@ -17,7 +17,8 @@
     "lib/spotify.ts",
     "lib/battle-store.ts",
     "lib/identity.ts",
-    "lib/auth.ts"
+    "lib/auth.ts",
+    "lib/conversion-events.ts"
   ],
   "exclude": [
     "node_modules",

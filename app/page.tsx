@@ -35,10 +35,10 @@ export default function HomePage() {
 
             <div className="mt-6 flex flex-wrap gap-3">
               <Link
-                href="/battle"
+                href="/battle?source=try-first"
                 className="inline-flex items-center gap-2 rounded-2xl border-4 border-black bg-[#00FF66] px-5 py-3 text-sm font-black uppercase tracking-wide text-black shadow-[0_8px_0_0_rgba(0,0,0,0.25)] transition-all hover:brightness-110 active:translate-y-1 active:shadow-none"
               >
-                Entrar a Battle
+                Try First: Start Battle
                 <ArrowRight className="h-4 w-4" />
               </Link>
               <Link
