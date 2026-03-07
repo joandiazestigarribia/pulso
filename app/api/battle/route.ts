@@ -32,9 +32,10 @@ const voteRequestSchema = z
 
 export async function GET(request: Request) {
   try {
-    await ensureBattleCatalog()
-
     const { searchParams } = new URL(request.url)
+    const shouldRefreshCatalog = searchParams.get("refreshCatalog") === "1"
+    await ensureBattleCatalog({ forceRefresh: shouldRefreshCatalog })
+
     const identity = resolveRequestIdentity(request)
     const userId =
       searchParams.get("userId") ?? identity.userId ?? identity.anonymousId ?? buildAnonSessionId()

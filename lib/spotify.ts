@@ -2,7 +2,7 @@ import type { Track } from "@/lib/mock-data"
 import { INITIAL_ELO_RATING } from "@/lib/elo"
 import {
   buildTrackDuplicateKey,
-  isTrackBlockedByCurationHeuristics,
+  isTrackAllowedByManualCuration,
 } from "@/lib/catalog-curation"
 
 const SPOTIFY_TOKEN_URL = "https://accounts.spotify.com/api/token"
@@ -134,11 +134,27 @@ const SPOTIFY_BUCKET_QUERIES: SpotifyBucketQuery[] = [
 const ITUNES_BUCKET_QUERIES: ItunesBucketQuery[] = [
   {
     bucket: "classics_70s_80s_90s",
-    terms: ["80s hits", "90s classics", "rock en espanol 90s", "nostalgia 90s", "baladas 90s"],
+    terms: [
+      "80s hits",
+      "90s classics",
+      "rock en espanol 90s",
+      "nostalgia 90s",
+      "baladas 90s",
+      "disco 80s hits",
+      "new wave 80s",
+    ],
   },
   {
     bucket: "classics_00s_10s",
-    terms: ["2000s pop hits", "2010s hits", "rock 2000s", "nostalgia 2000s", "pop 2000s"],
+    terms: [
+      "2000s pop hits",
+      "2010s hits",
+      "rock 2000s",
+      "nostalgia 2000s",
+      "pop 2000s",
+      "indie 2010s",
+      "electropop 2010s",
+    ],
   },
   {
     bucket: "rock",
@@ -152,14 +168,67 @@ const ITUNES_BUCKET_QUERIES: ItunesBucketQuery[] = [
   },
   {
     bucket: "pop",
-    terms: ["pop hits", "global pop hits", "argentina pop hits", "pop en espanol", "latin pop hits"],
+    terms: [
+      "pop hits",
+      "global pop hits",
+      "argentina pop hits",
+      "pop en espanol",
+      "latin pop hits",
+      "dance pop hits",
+      "electropop hits",
+    ],
   },
-  { bucket: "cumbia_latina", terms: ["cumbia argentina", "cumbia villera", "latin cumbia hits", "latin hits"] },
-  { bucket: "urbano", terms: ["reggaeton hits", "trap latino hits", "urbano latino"] },
-  { bucket: "electronic", terms: ["electronic dance hits", "edm classics", "house hits"] },
+  {
+    bucket: "cumbia_latina",
+    terms: [
+      "cumbia argentina",
+      "cumbia villera",
+      "latin cumbia hits",
+      "cumbia santafesina",
+      "cumbia sonidera",
+    ],
+  },
+  {
+    bucket: "urbano",
+    terms: [
+      "reggaeton hits",
+      "trap latino hits",
+      "urbano latino",
+      "dembow hits",
+      "latin trap",
+    ],
+  },
+  {
+    bucket: "electronic",
+    terms: [
+      "electronic dance hits",
+      "edm classics",
+      "house hits",
+      "techno hits",
+      "deep house",
+      "drum and bass hits",
+      "david guetta",
+      "calvin harris",
+      "avicii",
+      "martin garrix",
+      "swedish house mafia",
+    ],
+  },
   {
     bucket: "indie_alt",
-    terms: ["indie hits", "alternative rock hits", "indie latino", "alternativa", "alternativa y rock en espanol"],
+    terms: [
+      "indie hits",
+      "alternative rock hits",
+      "indie latino",
+      "alternativa",
+      "indie pop",
+      "shoegaze hits",
+      "post punk revival",
+      "tame impala",
+      "the strokes",
+      "arctic monkeys",
+      "cage the elephant",
+    ],
   },
 ]
 
@@ -347,10 +416,53 @@ function toItunesBattleTrack(item: ItunesTrackResult): Track | null {
 }
 
 function inferItunesBucket(trackName: string, artistName: string): CatalogBucket {
-  const signal = `${trackName} ${artistName}`.toLowerCase()
+  const signal = normalizeForMatch(`${trackName} ${artistName}`)
 
-  if (signal.includes("feat.") || signal.includes("bzrp") || signal.includes("bad bunny")) {
+  if (
+    signal.includes("feat") ||
+    signal.includes("bzrp") ||
+    signal.includes("bad bunny") ||
+    signal.includes("dembow") ||
+    signal.includes("reggaeton") ||
+    signal.includes("trap latino")
+  ) {
     return "urbano"
+  }
+
+  if (
+    signal.includes("cumbia") ||
+    signal.includes("villera") ||
+    signal.includes("sonidera")
+  ) {
+    return "cumbia_latina"
+  }
+
+  if (
+    signal.includes("edm") ||
+    signal.includes("electronic") ||
+    signal.includes("techno") ||
+    signal.includes("house") ||
+    signal.includes("drum and bass")
+  ) {
+    return "electronic"
+  }
+
+  if (
+    signal.includes("indie") ||
+    signal.includes("alternative") ||
+    signal.includes("shoegaze") ||
+    signal.includes("post punk")
+  ) {
+    return "indie_alt"
+  }
+
+  if (
+    signal.includes("rock") ||
+    signal.includes("metal") ||
+    signal.includes("punk") ||
+    signal.includes("grunge")
+  ) {
+    return "rock"
   }
 
   return "pop"
@@ -371,6 +483,60 @@ function toItunesBattleTrackWithBucket(
   }
 }
 
+function shuffleTracks<T>(items: T[]): T[] {
+  const cloned = [...items]
+  for (let index = cloned.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(Math.random() * (index + 1))
+    const temp = cloned[index]
+    cloned[index] = cloned[swapIndex]
+    cloned[swapIndex] = temp
+  }
+  return cloned
+}
+
+function selectBalancedBucketTracks(tracks: Track[], limit: number): Track[] {
+  if (tracks.length <= limit) {
+    return tracks
+  }
+
+  const byBucket = new Map<CatalogBucket, Track[]>()
+  for (const track of tracks) {
+    const bucket = (track.catalogBucket ?? "pop") as CatalogBucket
+    const current = byBucket.get(bucket) ?? []
+    current.push(track)
+    byBucket.set(bucket, current)
+  }
+
+  const entries = Array.from(byBucket.entries()).map(([bucket, bucketTracks]) => ({
+    bucket,
+    tracks: shuffleTracks(bucketTracks),
+  }))
+
+  const selected: Track[] = []
+  while (selected.length < limit) {
+    let pickedInRound = false
+
+    for (const entry of entries) {
+      const candidate = entry.tracks.shift()
+      if (!candidate) {
+        continue
+      }
+
+      selected.push(candidate)
+      pickedInRound = true
+      if (selected.length >= limit) {
+        break
+      }
+    }
+
+    if (!pickedInRound) {
+      break
+    }
+  }
+
+  return selected
+}
+
 export async function fetchItunesBattleTracks(limit = 120): Promise<Track[]> {
   try {
     const deduped = new Map<string, Track>()
@@ -389,7 +555,7 @@ export async function fetchItunesBattleTracks(limit = 120): Promise<Track[]> {
         const payload = (await response.json()) as ItunesSearchResponse
         for (const item of payload.results ?? []) {
           const mapped = toItunesBattleTrackWithBucket(item, bucketConfig.bucket)
-          if (!mapped || !mapped.previewUrl || isTrackBlockedByCurationHeuristics(mapped)) {
+          if (!mapped || !mapped.previewUrl || !isTrackAllowedByManualCuration(mapped)) {
             continue
           }
 
@@ -433,7 +599,7 @@ export async function fetchItunesBattleTracks(limit = 120): Promise<Track[]> {
           }
 
           const mapped = toItunesBattleTrackWithBucket(item)
-          if (!mapped || !mapped.previewUrl || isTrackBlockedByCurationHeuristics(mapped)) {
+          if (!mapped || !mapped.previewUrl || !isTrackAllowedByManualCuration(mapped)) {
             continue
           }
 
@@ -444,7 +610,7 @@ export async function fetchItunesBattleTracks(limit = 120): Promise<Track[]> {
       }
     }
 
-    return Array.from(deduped.values()).slice(0, limit)
+    return selectBalancedBucketTracks(Array.from(deduped.values()), limit)
   } catch {
     return []
   }
@@ -563,7 +729,7 @@ export async function fetchSpotifyBattleTracks(limit = 40): Promise<Track[]> {
         }
 
         const mapped = toBattleTrack(item, undefined, bucket)
-        if (isTrackBlockedByCurationHeuristics(mapped)) {
+        if (!isTrackAllowedByManualCuration(mapped)) {
           continue
         }
 

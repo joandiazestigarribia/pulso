@@ -32,11 +32,27 @@ const SPOTIFY_BUCKET_QUERIES = [
 const ITUNES_BUCKET_QUERIES = [
     {
         bucket: "classics_70s_80s_90s",
-        terms: ["80s hits", "90s classics", "rock en espanol 90s", "nostalgia 90s", "baladas 90s"],
+        terms: [
+            "80s hits",
+            "90s classics",
+            "rock en espanol 90s",
+            "nostalgia 90s",
+            "baladas 90s",
+            "disco 80s hits",
+            "new wave 80s",
+        ],
     },
     {
         bucket: "classics_00s_10s",
-        terms: ["2000s pop hits", "2010s hits", "rock 2000s", "nostalgia 2000s", "pop 2000s"],
+        terms: [
+            "2000s pop hits",
+            "2010s hits",
+            "rock 2000s",
+            "nostalgia 2000s",
+            "pop 2000s",
+            "indie 2010s",
+            "electropop 2010s",
+        ],
     },
     {
         bucket: "rock",
@@ -50,14 +66,67 @@ const ITUNES_BUCKET_QUERIES = [
     },
     {
         bucket: "pop",
-        terms: ["pop hits", "global pop hits", "argentina pop hits", "pop en espanol", "latin pop hits"],
+        terms: [
+            "pop hits",
+            "global pop hits",
+            "argentina pop hits",
+            "pop en espanol",
+            "latin pop hits",
+            "dance pop hits",
+            "electropop hits",
+        ],
     },
-    { bucket: "cumbia_latina", terms: ["cumbia argentina", "cumbia villera", "latin cumbia hits", "latin hits"] },
-    { bucket: "urbano", terms: ["reggaeton hits", "trap latino hits", "urbano latino"] },
-    { bucket: "electronic", terms: ["electronic dance hits", "edm classics", "house hits"] },
+    {
+        bucket: "cumbia_latina",
+        terms: [
+            "cumbia argentina",
+            "cumbia villera",
+            "latin cumbia hits",
+            "cumbia santafesina",
+            "cumbia sonidera",
+        ],
+    },
+    {
+        bucket: "urbano",
+        terms: [
+            "reggaeton hits",
+            "trap latino hits",
+            "urbano latino",
+            "dembow hits",
+            "latin trap",
+        ],
+    },
+    {
+        bucket: "electronic",
+        terms: [
+            "electronic dance hits",
+            "edm classics",
+            "house hits",
+            "techno hits",
+            "deep house",
+            "drum and bass hits",
+            "david guetta",
+            "calvin harris",
+            "avicii",
+            "martin garrix",
+            "swedish house mafia",
+        ],
+    },
     {
         bucket: "indie_alt",
-        terms: ["indie hits", "alternative rock hits", "indie latino", "alternativa", "alternativa y rock en espanol"],
+        terms: [
+            "indie hits",
+            "alternative rock hits",
+            "indie latino",
+            "alternativa",
+            "indie pop",
+            "shoegaze hits",
+            "post punk revival",
+            "tame impala",
+            "the strokes",
+            "arctic monkeys",
+            "cage the elephant",
+        ],
     },
 ];
 let tokenCache = null;
@@ -200,9 +269,38 @@ function toItunesBattleTrack(item) {
     };
 }
 function inferItunesBucket(trackName, artistName) {
-    const signal = `${trackName} ${artistName}`.toLowerCase();
-    if (signal.includes("feat.") || signal.includes("bzrp") || signal.includes("bad bunny")) {
+    const signal = normalizeForMatch(`${trackName} ${artistName}`);
+    if (signal.includes("feat") ||
+        signal.includes("bzrp") ||
+        signal.includes("bad bunny") ||
+        signal.includes("dembow") ||
+        signal.includes("reggaeton") ||
+        signal.includes("trap latino")) {
         return "urbano";
+    }
+    if (signal.includes("cumbia") ||
+        signal.includes("villera") ||
+        signal.includes("sonidera")) {
+        return "cumbia_latina";
+    }
+    if (signal.includes("edm") ||
+        signal.includes("electronic") ||
+        signal.includes("techno") ||
+        signal.includes("house") ||
+        signal.includes("drum and bass")) {
+        return "electronic";
+    }
+    if (signal.includes("indie") ||
+        signal.includes("alternative") ||
+        signal.includes("shoegaze") ||
+        signal.includes("post punk")) {
+        return "indie_alt";
+    }
+    if (signal.includes("rock") ||
+        signal.includes("metal") ||
+        signal.includes("punk") ||
+        signal.includes("grunge")) {
+        return "rock";
     }
     return "pop";
 }
@@ -215,6 +313,51 @@ function toItunesBattleTrackWithBucket(item, bucketOverride) {
         ...mapped,
         catalogBucket: bucketOverride ?? inferItunesBucket(mapped.name, mapped.artist),
     };
+}
+function shuffleTracks(items) {
+    const cloned = [...items];
+    for (let index = cloned.length - 1; index > 0; index -= 1) {
+        const swapIndex = Math.floor(Math.random() * (index + 1));
+        const temp = cloned[index];
+        cloned[index] = cloned[swapIndex];
+        cloned[swapIndex] = temp;
+    }
+    return cloned;
+}
+function selectBalancedBucketTracks(tracks, limit) {
+    if (tracks.length <= limit) {
+        return tracks;
+    }
+    const byBucket = new Map();
+    for (const track of tracks) {
+        const bucket = (track.catalogBucket ?? "pop");
+        const current = byBucket.get(bucket) ?? [];
+        current.push(track);
+        byBucket.set(bucket, current);
+    }
+    const entries = Array.from(byBucket.entries()).map(([bucket, bucketTracks]) => ({
+        bucket,
+        tracks: shuffleTracks(bucketTracks),
+    }));
+    const selected = [];
+    while (selected.length < limit) {
+        let pickedInRound = false;
+        for (const entry of entries) {
+            const candidate = entry.tracks.shift();
+            if (!candidate) {
+                continue;
+            }
+            selected.push(candidate);
+            pickedInRound = true;
+            if (selected.length >= limit) {
+                break;
+            }
+        }
+        if (!pickedInRound) {
+            break;
+        }
+    }
+    return selected;
 }
 async function fetchItunesBattleTracks(limit = 120) {
     try {
@@ -231,7 +374,7 @@ async function fetchItunesBattleTracks(limit = 120) {
                 const payload = (await response.json());
                 for (const item of payload.results ?? []) {
                     const mapped = toItunesBattleTrackWithBucket(item, bucketConfig.bucket);
-                    if (!mapped || !mapped.previewUrl || (0, catalog_curation_1.isTrackBlockedByCurationHeuristics)(mapped)) {
+                    if (!mapped || !mapped.previewUrl || !(0, catalog_curation_1.isTrackAllowedByManualCuration)(mapped)) {
                         continue;
                     }
                     const dedupeKey = (0, catalog_curation_1.buildTrackDuplicateKey)(mapped);
@@ -270,7 +413,7 @@ async function fetchItunesBattleTracks(limit = 120) {
                         continue;
                     }
                     const mapped = toItunesBattleTrackWithBucket(item);
-                    if (!mapped || !mapped.previewUrl || (0, catalog_curation_1.isTrackBlockedByCurationHeuristics)(mapped)) {
+                    if (!mapped || !mapped.previewUrl || !(0, catalog_curation_1.isTrackAllowedByManualCuration)(mapped)) {
                         continue;
                     }
                     const dedupeKey = (0, catalog_curation_1.buildTrackDuplicateKey)(mapped);
@@ -279,7 +422,7 @@ async function fetchItunesBattleTracks(limit = 120) {
                 }
             }
         }
-        return Array.from(deduped.values()).slice(0, limit);
+        return selectBalancedBucketTracks(Array.from(deduped.values()), limit);
     }
     catch {
         return [];
@@ -372,7 +515,7 @@ async function fetchSpotifyBattleTracks(limit = 40) {
                     continue;
                 }
                 const mapped = toBattleTrack(item, undefined, bucket);
-                if ((0, catalog_curation_1.isTrackBlockedByCurationHeuristics)(mapped)) {
+                if (!(0, catalog_curation_1.isTrackAllowedByManualCuration)(mapped)) {
                     continue;
                 }
                 const dedupeKey = (0, catalog_curation_1.buildTrackDuplicateKey)(mapped);

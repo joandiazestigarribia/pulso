@@ -7,12 +7,14 @@ import { fetchItunesBattleTracks, fetchItunesPreviewUrl, fetchSpotifyBattleTrack
 import {
   buildTrackTitleKey,
   extractArtistMatchTokens,
-  isTrackBlockedByCurationHeuristics,
+  isTrackAllowedByManualCuration,
+  normalizeCatalogText,
 } from "@/lib/catalog-curation"
 import { getActiveArtistDenylist, isArtistBlocked } from "@/lib/catalog-policy"
 
 const MATCHMAKING_ELO_THRESHOLD = 200
 const SPOTIFY_REFRESH_MS = 1000 * 60 * 30
+const CATALOG_SYNC_LIMIT = 200
 const EXTERNAL_PREVIEW_TRACK_THRESHOLD = 8
 const LEGACY_PLACEHOLDER_PREVIEW_URL = "https://interactive-examples.mdn.mozilla.net/media/cc0-audio/t-rex-roar.mp3"
 const BLOCKED_PREVIEW_URL_FRAGMENTS = ["cdn.example.com", "tests.invalid", ".invalid/"]
@@ -20,12 +22,14 @@ const PREVIEW_BACKFILL_BATCH_SIZE = 50
 const PREVIEW_BACKFILL_MIN_INTERVAL_MS = 1000 * 30
 const PREVIEW_RECHECK_WINDOW_MS = 1000 * 60 * 60 * 24 * 7
 const DEFAULT_BUCKET = "general"
+const ENABLE_STRICT_EXTERNAL_CATALOG_SYNC = true
 const INTRA_BUCKET_RATIO = 0.6
 const THEMATIC_DUEL_PROBABILITY = 0.3
 const USER_COOLDOWN_RECENT_BATTLES = 6
 const GLOBAL_EXPOSURE_RECENT_BATTLES = 250
 const MAX_RECENT_TITLE_EXPOSURE = 8
 const MAX_RECENT_ARTIST_EXPOSURE = 16
+const MAX_TRACKS_PER_ARTIST_IN_POOL = 3
 const BUCKET_MATCH_WEIGHTS: Record<string, number> = {
   classics_70s_80s_90s: 14,
   classics_00s_10s: 14,
@@ -36,6 +40,18 @@ const BUCKET_MATCH_WEIGHTS: Record<string, number> = {
   electronic: 11,
   indie_alt: 11,
   [DEFAULT_BUCKET]: 6,
+}
+
+const BUCKET_TARGET_SHARE: Record<string, number> = {
+  classics_70s_80s_90s: 0.13,
+  classics_00s_10s: 0.13,
+  rock: 0.14,
+  pop: 0.15,
+  cumbia_latina: 0.12,
+  urbano: 0.13,
+  electronic: 0.1,
+  indie_alt: 0.1,
+  [DEFAULT_BUCKET]: 0,
 }
 
 export interface BattleVotePayload {
@@ -82,6 +98,42 @@ export interface BattleVoteResult {
     eloChange: number
     battlesCount: number
   }
+}
+
+export interface CatalogBucketDiagnostics {
+  bucket: string
+  totalTracks: number
+  previewTracks: number
+  averageBattlesCount: number
+}
+
+export interface CatalogSourceDiagnostics {
+  source: string
+  totalTracks: number
+}
+
+export interface CatalogTrackExposureDiagnostics {
+  trackId: string
+  name: string
+  artist: string
+  bucket: string
+  previewSource: string | null
+  battlesCount: number
+  eloScore: number
+  recentBattleAppearances: number
+}
+
+export interface CatalogDiagnosticsReport {
+  generatedAt: string
+  totals: {
+    tracks: number
+    previewTracks: number
+    previewCoverage: number
+  }
+  buckets: CatalogBucketDiagnostics[]
+  sources: CatalogSourceDiagnostics[]
+  topArtistsByCatalogSize: Array<{ artist: string; tracks: number }>
+  topTracksByExposure: CatalogTrackExposureDiagnostics[]
 }
 
 export type VoteErrorCode =
@@ -336,6 +388,61 @@ function applyExposureFilter(tracks: Track[], context: MatchmakingContext): Trac
   return tracks
 }
 
+function capArtistPresence(tracks: Track[], maxTracksPerArtist: number): Track[] {
+  if (tracks.length <= 2) {
+    return tracks
+  }
+
+  const countsByToken = new Map<string, number>()
+  const accepted: Track[] = []
+  const overflow: Track[] = []
+
+  for (const track of tracks) {
+    const tokens = extractArtistMatchTokens(track.artist)
+    const primaryToken = tokens[0]
+    if (!primaryToken) {
+      accepted.push(track)
+      continue
+    }
+
+    const currentCount = countsByToken.get(primaryToken) ?? 0
+    if (currentCount < maxTracksPerArtist) {
+      countsByToken.set(primaryToken, currentCount + 1)
+      accepted.push(track)
+      continue
+    }
+
+    overflow.push(track)
+  }
+
+  if (accepted.length < 2) {
+    return tracks
+  }
+
+  return [...accepted, ...overflow]
+}
+
+function computeBucketShareByBattles(previewTracks: Track[]): Map<string, number> {
+  const totalBattles = previewTracks.reduce((sum, track) => sum + track.battlesCount, 0)
+  const byBucket = new Map<string, number>()
+
+  for (const track of previewTracks) {
+    const bucket = trackBucket(track)
+    byBucket.set(bucket, (byBucket.get(bucket) ?? 0) + track.battlesCount)
+  }
+
+  if (totalBattles <= 0) {
+    return new Map()
+  }
+
+  const shareByBucket = new Map<string, number>()
+  for (const [bucket, battles] of byBucket.entries()) {
+    shareByBucket.set(bucket, battles / totalBattles)
+  }
+
+  return shareByBucket
+}
+
 function shareArtistTokens(trackA: Track, trackB: Track): boolean {
   const trackATokens = new Set(extractArtistMatchTokens(trackA.artist))
   for (const token of extractArtistMatchTokens(trackB.artist)) {
@@ -456,7 +563,8 @@ function selectPairWithinPool(pool: Track[]): { trackA: Track; trackB: Track } {
 
 function selectWeightedBucket(
   buckets: Map<string, Track[]>,
-  excludedBuckets: Set<string> = new Set()
+  excludedBuckets: Set<string> = new Set(),
+  currentShareByBucket: Map<string, number> = new Map()
 ): string | null {
   const entries: Array<{ key: string; weight: number }> = []
 
@@ -466,13 +574,16 @@ function selectWeightedBucket(
     }
 
     const configuredWeight = BUCKET_MATCH_WEIGHTS[bucket] ?? BUCKET_MATCH_WEIGHTS[DEFAULT_BUCKET]
+    const targetShare = BUCKET_TARGET_SHARE[bucket] ?? BUCKET_TARGET_SHARE[DEFAULT_BUCKET]
+    const currentShare = currentShareByBucket.get(bucket) ?? 0
+    const targetBoost = targetShare > 0 ? Math.max(0.2, 1 + (targetShare - currentShare) * 3) : 1
     const totalBattles = bucketTracks.reduce((sum, track) => sum + track.battlesCount, 0)
     const averageBattles = totalBattles / bucketTracks.length
     const exposurePenalty = 1 / (averageBattles + 1)
     const capacityBoost = Math.min(2, 1 + Math.log10(bucketTracks.length + 1))
     entries.push({
       key: bucket,
-      weight: configuredWeight * exposurePenalty * capacityBoost,
+      weight: configuredWeight * exposurePenalty * capacityBoost * targetBoost,
     })
   }
 
@@ -493,12 +604,13 @@ function selectCrossBucketPair(previewTracks: Track[]): { trackA: Track; trackB:
     byBucket.set(bucket, current)
   }
 
-  const firstBucket = selectWeightedBucket(byBucket)
+  const currentShareByBucket = computeBucketShareByBattles(previewTracks)
+  const firstBucket = selectWeightedBucket(byBucket, new Set(), currentShareByBucket)
   if (!firstBucket) {
     return selectPairWithinPool(previewTracks)
   }
 
-  const secondBucket = selectWeightedBucket(byBucket, new Set([firstBucket]))
+  const secondBucket = selectWeightedBucket(byBucket, new Set([firstBucket]), currentShareByBucket)
   if (!secondBucket) {
     return selectPairWithinPool(previewTracks)
   }
@@ -640,6 +752,32 @@ async function sanitizeLegacyPlaceholderPreviews(): Promise<void> {
   })
 }
 
+async function normalizeLegacyPreviewSources(): Promise<void> {
+  await prisma.track.updateMany({
+    where: {
+      previewUrl: { not: null },
+      previewSource: null,
+      spotifyTrackId: { not: null },
+    },
+    data: {
+      previewSource: "spotify",
+      previewCheckedAt: new Date(),
+    },
+  })
+
+  await prisma.track.updateMany({
+    where: {
+      previewUrl: { not: null },
+      previewSource: null,
+      spotifyTrackId: null,
+    },
+    data: {
+      previewSource: "itunes",
+      previewCheckedAt: new Date(),
+    },
+  })
+}
+
 async function backfillMissingPreviewUrls(): Promise<void> {
   const recheckCutoff = new Date(Date.now() - PREVIEW_RECHECK_WINDOW_MS)
   const tracksMissingPreview = await prisma.track.findMany({
@@ -673,6 +811,36 @@ async function backfillMissingPreviewUrls(): Promise<void> {
   }
 }
 
+async function suppressStaleExternalTracks(activeTrackIds: string[]): Promise<void> {
+  if (
+    !ENABLE_STRICT_EXTERNAL_CATALOG_SYNC ||
+    activeTrackIds.length < EXTERNAL_PREVIEW_TRACK_THRESHOLD
+  ) {
+    return
+  }
+
+  await prisma.track.updateMany({
+    where: {
+      previewSource: {
+        in: ["spotify", "itunes"],
+      },
+      id: {
+        notIn: activeTrackIds,
+      },
+    },
+    data: {
+      previewUrl: null,
+      previewSource: null,
+      previewCheckedAt: new Date(),
+      spotifyPreviewAvailable: false,
+    },
+  })
+}
+
+function hasTrackPreview(track: Pick<Track, "previewUrl">): boolean {
+  return typeof track.previewUrl === "string" && track.previewUrl.trim().length > 0
+}
+
 function triggerPreviewBackfillInBackground(): void {
   if (previewBackfillPromise) {
     return
@@ -699,19 +867,17 @@ function selectBattlePair(
   }
 ): { trackA: Track; trackB: Track } {
   const applyCooldownFilters = options?.applyCooldownFilters ?? true
-  const curatedPreviewTracks = tracks.filter(
+  const allPreviewTracks = tracks.filter((track) => hasPreview(track))
+  const curatedPreviewTracks = allPreviewTracks.filter(
     (track) =>
-      hasPreview(track) &&
-      !isTrackBlockedByCurationHeuristics(track) &&
+      isTrackAllowedByManualCuration(track) &&
       !isArtistBlocked(track.artist, artistDenylist)
   )
-  const basePreviewTracks =
-    curatedPreviewTracks.length >= 2
-      ? curatedPreviewTracks
-      : tracks.filter((track) => hasPreview(track) && !isTrackBlockedByCurationHeuristics(track))
-  const previewTracks = applyCooldownFilters
+  const basePreviewTracks = curatedPreviewTracks.length >= 2 ? curatedPreviewTracks : allPreviewTracks
+  const rawPreviewTracks = applyCooldownFilters
     ? applyExposureFilter(applyUserCooldownFilter(basePreviewTracks, context), context)
     : basePreviewTracks
+  const previewTracks = capArtistPresence(rawPreviewTracks, MAX_TRACKS_PER_ARTIST_IN_POOL)
 
   if (previewTracks.length >= 2) {
     if (Math.random() < THEMATIC_DUEL_PROBABILITY) {
@@ -731,7 +897,8 @@ function selectBattlePair(
     }
 
     const shouldUseIntraBucket = Math.random() < INTRA_BUCKET_RATIO
-    const selectedBucket = selectWeightedBucket(byBucket)
+    const currentShareByBucket = computeBucketShareByBattles(previewTracks)
+    const selectedBucket = selectWeightedBucket(byBucket, new Set(), currentShareByBucket)
 
     if (shouldUseIntraBucket && selectedBucket) {
       const bucketTracks = byBucket.get(selectedBucket) ?? []
@@ -749,25 +916,28 @@ function selectBattlePair(
   )
 }
 
-export async function ensureBattleCatalog(): Promise<void> {
+export async function ensureBattleCatalog(options?: { forceRefresh?: boolean }): Promise<void> {
   assertDatabaseConfigured()
   await seedCatalogIfEmpty()
   await sanitizeLegacyPlaceholderPreviews()
+  await normalizeLegacyPreviewSources()
   triggerPreviewBackfillInBackground()
+  const forceRefresh = options?.forceRefresh ?? false
   const artistDenylist = await getActiveArtistDenylist()
   const externalPreviewTrackCount = await countExternalPreviewTracks()
   const hasHealthyExternalCatalog = externalPreviewTrackCount >= EXTERNAL_PREVIEW_TRACK_THRESHOLD
 
-  if (Date.now() - lastSpotifySyncAt < SPOTIFY_REFRESH_MS && hasHealthyExternalCatalog) {
+  if (!forceRefresh && Date.now() - lastSpotifySyncAt < SPOTIFY_REFRESH_MS && hasHealthyExternalCatalog) {
     return
   }
 
-  const spotifyTracks = (await fetchSpotifyBattleTracks(120)).filter(
+  const spotifyTracks = (await fetchSpotifyBattleTracks(CATALOG_SYNC_LIMIT)).filter(
     (track) => !isArtistBlocked(track.artist, artistDenylist)
   )
+  const spotifyPreviewTracks = spotifyTracks.filter((track) => hasTrackPreview(track))
 
-  if (spotifyTracks.length < 2) {
-    const itunesTracks = (await fetchItunesBattleTracks(120)).filter(
+  if (spotifyPreviewTracks.length < 2) {
+    const itunesTracks = (await fetchItunesBattleTracks(CATALOG_SYNC_LIMIT)).filter(
       (track) => !isArtistBlocked(track.artist, artistDenylist)
     )
 
@@ -787,9 +957,13 @@ export async function ensureBattleCatalog(): Promise<void> {
               name: track.name,
               artist: track.artist,
               albumImage: track.albumImage,
-              previewUrl: track.previewUrl,
-              previewSource: track.previewSource ?? (track.previewUrl ? "itunes" : null),
-              previewCheckedAt: new Date(),
+              ...(hasTrackPreview(track)
+                ? {
+                    previewUrl: track.previewUrl,
+                    previewSource: track.previewSource ?? "itunes",
+                    previewCheckedAt: new Date(),
+                  }
+                : {}),
               spotifyTrackId: track.spotifyTrackId,
               spotifyPopularity: track.spotifyPopularity,
               spotifyExplicit: track.spotifyExplicit,
@@ -805,6 +979,8 @@ export async function ensureBattleCatalog(): Promise<void> {
           })
         )
       )
+
+      await suppressStaleExternalTracks(itunesTracks.filter((track) => hasTrackPreview(track)).map((track) => track.id))
 
       lastSpotifySyncAt = Date.now()
     }
@@ -828,9 +1004,13 @@ export async function ensureBattleCatalog(): Promise<void> {
           name: track.name,
           artist: track.artist,
           albumImage: track.albumImage,
-          previewUrl: track.previewUrl,
-          previewSource: track.previewUrl ? "spotify" : null,
-          previewCheckedAt: new Date(),
+          ...(hasTrackPreview(track)
+            ? {
+                previewUrl: track.previewUrl,
+                previewSource: "spotify",
+                previewCheckedAt: new Date(),
+              }
+            : {}),
           spotifyTrackId: track.spotifyTrackId,
           spotifyPopularity: track.spotifyPopularity,
           spotifyExplicit: track.spotifyExplicit,
@@ -846,6 +1026,7 @@ export async function ensureBattleCatalog(): Promise<void> {
       })
     )
   )
+  await suppressStaleExternalTracks(spotifyPreviewTracks.map((track) => track.id))
   lastSpotifySyncAt = Date.now()
   triggerPreviewBackfillInBackground()
 }
@@ -888,6 +1069,122 @@ export async function createPendingBattle(userId: string): Promise<Battle> {
     winnerId: null,
     createdAt: battle.createdAt.toISOString(),
     completedAt: null,
+  }
+}
+
+export async function getCatalogDiagnostics(): Promise<CatalogDiagnosticsReport> {
+  assertDatabaseConfigured()
+
+  const [tracks, recentBattles] = await Promise.all([
+    prisma.track.findMany({
+      select: {
+        id: true,
+        name: true,
+        artist: true,
+        catalogBucket: true,
+        previewUrl: true,
+        previewSource: true,
+        battlesCount: true,
+        eloScore: true,
+      },
+    }),
+    prisma.battle.findMany({
+      where: { status: "COMPLETED" },
+      include: {
+        trackA: {
+          select: {
+            id: true,
+          },
+        },
+        trackB: {
+          select: {
+            id: true,
+          },
+        },
+      },
+      orderBy: [{ completedAt: "desc" }, { createdAt: "desc" }],
+      take: 300,
+    }),
+  ])
+
+  const bucketAggregate = new Map<string, { total: number; preview: number; battles: number }>()
+  const sourceAggregate = new Map<string, number>()
+  const artistAggregate = new Map<string, number>()
+  const recentExposureByTrackId = new Map<string, number>()
+
+  for (const battle of recentBattles) {
+    recentExposureByTrackId.set(battle.trackA.id, (recentExposureByTrackId.get(battle.trackA.id) ?? 0) + 1)
+    recentExposureByTrackId.set(battle.trackB.id, (recentExposureByTrackId.get(battle.trackB.id) ?? 0) + 1)
+  }
+
+  for (const track of tracks) {
+    const bucket = track.catalogBucket ?? DEFAULT_BUCKET
+    const bucketStats = bucketAggregate.get(bucket) ?? { total: 0, preview: 0, battles: 0 }
+    bucketStats.total += 1
+    bucketStats.battles += track.battlesCount
+    if (typeof track.previewUrl === "string" && track.previewUrl.trim().length > 0) {
+      bucketStats.preview += 1
+    }
+    bucketAggregate.set(bucket, bucketStats)
+
+    const normalizedArtist = normalizeCatalogText(track.artist)
+    if (normalizedArtist.length > 0) {
+      artistAggregate.set(normalizedArtist, (artistAggregate.get(normalizedArtist) ?? 0) + 1)
+    }
+
+    const source = track.previewSource ?? "none"
+    sourceAggregate.set(source, (sourceAggregate.get(source) ?? 0) + 1)
+  }
+
+  const previewTracks = tracks.filter((track) => Boolean(track.previewUrl)).length
+  const buckets = Array.from(bucketAggregate.entries())
+    .map(([bucket, stats]) => ({
+      bucket,
+      totalTracks: stats.total,
+      previewTracks: stats.preview,
+      averageBattlesCount: stats.total > 0 ? Number((stats.battles / stats.total).toFixed(2)) : 0,
+    }))
+    .sort((a, b) => b.totalTracks - a.totalTracks)
+
+  const sources = Array.from(sourceAggregate.entries())
+    .map(([source, totalTracks]) => ({ source, totalTracks }))
+    .sort((a, b) => b.totalTracks - a.totalTracks)
+
+  const topArtistsByCatalogSize = Array.from(artistAggregate.entries())
+    .map(([artist, count]) => ({ artist, tracks: count }))
+    .sort((a, b) => b.tracks - a.tracks)
+    .slice(0, 20)
+
+  const topTracksByExposure = tracks
+    .map((track) => ({
+      trackId: track.id,
+      name: track.name,
+      artist: track.artist,
+      bucket: track.catalogBucket ?? DEFAULT_BUCKET,
+      previewSource: track.previewSource ?? null,
+      battlesCount: track.battlesCount,
+      eloScore: track.eloScore,
+      recentBattleAppearances: recentExposureByTrackId.get(track.id) ?? 0,
+    }))
+    .sort((a, b) => {
+      if (b.recentBattleAppearances !== a.recentBattleAppearances) {
+        return b.recentBattleAppearances - a.recentBattleAppearances
+      }
+      return b.battlesCount - a.battlesCount
+    })
+    .slice(0, 30)
+
+  return {
+    generatedAt: new Date().toISOString(),
+    totals: {
+      tracks: tracks.length,
+      previewTracks,
+      previewCoverage: tracks.length > 0 ? Number((previewTracks / tracks.length).toFixed(4)) : 0,
+    },
+    buckets,
+    sources,
+    topArtistsByCatalogSize,
+    topTracksByExposure,
   }
 }
 

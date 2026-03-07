@@ -4,6 +4,7 @@ exports.normalizeCatalogText = normalizeCatalogText;
 exports.buildTrackDuplicateKey = buildTrackDuplicateKey;
 exports.buildTrackTitleKey = buildTrackTitleKey;
 exports.extractArtistMatchTokens = extractArtistMatchTokens;
+exports.isTrackAllowedByManualCuration = isTrackAllowedByManualCuration;
 exports.isLikelyInstrumentalTrack = isLikelyInstrumentalTrack;
 exports.isLikelyCoverTrack = isLikelyCoverTrack;
 exports.isTrackBlockedByCurationHeuristics = isTrackBlockedByCurationHeuristics;
@@ -33,6 +34,20 @@ const TITLE_CLEANUP_MARKERS = [
     " remaster",
     " radio edit",
     " live",
+];
+const FORCED_ALLOW_ARTIST_TOKENS = [
+    "bad bunny",
+    "bizarrap",
+    "soda stereo"
+];
+const FORCED_DENY_ARTIST_TOKENS = [
+    "kids bop kids",
+];
+const FORCED_DENY_TITLE_TOKENS = [
+    "sped up",
+    "slowed",
+    "nightcore",
+    "8d audio",
 ];
 function normalizeCatalogText(value) {
     return value
@@ -76,6 +91,23 @@ function extractArtistMatchTokens(artist) {
         .split(/[,&/]| feat\.?| ft\.?/gi)
         .map((token) => normalizeArtistForDupKey(token))
         .filter((token) => token.length > 0);
+}
+function includesAnyToken(value, tokens) {
+    return tokens.some((token) => value.includes(token));
+}
+function isTrackAllowedByManualCuration(track) {
+    const artistSignal = normalizeCatalogText(track.artist);
+    const titleSignal = normalizeCatalogText(track.name);
+    if (includesAnyToken(artistSignal, FORCED_DENY_ARTIST_TOKENS)) {
+        return false;
+    }
+    if (includesAnyToken(titleSignal, FORCED_DENY_TITLE_TOKENS)) {
+        return false;
+    }
+    if (includesAnyToken(artistSignal, FORCED_ALLOW_ARTIST_TOKENS)) {
+        return true;
+    }
+    return !isTrackBlockedByCurationHeuristics(track);
 }
 function isLikelyInstrumentalTrack(track) {
     const signal = normalizeCatalogText(`${track.name} ${track.artist} ${track.genre}`);

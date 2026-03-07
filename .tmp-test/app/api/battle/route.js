@@ -22,8 +22,9 @@ const voteRequestSchema = zod_1.z
 });
 async function GET(request) {
     try {
-        await (0, battle_store_1.ensureBattleCatalog)();
         const { searchParams } = new URL(request.url);
+        const shouldRefreshCatalog = searchParams.get("refreshCatalog") === "1";
+        await (0, battle_store_1.ensureBattleCatalog)({ forceRefresh: shouldRefreshCatalog });
         const identity = (0, identity_1.resolveRequestIdentity)(request);
         const userId = searchParams.get("userId") ?? identity.userId ?? identity.anonymousId ?? (0, identity_1.buildAnonSessionId)();
         const battle = await (0, battle_store_1.createPendingBattle)(userId);

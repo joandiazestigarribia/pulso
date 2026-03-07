@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db"
+import { normalizeTrackGenre } from "@/lib/genre-normalization"
 
 const PROFILE_UNLOCK_THRESHOLD = 10
 const OPENAI_API_URL = "https://api.openai.com/v1/responses"
@@ -33,6 +34,7 @@ interface AggregatedWinners {
   averageDanceability: number | null
   decadeDistribution: Record<string, number>
   topGenres: Array<{ genre: string; count: number }>
+  topSubgenres: Array<{ genre: string; count: number }>
 }
 
 export interface MusicProfileSnapshot {
@@ -53,6 +55,7 @@ export interface MusicTeaserInsights {
   unlockThreshold: number
   remainingBattles: number
   topGenres: Array<{ genre: string; count: number }>
+  topSubgenres: Array<{ genre: string; count: number }>
   averageEnergy: number | null
   averageValence: number | null
   averageDanceability: number | null
@@ -112,11 +115,6 @@ function average(values: Array<number | null>): number | null {
   return roundToThree(sum / valid.length)
 }
 
-function normalizeGenre(genre: string): string {
-  const value = genre.trim()
-  return value.length > 0 ? value : "Unknown"
-}
-
 function toDecadeLabel(year: number): string {
   if (!Number.isFinite(year) || year < 1900) {
     return "Unknown"
@@ -150,6 +148,14 @@ function computeNormalizedEntropy(counts: number[]): number {
   return roundToThree(Math.max(0, Math.min(1, entropy / maxEntropy)))
 }
 
+function normalizeGenreLabel(value: string): string {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "")
+}
+
 function selectWinnerTrack(battle: CompletedBattleWithTracks) {
   if (battle.winnerId === battle.trackA.id) {
     return battle.trackA
@@ -168,12 +174,21 @@ function aggregateWinnerPreferences(completedBattles: CompletedBattleWithTracks[
     .filter((track): track is NonNullable<ReturnType<typeof selectWinnerTrack>> => track !== null)
 
   const genreCountMap = new Map<string, number>()
+  const weightedGenreCountMap = new Map<string, number>()
+  const subgenreCountMap = new Map<string, number>()
   const decadeCountMap = new Map<string, number>()
+  const totalWinners = winners.length
 
-  for (const winnerTrack of winners) {
-    const genre = normalizeGenre(winnerTrack.genre)
+  for (const [index, winnerTrack] of winners.entries()) {
+    const normalizedGenre = normalizeTrackGenre(winnerTrack.genre)
+    const recencyBoost = totalWinners > 0 ? 1 + ((totalWinners - index) / totalWinners) * 0.35 : 1
+    const genre = normalizedGenre.macroGenre
     const decade = toDecadeLabel(winnerTrack.year)
     genreCountMap.set(genre, (genreCountMap.get(genre) ?? 0) + 1)
+    weightedGenreCountMap.set(genre, roundToThree((weightedGenreCountMap.get(genre) ?? 0) + recencyBoost))
+    if (normalizedGenre.subgenre) {
+      subgenreCountMap.set(normalizedGenre.subgenre, (subgenreCountMap.get(normalizedGenre.subgenre) ?? 0) + 1)
+    }
     decadeCountMap.set(decade, (decadeCountMap.get(decade) ?? 0) + 1)
   }
 
@@ -182,7 +197,16 @@ function aggregateWinnerPreferences(completedBattles: CompletedBattleWithTracks[
     .slice(0, 3)
     .map(([genre, count]) => ({ genre, count }))
 
-  const dominantGenre = topGenres[0]?.genre ?? null
+  const topGenreLabelSet = new Set(topGenres.map((entry) => normalizeGenreLabel(entry.genre)))
+
+  const topSubgenres = Array.from(subgenreCountMap.entries())
+    .sort((left, right) => right[1] - left[1])
+    .filter(([genre]) => !topGenreLabelSet.has(normalizeGenreLabel(genre)))
+    .slice(0, 3)
+    .map(([genre, count]) => ({ genre, count }))
+
+  const dominantGenre =
+    Array.from(weightedGenreCountMap.entries()).sort((left, right) => right[1] - left[1])[0]?.[0] ?? null
   const genreVarietyScore = computeNormalizedEntropy(Array.from(genreCountMap.values()))
   const averageEnergy = clampUnitValue(average(winners.map((track) => track.energy)))
   const averageValence = clampUnitValue(average(winners.map((track) => track.valence)))
@@ -199,6 +223,7 @@ function aggregateWinnerPreferences(completedBattles: CompletedBattleWithTracks[
       Array.from(decadeCountMap.entries()).sort((left, right) => right[1] - left[1])
     ),
     topGenres,
+    topSubgenres,
   }
 }
 
@@ -225,6 +250,13 @@ function buildFallbackSummary(aggregated: AggregatedWinners): string {
   const valenceBand = levelFromValue(aggregated.averageValence)
   const danceBand = levelFromValue(aggregated.averageDanceability)
   const topDecade = Object.entries(aggregated.decadeDistribution)[0]?.[0] ?? "mixed decades"
+  const topSubgenre = aggregated.topSubgenres.find(
+    (entry) => normalizeGenreLabel(entry.genre) !== normalizeGenreLabel(dominantGenre)
+  )?.genre
+
+  if (topSubgenre) {
+    return `You gravitate toward ${dominantGenre} (${topSubgenre}) with ${varietyBand}. Your winning picks trend ${energyBand} energy, ${valenceBand} mood, and ${danceBand} danceability, with strongest pull from ${topDecade}.`
+  }
 
   return `You gravitate toward ${dominantGenre} with ${varietyBand}. Your winning picks trend ${energyBand} energy, ${valenceBand} mood, and ${danceBand} danceability, with strongest pull from ${topDecade}.`
 }
@@ -258,6 +290,7 @@ async function generateSummaryWithOpenAI(aggregated: AggregatedWinners): Promise
     "Write 2 short sentences (max 45 words total) describing this listener persona.",
     "Avoid bullet points and avoid mentioning percentages.",
     `Top genres: ${aggregated.topGenres.map((entry) => `${entry.genre} (${entry.count})`).join(", ") || "none"}.`,
+    `Top subgenres: ${aggregated.topSubgenres.map((entry) => `${entry.genre} (${entry.count})`).join(", ") || "none"}.`,
     `Dominant genre: ${aggregated.dominantGenre ?? "none"}.`,
     `Variety score (0-1): ${aggregated.genreVarietyScore}.`,
     `Average energy: ${aggregated.averageEnergy ?? "n/a"}.`,
@@ -360,6 +393,7 @@ async function loadCompletedBattles(userId: string): Promise<CompletedBattleWith
         },
       },
     },
+    orderBy: [{ completedAt: "desc" }, { createdAt: "desc" }],
   })
 }
 
@@ -382,6 +416,7 @@ export async function getMusicProfileState(
     unlockThreshold,
     remainingBattles,
     topGenres: aggregated.topGenres,
+    topSubgenres: aggregated.topSubgenres,
     averageEnergy: aggregated.averageEnergy,
     averageValence: aggregated.averageValence,
     averageDanceability: aggregated.averageDanceability,
@@ -469,4 +504,3 @@ export async function getMusicProfileState(
     }
   }
 }
-

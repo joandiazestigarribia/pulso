@@ -36,6 +36,8 @@ interface FullProfileResponse {
     teaser: {
       hint: string
       remainingBattles: number
+      topGenres: Array<{ genre: string; count: number }>
+      topSubgenres: Array<{ genre: string; count: number }>
     }
     error: {
       code: "PROFILE_GENERATION_FAILED"
@@ -165,7 +167,17 @@ export default function FullProfilePage() {
 
         {!isLoading && profileState && !profileState.unlocked && (
           <div className="mt-4 rounded-xl border border-white/10 bg-carbon-lighter/50 p-4 text-sm text-foreground/70">
-            {profileState.teaser.hint}
+            <p>{profileState.teaser.hint}</p>
+            {profileState.teaser.topGenres.length > 0 && (
+              <p className="mt-2 text-xs text-foreground/70">
+                Top genres: {profileState.teaser.topGenres.map((entry) => `${entry.genre} (${entry.count})`).join(" · ")}
+              </p>
+            )}
+            {profileState.teaser.topSubgenres.length > 0 && (
+              <p className="mt-1 text-xs text-foreground/70">
+                Top subgenres: {profileState.teaser.topSubgenres.map((entry) => `${entry.genre} (${entry.count})`).join(" · ")}
+              </p>
+            )}
           </div>
         )}
 
@@ -174,6 +186,22 @@ export default function FullProfilePage() {
             <div className="rounded-xl border border-white/10 bg-carbon-lighter/50 p-4 text-sm text-foreground/80">
               {profile.summary ?? "Music DNA summary not available yet."}
             </div>
+
+            {(profileState?.teaser.topGenres.length ?? 0) > 0 && (
+              <div className="rounded-xl border border-white/10 bg-carbon-lighter/50 p-4">
+                <div className="text-[10px] font-mono uppercase tracking-widest text-foreground/50">
+                  Top Genres
+                </div>
+                <p className="mt-2 text-xs text-foreground/75">
+                  {profileState?.teaser.topGenres.map((entry) => `${entry.genre} (${entry.count})`).join(" · ")}
+                </p>
+                {(profileState?.teaser.topSubgenres.length ?? 0) > 0 && (
+                  <p className="mt-2 text-xs text-foreground/75">
+                    Top subgenres: {profileState?.teaser.topSubgenres.map((entry) => `${entry.genre} (${entry.count})`).join(" · ")}
+                  </p>
+                )}
+              </div>
+            )}
 
             <div className="grid gap-3 md:grid-cols-2">
               <div className="rounded-xl border border-white/10 bg-carbon-lighter/50 p-4">
@@ -267,4 +295,3 @@ export default function FullProfilePage() {
     </main>
   )
 }
-

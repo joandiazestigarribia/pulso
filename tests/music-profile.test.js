@@ -5,6 +5,7 @@ const { prisma } = require("../.tmp-test/lib/db")
 const { MOCK_TRACKS } = require("../.tmp-test/lib/mock-data")
 const { createPendingBattle, completeBattleVote } = require("../.tmp-test/lib/battle-store")
 const { getMusicProfileState } = require("../.tmp-test/lib/music-profile")
+const { normalizeTrackGenre } = require("../.tmp-test/lib/genre-normalization")
 
 async function seedBaselineTracks() {
   await prisma.battle.deleteMany()
@@ -110,6 +111,16 @@ test("music profile regenerates when new battles are completed", async () => {
   const refreshed = await getMusicProfileState(userId)
   assert.ok(refreshed.profile)
   assert.equal(refreshed.profile.generatedFromVotes, 11)
+})
+
+test("genre normalization avoids duplicate macro/subgenre labels", async () => {
+  const normalizedRock = normalizeTrackGenre("Rock")
+  assert.equal(normalizedRock.macroGenre, "Rock")
+  assert.equal(normalizedRock.subgenre, null)
+
+  const normalizedPop = normalizeTrackGenre("Pop")
+  assert.equal(normalizedPop.macroGenre, "Pop")
+  assert.equal(normalizedPop.subgenre, null)
 })
 
 test.after(async () => {

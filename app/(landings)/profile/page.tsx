@@ -28,6 +28,7 @@ interface ProfileInsightsResponse {
       unlockThreshold: number
       remainingBattles: number
       topGenres: Array<{ genre: string; count: number }>
+      topSubgenres: Array<{ genre: string; count: number }>
       averageEnergy: number | null
       averageValence: number | null
       averageDanceability: number | null
@@ -63,6 +64,7 @@ export default function ProfilePage() {
   const battlesRequired = insights?.data?.unlockThreshold ?? 10
   const teaserHint = insights?.data?.teaser.hint ?? "Battle more tracks to unlock your full Music DNA profile."
   const teaserTopGenres = insights?.data?.teaser.topGenres ?? []
+  const teaserTopSubgenres = insights?.data?.teaser.topSubgenres ?? []
   const insightsError = !insights?.ok ? insights?.message : insights?.data?.error?.message
   const hasUnlocked = Boolean(insights?.data?.unlocked ?? battlesCompleted >= battlesRequired)
   const [hasTrackedTeaserView, setHasTrackedTeaserView] = useState(false)
@@ -184,6 +186,13 @@ export default function ProfilePage() {
                 Top genres:
                 {" "}
                 {teaserTopGenres.map((entry) => `${entry.genre} (${entry.count})`).join(" · ")}
+              </p>
+            )}
+            {teaserTopSubgenres.length > 0 && (
+              <p className="mt-2 text-[11px] text-foreground/70">
+                Top subgenres:
+                {" "}
+                {teaserTopSubgenres.map((entry) => `${entry.genre} (${entry.count})`).join(" · ")}
               </p>
             )}
             {insightsError && (
