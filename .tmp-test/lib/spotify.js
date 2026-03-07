@@ -2,11 +2,14 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.fetchItunesPreviewUrl = fetchItunesPreviewUrl;
 exports.fetchItunesBattleTracks = fetchItunesBattleTracks;
+exports.fetchDeezerBattleTracks = fetchDeezerBattleTracks;
 exports.fetchSpotifyBattleTracks = fetchSpotifyBattleTracks;
 const elo_1 = require("@/lib/elo");
+const deezer_playlists_1 = require("@/lib/deezer-playlists");
 const catalog_curation_1 = require("@/lib/catalog-curation");
 const SPOTIFY_TOKEN_URL = "https://accounts.spotify.com/api/token";
 const SPOTIFY_API_URL = "https://api.spotify.com/v1";
+const DEEZER_API_URL = "https://api.deezer.com";
 const DEFAULT_MARKET = "AR";
 const SPOTIFY_MIN_POPULARITY = 65;
 const ITUNES_RSS_TOP_SONGS_URL = "https://rss.applemarketingtools.com/api/v2/ar/music/most-played/100/songs.json";
@@ -129,6 +132,8 @@ const ITUNES_BUCKET_QUERIES = [
         ],
     },
 ];
+const DEEZER_PLAYLIST_MAX_TRACKS = 180;
+const DEEZER_PLAYLIST_PAGE_SIZE = 100;
 let tokenCache = null;
 function pickPreferredTrack(current, candidate) {
     const currentPreviewScore = current.previewUrl ? 1 : 0;
@@ -152,6 +157,12 @@ function parseReleaseYear(releaseDate) {
 }
 function formatDuration(durationMs) {
     const totalSeconds = Math.max(0, Math.floor(durationMs / 1000));
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+}
+function formatDurationSeconds(durationSeconds) {
+    const totalSeconds = Math.max(0, Math.floor(durationSeconds));
     const minutes = Math.floor(totalSeconds / 60);
     const seconds = totalSeconds % 60;
     return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
@@ -240,6 +251,9 @@ function toHighResItunesArtwork(url) {
     }
     return url.replace(/\/\d+x\d+bb\./, "/600x600bb.");
 }
+function toHighResDeezerArtwork(album) {
+    return album?.cover_xl ?? album?.cover_big ?? album?.cover_medium ?? "/placeholder.jpg";
+}
 function toItunesBattleTrack(item) {
     if (!item.trackId || !item.trackName || !item.artistName) {
         return null;
@@ -268,8 +282,81 @@ function toItunesBattleTrack(item) {
         danceability: null,
     };
 }
+function parseDeezerYear(item) {
+    const releaseDate = item.release_date ?? item.album?.release_date;
+    if (!releaseDate) {
+        return new Date().getFullYear();
+    }
+    const parsed = Number.parseInt(releaseDate.slice(0, 4), 10);
+    if (Number.isNaN(parsed)) {
+        return new Date().getFullYear();
+    }
+    return parsed;
+}
+function toDeezerBattleTrack(item, bucketOverride) {
+    if (!item.id || !item.title || !item.artist?.name) {
+        return null;
+    }
+    return {
+        id: `deezer_${item.id}`,
+        spotifyTrackId: null,
+        catalogBucket: bucketOverride ?? inferItunesBucket(item.title, item.artist.name),
+        name: item.title,
+        artist: item.artist.name,
+        albumImage: toHighResDeezerArtwork(item.album),
+        previewUrl: item.preview ?? null,
+        previewSource: item.preview ? "deezer" : null,
+        previewCheckedAt: new Date().toISOString(),
+        spotifyPopularity: null,
+        spotifyExplicit: item.explicit_lyrics ?? null,
+        spotifyPreviewAvailable: item.preview ? true : false,
+        eloScore: elo_1.INITIAL_ELO_RATING,
+        battlesCount: 0,
+        bpm: 120,
+        duration: formatDurationSeconds(item.duration ?? 0),
+        genre: bucketToGenreLabel(bucketOverride ?? inferItunesBucket(item.title, item.artist.name)),
+        year: parseDeezerYear(item),
+        energy: null,
+        valence: null,
+        danceability: null,
+    };
+}
+function bucketToGenreLabel(bucket) {
+    const labels = {
+        classics_70s_80s_90s: "Classic Rock",
+        classics_00s_10s: "2000s/2010s",
+        rock: "Rock",
+        metal_hardrock: "Metal",
+        pop: "Pop",
+        cumbia_latina: "Cumbia",
+        folk_regional: "Folklore",
+        urbano: "Latin Urban",
+        hiphop_rap: "Hip Hop",
+        rnb_soul: "R&B/Soul",
+        electronic: "Electronic",
+        indie_alt: "Alternative",
+    };
+    return labels[bucket];
+}
 function inferItunesBucket(trackName, artistName) {
     const signal = normalizeForMatch(`${trackName} ${artistName}`);
+    if (signal.includes("hip hop") ||
+        signal.includes("hip-hop") ||
+        signal.includes("rap")) {
+        return "hiphop_rap";
+    }
+    if (signal.includes("r&b") ||
+        signal.includes("rnb") ||
+        signal.includes("neo soul") ||
+        signal.includes("soul")) {
+        return "rnb_soul";
+    }
+    if (signal.includes("folklore") ||
+        signal.includes("chacarera") ||
+        signal.includes("zamba") ||
+        signal.includes("cueca")) {
+        return "folk_regional";
+    }
     if (signal.includes("feat") ||
         signal.includes("bzrp") ||
         signal.includes("bad bunny") ||
@@ -295,6 +382,11 @@ function inferItunesBucket(trackName, artistName) {
         signal.includes("shoegaze") ||
         signal.includes("post punk")) {
         return "indie_alt";
+    }
+    if (signal.includes("metal") ||
+        signal.includes("hard rock") ||
+        signal.includes("nu metal")) {
+        return "metal_hardrock";
     }
     if (signal.includes("rock") ||
         signal.includes("metal") ||
@@ -427,6 +519,54 @@ async function fetchItunesBattleTracks(limit = 120) {
     catch {
         return [];
     }
+}
+async function fetchDeezerBattleTracks(limit = 120) {
+    try {
+        const deduped = new Map();
+        for (const source of deezer_playlists_1.DEEZER_PLAYLIST_SOURCES) {
+            const playlistTracks = await fetchDeezerPlaylistTracks(source.playlistId, DEEZER_PLAYLIST_MAX_TRACKS);
+            for (const item of playlistTracks) {
+                const mapped = toDeezerBattleTrack(item, source.bucket);
+                if (!mapped || !mapped.previewUrl || !(0, catalog_curation_1.isTrackAllowedByManualCuration)(mapped)) {
+                    continue;
+                }
+                const dedupeKey = (0, catalog_curation_1.buildTrackDuplicateKey)(mapped);
+                const current = deduped.get(dedupeKey);
+                if (!current) {
+                    deduped.set(dedupeKey, mapped);
+                }
+                else {
+                    deduped.set(dedupeKey, pickPreferredTrack(current, mapped));
+                }
+            }
+        }
+        return selectBalancedBucketTracks(Array.from(deduped.values()), limit);
+    }
+    catch {
+        return [];
+    }
+}
+async function fetchDeezerPlaylistTracks(playlistId, maxTracks) {
+    const collected = [];
+    for (let index = 0; index < maxTracks; index += DEEZER_PLAYLIST_PAGE_SIZE) {
+        const remaining = maxTracks - index;
+        const pageLimit = Math.min(DEEZER_PLAYLIST_PAGE_SIZE, remaining);
+        const url = `${DEEZER_API_URL}/playlist/${encodeURIComponent(playlistId)}/tracks?index=${index}&limit=${pageLimit}`;
+        const response = await fetch(url, { cache: "no-store" });
+        if (!response.ok) {
+            break;
+        }
+        const payload = (await response.json());
+        const pageItems = payload.data ?? [];
+        if (pageItems.length === 0) {
+            break;
+        }
+        collected.push(...pageItems);
+        if (pageItems.length < pageLimit) {
+            break;
+        }
+    }
+    return collected;
 }
 function roundTempoToBpm(tempo) {
     if (typeof tempo !== "number" || Number.isNaN(tempo) || tempo <= 0) {

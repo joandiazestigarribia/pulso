@@ -1,0 +1,547 @@
+{
+  "provider": "deezer",
+  "generatedAt": "2026-03-07T19:48:51.326Z",
+  "options": {
+    "terms": [
+      "rock en espanol",
+      "reggaeton",
+      "cumbia",
+      "indie rock",
+      "electronic",
+      "pop en espanol",
+      "alternative",
+      "synthpop",
+      "latin trap",
+      "new wave"
+    ],
+    "limit": 20,
+    "top": 10,
+    "timeoutMs": 8000,
+    "out": null,
+    "json": false
+  },
+  "summary": {
+    "queryCount": 10,
+    "successfulQueries": 10,
+    "failedQueries": 0,
+    "successRatePercent": 100,
+    "requestedSlots": 200,
+    "tracksReturnedTotal": 198,
+    "proxyMatchRatePercent": 99,
+    "uniqueTrackCount": 198,
+    "previewTrackCount": 197,
+    "previewCoveragePercent": 99.49,
+    "latencyMs": {
+      "min": 351,
+      "avg": 407.5,
+      "p50": 377,
+      "p95": 552,
+      "max": 552
+    },
+    "errorBreakdown": {}
+  },
+  "queries": [
+    {
+      "term": "rock en espanol",
+      "ok": true,
+      "status": 200,
+      "latencyMs": 552,
+      "resultCount": 20,
+      "deezerTotal": 300,
+      "errorCode": null,
+      "errorMessage": null,
+      "url": "https://api.deezer.com/search?q=rock+en+espanol&limit=20",
+      "sample": [
+        {
+          "title": "Rock en Español (En Vivo)",
+          "artist": "Latin Band DIVINE",
+          "hasPreview": true
+        },
+        {
+          "title": "Rock en Español",
+          "artist": "Cuca",
+          "hasPreview": true
+        },
+        {
+          "title": "Solo Por Tu Gracia",
+          "artist": "The Rock En Español",
+          "hasPreview": true
+        },
+        {
+          "title": "El Rock de los Bichos",
+          "artist": "El Reino Infantil",
+          "hasPreview": true
+        },
+        {
+          "title": "Your Idol SUPER COVER VERSIÓN ROCK en ESPAÑOL (feat. Sebastián Palma & Gustavo Maikel)",
+          "artist": "Jeffar",
+          "hasPreview": true
+        }
+      ]
+    },
+    {
+      "term": "reggaeton",
+      "ok": true,
+      "status": 200,
+      "latencyMs": 369,
+      "resultCount": 20,
+      "deezerTotal": 252,
+      "errorCode": null,
+      "errorMessage": null,
+      "url": "https://api.deezer.com/search?q=reggaeton&limit=20",
+      "sample": [
+        {
+          "title": "Reggaetón Lento (Bailemos)",
+          "artist": "CNCO",
+          "hasPreview": true
+        },
+        {
+          "title": "Mon Amour (Remix)",
+          "artist": "zzoilo",
+          "hasPreview": true
+        },
+        {
+          "title": "Oye Mi Canto",
+          "artist": "N.O.R.E.",
+          "hasPreview": true
+        },
+        {
+          "title": "Reggaeton",
+          "artist": "J Balvin",
+          "hasPreview": true
+        },
+        {
+          "title": "Gata Fiera (Regueton Viejo)",
+          "artist": "Reggaetones",
+          "hasPreview": true
+        }
+      ]
+    },
+    {
+      "term": "cumbia",
+      "ok": true,
+      "status": 200,
+      "latencyMs": 368,
+      "resultCount": 20,
+      "deezerTotal": 286,
+      "errorCode": null,
+      "errorMessage": null,
+      "url": "https://api.deezer.com/search?q=cumbia&limit=20",
+      "sample": [
+        {
+          "title": "Porque te Amo",
+          "artist": "La Cumbia",
+          "hasPreview": true
+        },
+        {
+          "title": "La Cumbia De Los Trapos",
+          "artist": "Yerba Brava",
+          "hasPreview": true
+        },
+        {
+          "title": "Morenita",
+          "artist": "Hugel",
+          "hasPreview": true
+        },
+        {
+          "title": "Mujer cósmica, Porque te amo.",
+          "artist": "La Cumbia",
+          "hasPreview": true
+        },
+        {
+          "title": "Porque Te Amo",
+          "artist": "Pinky SD",
+          "hasPreview": true
+        }
+      ]
+    },
+    {
+      "term": "indie rock",
+      "ok": true,
+      "status": 200,
+      "latencyMs": 377,
+      "resultCount": 20,
+      "deezerTotal": 258,
+      "errorCode": null,
+      "errorMessage": null,
+      "url": "https://api.deezer.com/search?q=indie+rock&limit=20",
+      "sample": [
+        {
+          "title": "Sometimes",
+          "artist": "Miami Horror",
+          "hasPreview": true
+        },
+        {
+          "title": "Stairway to Heaven",
+          "artist": "Best Guitar Songs",
+          "hasPreview": true
+        },
+        {
+          "title": "Blue Orchid",
+          "artist": "Best Guitar Songs",
+          "hasPreview": true
+        },
+        {
+          "title": "Indie Rock (Vogue UA)",
+          "artist": "Loboda",
+          "hasPreview": true
+        },
+        {
+          "title": "Paint It Black",
+          "artist": "Classic Rock Heroes",
+          "hasPreview": true
+        }
+      ]
+    },
+    {
+      "term": "electronic",
+      "ok": true,
+      "status": 200,
+      "latencyMs": 435,
+      "resultCount": 18,
+      "deezerTotal": 134,
+      "errorCode": null,
+      "errorMessage": null,
+      "url": "https://api.deezer.com/search?q=electronic&limit=20",
+      "sample": [
+        {
+          "title": "Getting Away with It",
+          "artist": "Electronic",
+          "hasPreview": true
+        },
+        {
+          "title": "Reality",
+          "artist": "Electronic",
+          "hasPreview": true
+        },
+        {
+          "title": "Tropical House",
+          "artist": "Electronic",
+          "hasPreview": true
+        },
+        {
+          "title": "Spektrem - Shine Progressive House",
+          "artist": "Electronic",
+          "hasPreview": true
+        },
+        {
+          "title": "Electronic Heart",
+          "artist": "Nivek Fforhs",
+          "hasPreview": true
+        }
+      ]
+    },
+    {
+      "term": "pop en espanol",
+      "ok": true,
+      "status": 200,
+      "latencyMs": 456,
+      "resultCount": 20,
+      "deezerTotal": 279,
+      "errorCode": null,
+      "errorMessage": null,
+      "url": "https://api.deezer.com/search?q=pop+en+espanol&limit=20",
+      "sample": [
+        {
+          "title": "Dorada (Golden - versión en español)",
+          "artist": "HUNTR/X",
+          "hasPreview": true
+        },
+        {
+          "title": "Soda Pop (Spanish)",
+          "artist": "Saja Boys",
+          "hasPreview": true
+        },
+        {
+          "title": "Soda Pop (K-Pop Demon Hunters) (Versión en Español Latino)",
+          "artist": "David Delgado",
+          "hasPreview": true
+        },
+        {
+          "title": "Soda Pop (Cover en Español)",
+          "artist": "Hitomi Flor",
+          "hasPreview": true
+        },
+        {
+          "title": "Mix Exitos Románticos Pop En Español",
+          "artist": "Marcelo Gabriel",
+          "hasPreview": true
+        }
+      ]
+    },
+    {
+      "term": "alternative",
+      "ok": true,
+      "status": 200,
+      "latencyMs": 388,
+      "resultCount": 20,
+      "deezerTotal": 208,
+      "errorCode": null,
+      "errorMessage": null,
+      "url": "https://api.deezer.com/search?q=alternative&limit=20",
+      "sample": [
+        {
+          "title": "Alternative Ulster",
+          "artist": "Stiff Little Fingers",
+          "hasPreview": true
+        },
+        {
+          "title": "the alternative",
+          "artist": "Lyn Lapid",
+          "hasPreview": true
+        },
+        {
+          "title": "ALTERNATIVE",
+          "artist": "RØRY",
+          "hasPreview": true
+        },
+        {
+          "title": "Alternative Outro",
+          "artist": "Lucki",
+          "hasPreview": true
+        },
+        {
+          "title": "Alternative",
+          "artist": "BROCKBEATS",
+          "hasPreview": true
+        }
+      ]
+    },
+    {
+      "term": "synthpop",
+      "ok": true,
+      "status": 200,
+      "latencyMs": 369,
+      "resultCount": 20,
+      "deezerTotal": 300,
+      "errorCode": null,
+      "errorMessage": null,
+      "url": "https://api.deezer.com/search?q=synthpop&limit=20",
+      "sample": [
+        {
+          "title": "Synthpop",
+          "artist": "Synthwave Nation",
+          "hasPreview": true
+        },
+        {
+          "title": "Everybody Knows Shit's Fucked",
+          "artist": "SynthPopTroubadour",
+          "hasPreview": true
+        },
+        {
+          "title": "Genau",
+          "artist": "SynthPopTroubadour",
+          "hasPreview": true
+        },
+        {
+          "title": "Synthpop Beat (Synthwave Radio)",
+          "artist": "Synthwave Nation",
+          "hasPreview": false
+        },
+        {
+          "title": "Hoya",
+          "artist": "SynthPopTroubadour",
+          "hasPreview": true
+        }
+      ]
+    },
+    {
+      "term": "latin trap",
+      "ok": true,
+      "status": 200,
+      "latencyMs": 410,
+      "resultCount": 20,
+      "deezerTotal": 300,
+      "errorCode": null,
+      "errorMessage": null,
+      "url": "https://api.deezer.com/search?q=latin+trap&limit=20",
+      "sample": [
+        {
+          "title": "Latin Trap (feat. Quimico Ultra Mega)",
+          "artist": "Jon Z",
+          "hasPreview": true
+        },
+        {
+          "title": "Latin Trap",
+          "artist": "Machete",
+          "hasPreview": true
+        },
+        {
+          "title": "Latin trap",
+          "artist": "Benini",
+          "hasPreview": true
+        },
+        {
+          "title": "Latin Trap Italia",
+          "artist": "Moreaux",
+          "hasPreview": true
+        },
+        {
+          "title": "Standing Next to You (Latin Trap Remix)",
+          "artist": "Jungkook",
+          "hasPreview": true
+        }
+      ]
+    },
+    {
+      "term": "new wave",
+      "ok": true,
+      "status": 200,
+      "latencyMs": 351,
+      "resultCount": 20,
+      "deezerTotal": 270,
+      "errorCode": null,
+      "errorMessage": null,
+      "url": "https://api.deezer.com/search?q=new+wave&limit=20",
+      "sample": [
+        {
+          "title": "New Wave",
+          "artist": "Bow Anderson",
+          "hasPreview": true
+        },
+        {
+          "title": "New Wave",
+          "artist": "Pleymo",
+          "hasPreview": true
+        },
+        {
+          "title": "New Wave",
+          "artist": "Silversun Pickups",
+          "hasPreview": true
+        },
+        {
+          "title": "(New Wave) Polly (BBC Mark Goodier Session)",
+          "artist": "Nirvana",
+          "hasPreview": true
+        },
+        {
+          "title": "New Wave",
+          "artist": "Funk Tribu",
+          "hasPreview": true
+        }
+      ]
+    }
+  ],
+  "topTracks": [
+    {
+      "id": 1466081782,
+      "title": "Mon Amour (Remix)",
+      "artist": "zzoilo",
+      "album": "Mon Amour (Remix)",
+      "durationSec": 179,
+      "rank": 785034,
+      "explicitLyrics": false,
+      "hasPreview": true,
+      "previewUrl": "https://cdnt-preview.dzcdn.net/api/1/1/c/b/7/0/cb7bc3b8f1e6fb24c9f1cc823e6305f6.mp3?hdnea=exp=1772913830~acl=/api/1/1/c/b/7/0/cb7bc3b8f1e6fb24c9f1cc823e6305f6.mp3*~data=user_id=0,application_id=42~hmac=ab0bd608e2c429254ca47b6b55aa505c649a3c754099b9967fe0ba34b265059f",
+      "deezerLink": "https://www.deezer.com/track/1466081782"
+    },
+    {
+      "id": 457041122,
+      "title": "Cumbia Sobre El Mar",
+      "artist": "Quantic",
+      "album": "The Power of the Latin Music",
+      "durationSec": 377,
+      "rank": 777280,
+      "explicitLyrics": false,
+      "hasPreview": true,
+      "previewUrl": "https://cdnt-preview.dzcdn.net/api/1/1/7/1/1/0/7114bf0f81aea370c569edc5fd69fa37.mp3?hdnea=exp=1772913830~acl=/api/1/1/7/1/1/0/7114bf0f81aea370c569edc5fd69fa37.mp3*~data=user_id=0,application_id=42~hmac=8f7494a24211f7d48ca4cad2ad83a4a5c4246aba0749b06a1edc156327220aa8",
+      "deezerLink": "https://www.deezer.com/track/457041122"
+    },
+    {
+      "id": 130850550,
+      "title": "Reggaetón Lento (Bailemos)",
+      "artist": "CNCO",
+      "album": "Primera Cita",
+      "durationSec": 222,
+      "rank": 693597,
+      "explicitLyrics": false,
+      "hasPreview": true,
+      "previewUrl": "https://cdnt-preview.dzcdn.net/api/1/1/b/0/a/0/b0aa2f60ca30769a5e6304f22a94617d.mp3?hdnea=exp=1772913830~acl=/api/1/1/b/0/a/0/b0aa2f60ca30769a5e6304f22a94617d.mp3*~data=user_id=0,application_id=42~hmac=1f3e74bfe615bf1ae8f1cae6f26db7d1e767c83ad52b6b4f10ab102cd8d18fc8",
+      "deezerLink": "https://www.deezer.com/track/130850550"
+    },
+    {
+      "id": 1573617,
+      "title": "Oye Mi Canto",
+      "artist": "N.O.R.E.",
+      "album": "N.O.R.E. Y La Familia",
+      "durationSec": 240,
+      "rank": 650079,
+      "explicitLyrics": true,
+      "hasPreview": true,
+      "previewUrl": "https://cdnt-preview.dzcdn.net/api/1/1/9/9/a/0/99a9062a6a7089bf01d2ee3e08bf89f2.mp3?hdnea=exp=1772913830~acl=/api/1/1/9/9/a/0/99a9062a6a7089bf01d2ee3e08bf89f2.mp3*~data=user_id=0,application_id=42~hmac=f4c03b55336bd7ebf870eb27e07987b0b12dd52b6160f359451b1c7d4abc59f9",
+      "deezerLink": "https://www.deezer.com/track/1573617"
+    },
+    {
+      "id": 1391847922,
+      "title": "Morenita",
+      "artist": "Hugel",
+      "album": "Morenita",
+      "durationSec": 176,
+      "rank": 644859,
+      "explicitLyrics": false,
+      "hasPreview": true,
+      "previewUrl": "https://cdnt-preview.dzcdn.net/api/1/1/9/4/0/0/9405aaefad1fcb79d0b081ec6d7c617f.mp3?hdnea=exp=1772913830~acl=/api/1/1/9/4/0/0/9405aaefad1fcb79d0b081ec6d7c617f.mp3*~data=user_id=0,application_id=42~hmac=94015f555361d367a1f57ccb818c58b7dc7763aafcf9ca8c1a8e99a81ac42048",
+      "deezerLink": "https://www.deezer.com/track/1391847922"
+    },
+    {
+      "id": 3509269601,
+      "title": "Dorada (Golden - versión en español)",
+      "artist": "HUNTR/X",
+      "album": "Golden (from the Netflix film KPop Demon Hunters)",
+      "durationSec": 192,
+      "rank": 621007,
+      "explicitLyrics": false,
+      "hasPreview": true,
+      "previewUrl": "https://cdnt-preview.dzcdn.net/api/1/1/f/9/c/0/f9c3e1b790621688ad0a490cf8be0a07.mp3?hdnea=exp=1772913831~acl=/api/1/1/f/9/c/0/f9c3e1b790621688ad0a490cf8be0a07.mp3*~data=user_id=0,application_id=42~hmac=665797d3d3f60b632c22616acf4bbe018ffa179480c04beda08ea6a423140a6b",
+      "deezerLink": "https://www.deezer.com/track/3509269601"
+    },
+    {
+      "id": 16753987,
+      "title": "Beneath Your Beautiful (feat. Emeli Sandé)",
+      "artist": "Labrinth",
+      "album": "Electronic Earth (Expanded Edition)",
+      "durationSec": 271,
+      "rank": 604148,
+      "explicitLyrics": false,
+      "hasPreview": true,
+      "previewUrl": "https://cdnt-preview.dzcdn.net/api/1/1/e/a/5/0/ea5149844ed2bfc56f9d1ea6bad914fe.mp3?hdnea=exp=1772913831~acl=/api/1/1/e/a/5/0/ea5149844ed2bfc56f9d1ea6bad914fe.mp3*~data=user_id=0,application_id=42~hmac=fb61d21eb82d86a998ad8f375d1f7978fafe29b9b37dc25a41b695eecd1602f7",
+      "deezerLink": "https://www.deezer.com/track/16753987"
+    },
+    {
+      "id": 1041385342,
+      "title": "Latin Grammys",
+      "artist": "Action Bronson",
+      "album": "Latin Grammys",
+      "durationSec": 169,
+      "rank": 600902,
+      "explicitLyrics": true,
+      "hasPreview": true,
+      "previewUrl": "https://cdnt-preview.dzcdn.net/api/1/1/3/c/9/0/3c94c5c57bd81e13b20c1fe44d91053e.mp3?hdnea=exp=1772913832~acl=/api/1/1/3/c/9/0/3c94c5c57bd81e13b20c1fe44d91053e.mp3*~data=user_id=0,application_id=42~hmac=14cc755ea7fbe982116256ae1b35b14ba92459a7dbaab49c7b364b67fe8f0dbd",
+      "deezerLink": "https://www.deezer.com/track/1041385342"
+    },
+    {
+      "id": 467664232,
+      "title": "Reggaetón Lento (Remix)",
+      "artist": "Little Mix",
+      "album": "CNCO",
+      "durationSec": 186,
+      "rank": 598658,
+      "explicitLyrics": false,
+      "hasPreview": true,
+      "previewUrl": "https://cdnt-preview.dzcdn.net/api/1/1/1/1/3/0/1137c4492a9a80f1319c4216843a461b.mp3?hdnea=exp=1772913830~acl=/api/1/1/1/1/3/0/1137c4492a9a80f1319c4216843a461b.mp3*~data=user_id=0,application_id=42~hmac=c299d406d696ada57ef643f2f751e8445581c5e7a46e69ec521bd0bc6bac36b2",
+      "deezerLink": "https://www.deezer.com/track/467664232"
+    },
+    {
+      "id": 586163072,
+      "title": "Reggaeton",
+      "artist": "J Balvin",
+      "album": "Reggaeton",
+      "durationSec": 158,
+      "rank": 588805,
+      "explicitLyrics": false,
+      "hasPreview": true,
+      "previewUrl": "https://cdnt-preview.dzcdn.net/api/1/1/3/f/4/0/3f4147f46dd46aca7d6058273a2d0e3f.mp3?hdnea=exp=1772913830~acl=/api/1/1/3/f/4/0/3f4147f46dd46aca7d6058273a2d0e3f.mp3*~data=user_id=0,application_id=42~hmac=df3752735fb43b8ba010a0985971a6bf110b877e2f2409dfb627d0f292222809",
+      "deezerLink": "https://www.deezer.com/track/586163072"
+    }
+  ]
+}

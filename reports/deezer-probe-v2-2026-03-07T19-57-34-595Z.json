@@ -1,0 +1,1219 @@
+{
+  "version": 2,
+  "generatedAt": "2026-03-07T19:57:34.594Z",
+  "options": {
+    "terms": [
+      "rock en espanol",
+      "reggaeton",
+      "cumbia",
+      "indie rock",
+      "electronic",
+      "pop en espanol",
+      "alternative",
+      "synthpop",
+      "latin trap",
+      "new wave"
+    ],
+    "limit": 50,
+    "top": 15,
+    "timeoutMs": 8000,
+    "compare": "itunes",
+    "market": "AR",
+    "out": null,
+    "json": false
+  },
+  "providers": [
+    "deezer",
+    "itunes"
+  ],
+  "notes": {
+    "compareMode": "itunes",
+    "spotifyTokenAvailable": false,
+    "qualityFormula": "usableRate*0.6 + previewRate*0.2 + uniquenessRate*0.15 + (100-mojibakeRate)*0.05",
+    "filtersApplied": [
+      "cover markers",
+      "instrumental markers",
+      "forced deny artist tokens",
+      "forced deny title tokens",
+      "duplicate normalization by title+artist"
+    ]
+  },
+  "summary": {
+    "deezer": {
+      "provider": "deezer",
+      "requestedTerms": 10,
+      "successfulQueries": 10,
+      "failedQueries": 0,
+      "skippedQueries": 0,
+      "successRatePercent": 100,
+      "latencyMs": {
+        "min": 332,
+        "avg": 412.7,
+        "p50": 399,
+        "p95": 584,
+        "max": 584
+      },
+      "counts": {
+        "rawCount": 494,
+        "blockedCount": 18,
+        "usableCount": 476,
+        "uniqueUsableCount": 459,
+        "previewCount": 457
+      },
+      "rates": {
+        "usableRatePercent": 96.36,
+        "previewCoveragePercent": 99.56,
+        "uniquenessRatePercent": 96.43,
+        "mojibakeRatePercent": 0
+      },
+      "qualityScore": 97.19,
+      "topTracks": [
+        {
+          "title": "Mon Amour (Remix)",
+          "artist": "zzoilo",
+          "album": "Mon Amour (Remix)",
+          "hasPreview": true,
+          "rank": 785034,
+          "link": "https://www.deezer.com/track/1466081782"
+        },
+        {
+          "title": "Cumbia Sobre El Mar",
+          "artist": "Quantic",
+          "album": "The Power of the Latin Music",
+          "hasPreview": true,
+          "rank": 777280,
+          "link": "https://www.deezer.com/track/457041122"
+        },
+        {
+          "title": "Reggaetón Lento (Bailemos)",
+          "artist": "CNCO",
+          "album": "Primera Cita",
+          "hasPreview": true,
+          "rank": 693597,
+          "link": "https://www.deezer.com/track/130850550"
+        },
+        {
+          "title": "Aguila (feat. Cumbiafrica)",
+          "artist": "Hugel",
+          "album": "Aguila (feat. Cumbiafrica)",
+          "hasPreview": true,
+          "rank": 658226,
+          "link": "https://www.deezer.com/track/2742426391"
+        },
+        {
+          "title": "Oye Mi Canto",
+          "artist": "N.O.R.E.",
+          "album": "N.O.R.E. Y La Familia",
+          "hasPreview": true,
+          "rank": 650079,
+          "link": "https://www.deezer.com/track/1573617"
+        },
+        {
+          "title": "Morenita",
+          "artist": "Hugel",
+          "album": "Morenita",
+          "hasPreview": true,
+          "rank": 644859,
+          "link": "https://www.deezer.com/track/1391847922"
+        },
+        {
+          "title": "Dorada (Golden - versión en español)",
+          "artist": "HUNTR/X",
+          "album": "Golden (from the Netflix film KPop Demon Hunters)",
+          "hasPreview": true,
+          "rank": 621007,
+          "link": "https://www.deezer.com/track/3509269601"
+        },
+        {
+          "title": "Beneath Your Beautiful (feat. Emeli Sandé)",
+          "artist": "Labrinth",
+          "album": "Electronic Earth (Expanded Edition)",
+          "hasPreview": true,
+          "rank": 604148,
+          "link": "https://www.deezer.com/track/16753987"
+        },
+        {
+          "title": "Latin Grammys",
+          "artist": "Action Bronson",
+          "album": "Latin Grammys",
+          "hasPreview": true,
+          "rank": 600902,
+          "link": "https://www.deezer.com/track/1041385342"
+        },
+        {
+          "title": "Reggaetón Lento (Remix)",
+          "artist": "Little Mix",
+          "album": "CNCO",
+          "hasPreview": true,
+          "rank": 598658,
+          "link": "https://www.deezer.com/track/467664232"
+        },
+        {
+          "title": "Reggaeton",
+          "artist": "J Balvin",
+          "album": "Reggaeton",
+          "hasPreview": true,
+          "rank": 588805,
+          "link": "https://www.deezer.com/track/586163072"
+        },
+        {
+          "title": "Niemand",
+          "artist": "KOMPROMAT",
+          "album": "Electronic Music Anthology Vol. 2 (by FG)",
+          "hasPreview": true,
+          "rank": 566403,
+          "link": "https://www.deezer.com/track/745274402"
+        },
+        {
+          "title": "Alternative Ulster",
+          "artist": "Stiff Little Fingers",
+          "album": "Inflammable Material",
+          "hasPreview": true,
+          "rank": 546489,
+          "link": "https://www.deezer.com/track/3099966"
+        },
+        {
+          "title": "Pop Muzik",
+          "artist": "Synth Poppers",
+          "album": "Synth Pop",
+          "hasPreview": true,
+          "rank": 545678,
+          "link": "https://www.deezer.com/track/106409422"
+        },
+        {
+          "title": "Reggaeton Champagne",
+          "artist": "Bellakath",
+          "album": "Kittyponeo",
+          "hasPreview": true,
+          "rank": 544143,
+          "link": "https://www.deezer.com/track/2752285741"
+        }
+      ]
+    },
+    "itunes": {
+      "provider": "itunes",
+      "requestedTerms": 10,
+      "successfulQueries": 10,
+      "failedQueries": 0,
+      "skippedQueries": 0,
+      "successRatePercent": 100,
+      "latencyMs": {
+        "min": 637,
+        "avg": 728.4,
+        "p50": 723,
+        "p95": 847,
+        "max": 847
+      },
+      "counts": {
+        "rawCount": 464,
+        "blockedCount": 1,
+        "usableCount": 463,
+        "uniqueUsableCount": 443,
+        "previewCount": 443
+      },
+      "rates": {
+        "usableRatePercent": 99.78,
+        "previewCoveragePercent": 100,
+        "uniquenessRatePercent": 95.68,
+        "mojibakeRatePercent": 0
+      },
+      "qualityScore": 99.22,
+      "topTracks": [
+        {
+          "title": "Lobo Hombre en París",
+          "artist": "La Unión",
+          "album": "Mil Siluetas",
+          "hasPreview": true,
+          "rank": null,
+          "link": "https://music.apple.com/ar/album/lobo-hombre-en-par%C3%ADs/79661101?i=79661011&uo=4"
+        },
+        {
+          "title": "Entre Dos Tierras",
+          "artist": "Héroes del Silencio",
+          "album": "Senderos de Traición",
+          "hasPreview": true,
+          "rank": null,
+          "link": "https://music.apple.com/ar/album/entre-dos-tierras/697634139?i=697634977&uo=4"
+        },
+        {
+          "title": "La Muralla Verde",
+          "artist": "Los Enanitos Verdes",
+          "album": "Originales - 20 Éxitos",
+          "hasPreview": true,
+          "rank": null,
+          "link": "https://music.apple.com/ar/album/la-muralla-verde/187443530?i=187443614&uo=4"
+        },
+        {
+          "title": "Afuera",
+          "artist": "Caifanes",
+          "album": "El Nervio del Volcán",
+          "hasPreview": true,
+          "rank": null,
+          "link": "https://music.apple.com/ar/album/afuera/205385037?i=205385055&uo=4"
+        },
+        {
+          "title": "Mi Buen Amor (feat. Bunbury)",
+          "artist": "Mon Laferte",
+          "album": "La Trenza",
+          "hasPreview": true,
+          "rank": null,
+          "link": "https://music.apple.com/ar/album/mi-buen-amor-feat-bunbury/1440880818?i=1440881140&uo=4"
+        },
+        {
+          "title": "Viento",
+          "artist": "Caifanes",
+          "album": "Caifanes",
+          "hasPreview": true,
+          "rank": null,
+          "link": "https://music.apple.com/ar/album/viento/205701061?i=205701159&uo=4"
+        },
+        {
+          "title": "Cuando Pase el Temblor",
+          "artist": "Soda Stereo",
+          "album": "Nada Personal",
+          "hasPreview": true,
+          "rank": null,
+          "link": "https://music.apple.com/ar/album/cuando-pase-el-temblor/321883378?i=321883388&uo=4"
+        },
+        {
+          "title": "De Música Ligera",
+          "artist": "Soda Stereo",
+          "album": "Canción Animal",
+          "hasPreview": true,
+          "rank": null,
+          "link": "https://music.apple.com/ar/album/de-m%C3%BAsica-ligera/321882757?i=321882958&uo=4"
+        },
+        {
+          "title": "Kumbala (Remasterizado)",
+          "artist": "Maldita Vecindad y Los Hijos del Quinto Patio",
+          "album": "A 30 Años",
+          "hasPreview": true,
+          "rank": null,
+          "link": "https://music.apple.com/ar/album/kumbala-remasterizado/1001699885?i=1001699907&uo=4"
+        },
+        {
+          "title": "To My Love (Tainy Remix)",
+          "artist": "Bomba Estéreo",
+          "album": "Amanecer (Remixed)",
+          "hasPreview": true,
+          "rank": null,
+          "link": "https://music.apple.com/ar/album/to-my-love-tainy-remix/1183147322?i=1183147730&uo=4"
+        },
+        {
+          "title": "Devuélveme a Mi Chica",
+          "artist": "Hombres G",
+          "album": "Hombres G (Edición 30 Aniversario)",
+          "hasPreview": true,
+          "rank": null,
+          "link": "https://music.apple.com/ar/album/devu%C3%A9lveme-a-mi-chica/979321009?i=979321016&uo=4"
+        },
+        {
+          "title": "Mi Primer Día Sin Ti",
+          "artist": "Los Enanitos Verdes",
+          "album": "Big Bang",
+          "hasPreview": true,
+          "rank": null,
+          "link": "https://music.apple.com/ar/album/mi-primer-d%C3%ADa-sin-ti/721632150?i=721632554&uo=4"
+        },
+        {
+          "title": "Mátenme Porque Me Muero",
+          "artist": "Caifanes",
+          "album": "Caifanes",
+          "hasPreview": true,
+          "rank": null,
+          "link": "https://music.apple.com/ar/album/m%C3%A1tenme-porque-me-muero/205701061?i=205701071&uo=4"
+        },
+        {
+          "title": "Rayando el Sol",
+          "artist": "Maná",
+          "album": "Falta Amor",
+          "hasPreview": true,
+          "rank": null,
+          "link": "https://music.apple.com/ar/album/rayando-el-sol/42017772?i=42017785&uo=4"
+        },
+        {
+          "title": "Te Lo Pido por Favor",
+          "artist": "Jaguares",
+          "album": "El Primer Instinto",
+          "hasPreview": true,
+          "rank": null,
+          "link": "https://music.apple.com/ar/album/te-lo-pido-por-favor/252480293?i=252480581&uo=4"
+        }
+      ]
+    }
+  },
+  "comparisonsByTerm": [
+    {
+      "term": "rock en espanol",
+      "leftProvider": "deezer",
+      "rightProvider": "itunes",
+      "leftCount": 50,
+      "rightCount": 46,
+      "overlapCount": 0,
+      "overlapJaccardPercent": 0
+    },
+    {
+      "term": "reggaeton",
+      "leftProvider": "deezer",
+      "rightProvider": "itunes",
+      "leftCount": 50,
+      "rightCount": 47,
+      "overlapCount": 4,
+      "overlapJaccardPercent": 4.3
+    },
+    {
+      "term": "cumbia",
+      "leftProvider": "deezer",
+      "rightProvider": "itunes",
+      "leftCount": 50,
+      "rightCount": 37,
+      "overlapCount": 4,
+      "overlapJaccardPercent": 4.82
+    },
+    {
+      "term": "indie rock",
+      "leftProvider": "deezer",
+      "rightProvider": "itunes",
+      "leftCount": 50,
+      "rightCount": 46,
+      "overlapCount": 1,
+      "overlapJaccardPercent": 1.05
+    },
+    {
+      "term": "electronic",
+      "leftProvider": "deezer",
+      "rightProvider": "itunes",
+      "leftCount": 44,
+      "rightCount": 45,
+      "overlapCount": 0,
+      "overlapJaccardPercent": 0
+    },
+    {
+      "term": "pop en espanol",
+      "leftProvider": "deezer",
+      "rightProvider": "itunes",
+      "leftCount": 49,
+      "rightCount": 50,
+      "overlapCount": 0,
+      "overlapJaccardPercent": 0
+    },
+    {
+      "term": "alternative",
+      "leftProvider": "deezer",
+      "rightProvider": "itunes",
+      "leftCount": 47,
+      "rightCount": 49,
+      "overlapCount": 0,
+      "overlapJaccardPercent": 0
+    },
+    {
+      "term": "synthpop",
+      "leftProvider": "deezer",
+      "rightProvider": "itunes",
+      "leftCount": 50,
+      "rightCount": 43,
+      "overlapCount": 2,
+      "overlapJaccardPercent": 2.2
+    },
+    {
+      "term": "latin trap",
+      "leftProvider": "deezer",
+      "rightProvider": "itunes",
+      "leftCount": 50,
+      "rightCount": 49,
+      "overlapCount": 1,
+      "overlapJaccardPercent": 1.02
+    },
+    {
+      "term": "new wave",
+      "leftProvider": "deezer",
+      "rightProvider": "itunes",
+      "leftCount": 50,
+      "rightCount": 40,
+      "overlapCount": 8,
+      "overlapJaccardPercent": 9.76
+    }
+  ],
+  "queries": [
+    {
+      "provider": "deezer",
+      "term": "rock en espanol",
+      "ok": true,
+      "skipped": false,
+      "status": 200,
+      "latencyMs": 584,
+      "resultCount": 50,
+      "errorCode": null,
+      "errorMessage": null,
+      "url": "https://api.deezer.com/search?q=rock+en+espanol&limit=50",
+      "sample": [
+        {
+          "title": "Rock en Español (En Vivo)",
+          "artist": "Latin Band DIVINE",
+          "hasPreview": true
+        },
+        {
+          "title": "Rock en Español",
+          "artist": "Cuca",
+          "hasPreview": true
+        },
+        {
+          "title": "Solo Por Tu Gracia",
+          "artist": "The Rock En Español",
+          "hasPreview": true
+        },
+        {
+          "title": "El Rock de los Bichos",
+          "artist": "El Reino Infantil",
+          "hasPreview": true
+        },
+        {
+          "title": "Your Idol SUPER COVER VERSIÓN ROCK en ESPAÑOL (feat. Sebastián Palma & Gustavo Maikel)",
+          "artist": "Jeffar",
+          "hasPreview": true
+        }
+      ]
+    },
+    {
+      "provider": "itunes",
+      "term": "rock en espanol",
+      "ok": true,
+      "skipped": false,
+      "status": 200,
+      "latencyMs": 842,
+      "resultCount": 49,
+      "errorCode": null,
+      "errorMessage": null,
+      "url": "https://itunes.apple.com/search?media=music&entity=song&limit=50&country=AR&term=rock+en+espanol",
+      "sample": [
+        {
+          "title": "Lobo Hombre en París",
+          "artist": "La Unión",
+          "hasPreview": true
+        },
+        {
+          "title": "Entre Dos Tierras",
+          "artist": "Héroes del Silencio",
+          "hasPreview": true
+        },
+        {
+          "title": "La Muralla Verde",
+          "artist": "Los Enanitos Verdes",
+          "hasPreview": true
+        },
+        {
+          "title": "Afuera",
+          "artist": "Caifanes",
+          "hasPreview": true
+        },
+        {
+          "title": "Mi Buen Amor (feat. Bunbury)",
+          "artist": "Mon Laferte",
+          "hasPreview": true
+        }
+      ]
+    },
+    {
+      "provider": "deezer",
+      "term": "reggaeton",
+      "ok": true,
+      "skipped": false,
+      "status": 200,
+      "latencyMs": 425,
+      "resultCount": 50,
+      "errorCode": null,
+      "errorMessage": null,
+      "url": "https://api.deezer.com/search?q=reggaeton&limit=50",
+      "sample": [
+        {
+          "title": "Reggaetón Lento (Bailemos)",
+          "artist": "CNCO",
+          "hasPreview": true
+        },
+        {
+          "title": "Mon Amour (Remix)",
+          "artist": "zzoilo",
+          "hasPreview": true
+        },
+        {
+          "title": "Oye Mi Canto",
+          "artist": "N.O.R.E.",
+          "hasPreview": true
+        },
+        {
+          "title": "Reggaeton",
+          "artist": "J Balvin",
+          "hasPreview": true
+        },
+        {
+          "title": "Gata Fiera (Regueton Viejo)",
+          "artist": "Reggaetones",
+          "hasPreview": true
+        }
+      ]
+    },
+    {
+      "provider": "itunes",
+      "term": "reggaeton",
+      "ok": true,
+      "skipped": false,
+      "status": 200,
+      "latencyMs": 708,
+      "resultCount": 48,
+      "errorCode": null,
+      "errorMessage": null,
+      "url": "https://itunes.apple.com/search?media=music&entity=song&limit=50&country=AR&term=reggaeton",
+      "sample": [
+        {
+          "title": "Yo Voy (feat. Daddy Yankee)",
+          "artist": "Zion & Lennox",
+          "hasPreview": true
+        },
+        {
+          "title": "No Me Conoce (Remix)",
+          "artist": "JHAYCO, J Balvin & Bad Bunny",
+          "hasPreview": true
+        },
+        {
+          "title": "LA CANCIÓN",
+          "artist": "J Balvin & Bad Bunny",
+          "hasPreview": true
+        },
+        {
+          "title": "Dale Don Dale",
+          "artist": "Don Omar",
+          "hasPreview": true
+        },
+        {
+          "title": "Lo Que Pasó, Pasó",
+          "artist": "Daddy Yankee",
+          "hasPreview": true
+        }
+      ]
+    },
+    {
+      "provider": "deezer",
+      "term": "cumbia",
+      "ok": true,
+      "skipped": false,
+      "status": 200,
+      "latencyMs": 408,
+      "resultCount": 50,
+      "errorCode": null,
+      "errorMessage": null,
+      "url": "https://api.deezer.com/search?q=cumbia&limit=50",
+      "sample": [
+        {
+          "title": "Porque te Amo",
+          "artist": "La Cumbia",
+          "hasPreview": true
+        },
+        {
+          "title": "La Cumbia De Los Trapos",
+          "artist": "Yerba Brava",
+          "hasPreview": true
+        },
+        {
+          "title": "Morenita",
+          "artist": "Hugel",
+          "hasPreview": true
+        },
+        {
+          "title": "Mujer cósmica, Porque te amo.",
+          "artist": "La Cumbia",
+          "hasPreview": true
+        },
+        {
+          "title": "Porque Te Amo",
+          "artist": "Pinky SD",
+          "hasPreview": true
+        }
+      ]
+    },
+    {
+      "provider": "itunes",
+      "term": "cumbia",
+      "ok": true,
+      "skipped": false,
+      "status": 200,
+      "latencyMs": 640,
+      "resultCount": 40,
+      "errorCode": null,
+      "errorMessage": null,
+      "url": "https://itunes.apple.com/search?media=music&entity=song&limit=50&country=AR&term=cumbia",
+      "sample": [
+        {
+          "title": "Llorar",
+          "artist": "Los Socios del Ritmo",
+          "hasPreview": true
+        },
+        {
+          "title": "Tao, Tao",
+          "artist": "Control",
+          "hasPreview": true
+        },
+        {
+          "title": "Tiene Espinas el Rosal",
+          "artist": "Grupo Cañaveral de Humberto Pabón",
+          "hasPreview": true
+        },
+        {
+          "title": "Baila Esta Cumbia",
+          "artist": "Selena",
+          "hasPreview": true
+        },
+        {
+          "title": "La Inconforme (Sonidera)",
+          "artist": "Grupo G",
+          "hasPreview": true
+        }
+      ]
+    },
+    {
+      "provider": "deezer",
+      "term": "indie rock",
+      "ok": true,
+      "skipped": false,
+      "status": 200,
+      "latencyMs": 340,
+      "resultCount": 50,
+      "errorCode": null,
+      "errorMessage": null,
+      "url": "https://api.deezer.com/search?q=indie+rock&limit=50",
+      "sample": [
+        {
+          "title": "Sometimes",
+          "artist": "Miami Horror",
+          "hasPreview": true
+        },
+        {
+          "title": "Stairway to Heaven",
+          "artist": "Best Guitar Songs",
+          "hasPreview": true
+        },
+        {
+          "title": "Blue Orchid",
+          "artist": "Best Guitar Songs",
+          "hasPreview": true
+        },
+        {
+          "title": "Indie Rock (Vogue UA)",
+          "artist": "Loboda",
+          "hasPreview": true
+        },
+        {
+          "title": "Paint It Black",
+          "artist": "Classic Rock Heroes",
+          "hasPreview": true
+        }
+      ]
+    },
+    {
+      "provider": "itunes",
+      "term": "indie rock",
+      "ok": true,
+      "skipped": false,
+      "status": 200,
+      "latencyMs": 733,
+      "resultCount": 46,
+      "errorCode": null,
+      "errorMessage": null,
+      "url": "https://itunes.apple.com/search?media=music&entity=song&limit=50&country=AR&term=indie+rock",
+      "sample": [
+        {
+          "title": "Sex On Fire",
+          "artist": "Kings of Leon",
+          "hasPreview": true
+        },
+        {
+          "title": "Yellow",
+          "artist": "Coldplay",
+          "hasPreview": true
+        },
+        {
+          "title": "Do I Wanna Know?",
+          "artist": "Arctic Monkeys",
+          "hasPreview": true
+        },
+        {
+          "title": "The Night We Met",
+          "artist": "Lord Huron",
+          "hasPreview": true
+        },
+        {
+          "title": "Viens en moi",
+          "artist": "Marlon Magnee",
+          "hasPreview": true
+        }
+      ]
+    },
+    {
+      "provider": "deezer",
+      "term": "electronic",
+      "ok": true,
+      "skipped": false,
+      "status": 200,
+      "latencyMs": 440,
+      "resultCount": 44,
+      "errorCode": null,
+      "errorMessage": null,
+      "url": "https://api.deezer.com/search?q=electronic&limit=50",
+      "sample": [
+        {
+          "title": "Getting Away with It",
+          "artist": "Electronic",
+          "hasPreview": true
+        },
+        {
+          "title": "Reality",
+          "artist": "Electronic",
+          "hasPreview": true
+        },
+        {
+          "title": "Tropical House",
+          "artist": "Electronic",
+          "hasPreview": true
+        },
+        {
+          "title": "Spektrem - Shine Progressive House",
+          "artist": "Electronic",
+          "hasPreview": true
+        },
+        {
+          "title": "Electronic Heart",
+          "artist": "Nivek Fforhs",
+          "hasPreview": true
+        }
+      ]
+    },
+    {
+      "provider": "itunes",
+      "term": "electronic",
+      "ok": true,
+      "skipped": false,
+      "status": 200,
+      "latencyMs": 736,
+      "resultCount": 45,
+      "errorCode": null,
+      "errorMessage": null,
+      "url": "https://itunes.apple.com/search?media=music&entity=song&limit=50&country=AR&term=electronic",
+      "sample": [
+        {
+          "title": "Paper Planes",
+          "artist": "M.I.A.",
+          "hasPreview": true
+        },
+        {
+          "title": "Light",
+          "artist": "San Holo",
+          "hasPreview": true
+        },
+        {
+          "title": "On Hold",
+          "artist": "The xx",
+          "hasPreview": true
+        },
+        {
+          "title": "Forward (feat. James Blake)",
+          "artist": "Beyoncé",
+          "hasPreview": true
+        },
+        {
+          "title": "Kerosene",
+          "artist": "Crystal Castles",
+          "hasPreview": true
+        }
+      ]
+    },
+    {
+      "provider": "deezer",
+      "term": "pop en espanol",
+      "ok": true,
+      "skipped": false,
+      "status": 200,
+      "latencyMs": 332,
+      "resultCount": 50,
+      "errorCode": null,
+      "errorMessage": null,
+      "url": "https://api.deezer.com/search?q=pop+en+espanol&limit=50",
+      "sample": [
+        {
+          "title": "Dorada (Golden - versión en español)",
+          "artist": "HUNTR/X",
+          "hasPreview": true
+        },
+        {
+          "title": "Soda Pop (Spanish)",
+          "artist": "Saja Boys",
+          "hasPreview": true
+        },
+        {
+          "title": "Soda Pop (K-Pop Demon Hunters) (Versión en Español Latino)",
+          "artist": "David Delgado",
+          "hasPreview": true
+        },
+        {
+          "title": "Soda Pop (Cover en Español)",
+          "artist": "Hitomi Flor",
+          "hasPreview": true
+        },
+        {
+          "title": "Mix Exitos Románticos Pop En Español",
+          "artist": "Marcelo Gabriel",
+          "hasPreview": true
+        }
+      ]
+    },
+    {
+      "provider": "itunes",
+      "term": "pop en espanol",
+      "ok": true,
+      "skipped": false,
+      "status": 200,
+      "latencyMs": 742,
+      "resultCount": 50,
+      "errorCode": null,
+      "errorMessage": null,
+      "url": "https://itunes.apple.com/search?media=music&entity=song&limit=50&country=AR&term=pop+en+espanol",
+      "sample": [
+        {
+          "title": "MI EX TENÍA RAZÓN",
+          "artist": "KAROL G",
+          "hasPreview": true
+        },
+        {
+          "title": "Ojitos Lindos",
+          "artist": "Bad Bunny & Bomba Estéreo",
+          "hasPreview": true
+        },
+        {
+          "title": "Bubalú (feat. Becky G & Prince Royce)",
+          "artist": "DJ Luian, Mambo Kingz & Anuel AA",
+          "hasPreview": true
+        },
+        {
+          "title": "Si Antes Te Hubiera Conocido",
+          "artist": "KAROL G",
+          "hasPreview": true
+        },
+        {
+          "title": "Enséñame a Bailar",
+          "artist": "Bad Bunny",
+          "hasPreview": true
+        }
+      ]
+    },
+    {
+      "provider": "deezer",
+      "term": "alternative",
+      "ok": true,
+      "skipped": false,
+      "status": 200,
+      "latencyMs": 375,
+      "resultCount": 50,
+      "errorCode": null,
+      "errorMessage": null,
+      "url": "https://api.deezer.com/search?q=alternative&limit=50",
+      "sample": [
+        {
+          "title": "Alternative Ulster",
+          "artist": "Stiff Little Fingers",
+          "hasPreview": true
+        },
+        {
+          "title": "the alternative",
+          "artist": "Lyn Lapid",
+          "hasPreview": true
+        },
+        {
+          "title": "ALTERNATIVE",
+          "artist": "RØRY",
+          "hasPreview": true
+        },
+        {
+          "title": "Alternative Outro",
+          "artist": "Lucki",
+          "hasPreview": true
+        },
+        {
+          "title": "Alternative",
+          "artist": "BROCKBEATS",
+          "hasPreview": true
+        }
+      ]
+    },
+    {
+      "provider": "itunes",
+      "term": "alternative",
+      "ok": true,
+      "skipped": false,
+      "status": 200,
+      "latencyMs": 847,
+      "resultCount": 49,
+      "errorCode": null,
+      "errorMessage": null,
+      "url": "https://itunes.apple.com/search?media=music&entity=song&limit=50&country=AR&term=alternative",
+      "sample": [
+        {
+          "title": "Say It Ain't So",
+          "artist": "Weezer",
+          "hasPreview": true
+        },
+        {
+          "title": "Get Lucky",
+          "artist": "Daft Punk, Pharrell Williams & Nile Rodgers",
+          "hasPreview": true
+        },
+        {
+          "title": "Stacy's Mom",
+          "artist": "Fountains of Wayne",
+          "hasPreview": true
+        },
+        {
+          "title": "This Side of Paradise",
+          "artist": "Coyote Theory",
+          "hasPreview": true
+        },
+        {
+          "title": "I Was Never There",
+          "artist": "The Weeknd & Gesaffelstein",
+          "hasPreview": true
+        }
+      ]
+    },
+    {
+      "provider": "deezer",
+      "term": "synthpop",
+      "ok": true,
+      "skipped": false,
+      "status": 200,
+      "latencyMs": 346,
+      "resultCount": 50,
+      "errorCode": null,
+      "errorMessage": null,
+      "url": "https://api.deezer.com/search?q=synthpop&limit=50",
+      "sample": [
+        {
+          "title": "Synthpop",
+          "artist": "Synthwave Nation",
+          "hasPreview": true
+        },
+        {
+          "title": "Everybody Knows Shit's Fucked",
+          "artist": "SynthPopTroubadour",
+          "hasPreview": true
+        },
+        {
+          "title": "Genau",
+          "artist": "SynthPopTroubadour",
+          "hasPreview": true
+        },
+        {
+          "title": "Synthpop Beat (Synthwave Radio)",
+          "artist": "Synthwave Nation",
+          "hasPreview": false
+        },
+        {
+          "title": "Hoya",
+          "artist": "SynthPopTroubadour",
+          "hasPreview": true
+        }
+      ]
+    },
+    {
+      "provider": "itunes",
+      "term": "synthpop",
+      "ok": true,
+      "skipped": false,
+      "status": 200,
+      "latencyMs": 676,
+      "resultCount": 44,
+      "errorCode": null,
+      "errorMessage": null,
+      "url": "https://itunes.apple.com/search?media=music&entity=song&limit=50&country=AR&term=synthpop",
+      "sample": [
+        {
+          "title": "Forever Young",
+          "artist": "Alphaville",
+          "hasPreview": true
+        },
+        {
+          "title": "Running Up That Hill (A Deal With God) [2018 Remaster]",
+          "artist": "Kate Bush",
+          "hasPreview": true
+        },
+        {
+          "title": "Pale Shelter",
+          "artist": "Tears for Fears",
+          "hasPreview": true
+        },
+        {
+          "title": "Synthpop",
+          "artist": "Synthwave Nation",
+          "hasPreview": true
+        },
+        {
+          "title": "Dancing with Tears in My Eyes (2009 Remaster)",
+          "artist": "Ultravox",
+          "hasPreview": true
+        }
+      ]
+    },
+    {
+      "provider": "deezer",
+      "term": "latin trap",
+      "ok": true,
+      "skipped": false,
+      "status": 200,
+      "latencyMs": 399,
+      "resultCount": 50,
+      "errorCode": null,
+      "errorMessage": null,
+      "url": "https://api.deezer.com/search?q=latin+trap&limit=50",
+      "sample": [
+        {
+          "title": "Latin Trap (feat. Quimico Ultra Mega)",
+          "artist": "Jon Z",
+          "hasPreview": true
+        },
+        {
+          "title": "Latin Trap",
+          "artist": "Machete",
+          "hasPreview": true
+        },
+        {
+          "title": "Latin trap",
+          "artist": "Benini",
+          "hasPreview": true
+        },
+        {
+          "title": "Latin Trap Italia",
+          "artist": "Moreaux",
+          "hasPreview": true
+        },
+        {
+          "title": "Standing Next to You (Latin Trap Remix)",
+          "artist": "Jungkook",
+          "hasPreview": true
+        }
+      ]
+    },
+    {
+      "provider": "itunes",
+      "term": "latin trap",
+      "ok": true,
+      "skipped": false,
+      "status": 200,
+      "latencyMs": 637,
+      "resultCount": 49,
+      "errorCode": null,
+      "errorMessage": null,
+      "url": "https://itunes.apple.com/search?media=music&entity=song&limit=50&country=AR&term=latin+trap",
+      "sample": [
+        {
+          "title": "El Farsante",
+          "artist": "Ozuna",
+          "hasPreview": true
+        },
+        {
+          "title": "Solita (feat. Bad Bunny, Wisin & Almighty)",
+          "artist": "Ozuna, Mambo Kingz & DJ Luian",
+          "hasPreview": true
+        },
+        {
+          "title": "Me Mata (feat. Arcángel, Almighty, Bryant Myers, Noriel, Baby Rasta & Brytiago)",
+          "artist": "Bad Bunny, Mambo Kingz & DJ Luian",
+          "hasPreview": true
+        },
+        {
+          "title": "Dm (Remix) [feat. Cosculluela, J Balvin, Arcángel & De La Ghetto]",
+          "artist": "Mueka",
+          "hasPreview": true
+        },
+        {
+          "title": "Vuelve",
+          "artist": "Daddy Yankee & Bad Bunny",
+          "hasPreview": true
+        }
+      ]
+    },
+    {
+      "provider": "deezer",
+      "term": "new wave",
+      "ok": true,
+      "skipped": false,
+      "status": 200,
+      "latencyMs": 478,
+      "resultCount": 50,
+      "errorCode": null,
+      "errorMessage": null,
+      "url": "https://api.deezer.com/search?q=new+wave&limit=50",
+      "sample": [
+        {
+          "title": "New Wave",
+          "artist": "Bow Anderson",
+          "hasPreview": true
+        },
+        {
+          "title": "New Wave",
+          "artist": "Pleymo",
+          "hasPreview": true
+        },
+        {
+          "title": "New Wave",
+          "artist": "Silversun Pickups",
+          "hasPreview": true
+        },
+        {
+          "title": "(New Wave) Polly (BBC Mark Goodier Session)",
+          "artist": "Nirvana",
+          "hasPreview": true
+        },
+        {
+          "title": "New Wave",
+          "artist": "Funk Tribu",
+          "hasPreview": true
+        }
+      ]
+    },
+    {
+      "provider": "itunes",
+      "term": "new wave",
+      "ok": true,
+      "skipped": false,
+      "status": 200,
+      "latencyMs": 723,
+      "resultCount": 44,
+      "errorCode": null,
+      "errorMessage": null,
+      "url": "https://itunes.apple.com/search?media=music&entity=song&limit=50&country=AR&term=new+wave",
+      "sample": [
+        {
+          "title": "New Wave",
+          "artist": "Quinn XCII",
+          "hasPreview": true
+        },
+        {
+          "title": "New Wave",
+          "artist": "Waterparks",
+          "hasPreview": true
+        },
+        {
+          "title": "New Wave",
+          "artist": "Islander",
+          "hasPreview": true
+        },
+        {
+          "title": "NEW WAVE",
+          "artist": "Sam Gellaitry",
+          "hasPreview": true
+        },
+        {
+          "title": "New Wave (feat. Mali Music)",
+          "artist": "Snoop Dogg",
+          "hasPreview": true
+        }
+      ]
+    }
+  ]
+}

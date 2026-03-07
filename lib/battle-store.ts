@@ -3,7 +3,7 @@ import { z } from "zod"
 import { assertDatabaseConfigured, prisma } from "@/lib/db"
 import { calculateElo } from "@/lib/elo"
 import { MOCK_TRACKS, type Battle, type BattleState, type Track } from "@/lib/mock-data"
-import { fetchItunesBattleTracks, fetchItunesPreviewUrl, fetchSpotifyBattleTracks } from "@/lib/spotify"
+import { fetchDeezerBattleTracks, fetchItunesBattleTracks, fetchItunesPreviewUrl } from "@/lib/spotify"
 import {
   buildTrackTitleKey,
   extractArtistMatchTokens,
@@ -21,6 +21,7 @@ const BLOCKED_PREVIEW_URL_FRAGMENTS = ["cdn.example.com", "tests.invalid", ".inv
 const PREVIEW_BACKFILL_BATCH_SIZE = 50
 const PREVIEW_BACKFILL_MIN_INTERVAL_MS = 1000 * 30
 const PREVIEW_RECHECK_WINDOW_MS = 1000 * 60 * 60 * 24 * 7
+const DEEZER_PREVIEW_EXPIRY_SAFETY_SECONDS = 90
 const DEFAULT_BUCKET = "general"
 const ENABLE_STRICT_EXTERNAL_CATALOG_SYNC = true
 const INTRA_BUCKET_RATIO = 0.6
@@ -31,25 +32,33 @@ const MAX_RECENT_TITLE_EXPOSURE = 8
 const MAX_RECENT_ARTIST_EXPOSURE = 16
 const MAX_TRACKS_PER_ARTIST_IN_POOL = 3
 const BUCKET_MATCH_WEIGHTS: Record<string, number> = {
-  classics_70s_80s_90s: 14,
-  classics_00s_10s: 14,
-  rock: 13,
-  pop: 13,
-  cumbia_latina: 12,
-  urbano: 12,
-  electronic: 11,
-  indie_alt: 11,
+  classics_70s_80s_90s: 12,
+  classics_00s_10s: 12,
+  rock: 11,
+  metal_hardrock: 9,
+  pop: 11,
+  cumbia_latina: 10,
+  folk_regional: 8,
+  urbano: 10,
+  hiphop_rap: 9,
+  rnb_soul: 9,
+  electronic: 10,
+  indie_alt: 10,
   [DEFAULT_BUCKET]: 6,
 }
 
 const BUCKET_TARGET_SHARE: Record<string, number> = {
-  classics_70s_80s_90s: 0.13,
-  classics_00s_10s: 0.13,
-  rock: 0.14,
-  pop: 0.15,
-  cumbia_latina: 0.12,
-  urbano: 0.13,
-  electronic: 0.1,
+  classics_70s_80s_90s: 0.1,
+  classics_00s_10s: 0.1,
+  rock: 0.1,
+  metal_hardrock: 0.08,
+  pop: 0.1,
+  cumbia_latina: 0.09,
+  folk_regional: 0.08,
+  urbano: 0.1,
+  hiphop_rap: 0.08,
+  rnb_soul: 0.08,
+  electronic: 0.09,
   indie_alt: 0.1,
   [DEFAULT_BUCKET]: 0,
 }
@@ -229,14 +238,25 @@ function buildDefaultMatchmakingContext(): MatchmakingContext {
 }
 
 async function countExternalPreviewTracks(): Promise<number> {
-  return prisma.track.count({
+  const tracks = await prisma.track.findMany({
     where: {
       previewUrl: { not: null },
       previewSource: {
-        in: ["spotify", "itunes"],
+        in: ["deezer", "spotify", "itunes"],
       },
     },
+    select: {
+      previewUrl: true,
+      previewSource: true,
+    },
   })
+
+  return tracks.filter((track) =>
+    hasTrackPreview({
+      previewUrl: track.previewUrl,
+      previewSource: track.previewSource,
+    })
+  ).length
 }
 
 function countTrackArtistExposure(track: Track, exposureMap: Map<string, number>): number {
@@ -310,8 +330,51 @@ async function buildMatchmakingContext(userId: string): Promise<MatchmakingConte
   return context
 }
 
+function extractDeezerPreviewExpiryUnix(previewUrl: string): number | null {
+  try {
+    const url = new URL(previewUrl)
+    const hdnea = url.searchParams.get("hdnea")
+    if (!hdnea) {
+      return null
+    }
+
+    const segments = hdnea.split("~")
+    const expSegment = segments.find((segment) => segment.startsWith("exp="))
+    if (!expSegment) {
+      return null
+    }
+
+    const exp = Number.parseInt(expSegment.slice(4), 10)
+    return Number.isFinite(exp) ? exp : null
+  } catch {
+    return null
+  }
+}
+
+function isExpiredDeezerPreview(previewUrl: string): boolean {
+  const expiryUnix = extractDeezerPreviewExpiryUnix(previewUrl)
+  if (!expiryUnix) {
+    return false
+  }
+
+  const nowUnix = Math.floor(Date.now() / 1000)
+  return nowUnix >= expiryUnix - DEEZER_PREVIEW_EXPIRY_SAFETY_SECONDS
+}
+
+function hasPlayablePreview(track: Pick<Track, "previewUrl" | "previewSource">): boolean {
+  if (typeof track.previewUrl !== "string" || track.previewUrl.trim().length === 0) {
+    return false
+  }
+
+  if (track.previewSource === "deezer" && isExpiredDeezerPreview(track.previewUrl)) {
+    return false
+  }
+
+  return true
+}
+
 function hasPreview(track: Track): boolean {
-  return typeof track.previewUrl === "string" && track.previewUrl.trim().length > 0
+  return hasPlayablePreview(track)
 }
 
 function trackBucket(track: Track): string {
@@ -467,14 +530,18 @@ const THEMATIC_DUELS: ThematicDuelDefinition[] = [
       track.year <= 2008 ||
       trackBucket(track) === "classics_70s_80s_90s" ||
       trackBucket(track) === "classics_00s_10s",
-    pickRight: (track) => track.year >= 2018 && ["pop", "urbano", "electronic", "indie_alt"].includes(trackBucket(track)),
+    pickRight: (track) =>
+      track.year >= 2018 &&
+      ["pop", "urbano", "hiphop_rap", "rnb_soul", "electronic", "indie_alt"].includes(trackBucket(track)),
   },
   {
     key: "fiesta_vs_chill",
     leftLabel: "fiesta",
     rightLabel: "chill",
     pickLeft: (track) =>
-      (track.energy ?? 0.6) >= 0.68 || (track.danceability ?? 0.55) >= 0.7 || ["urbano", "cumbia_latina", "electronic"].includes(trackBucket(track)),
+      (track.energy ?? 0.6) >= 0.68 ||
+      (track.danceability ?? 0.55) >= 0.7 ||
+      ["urbano", "hiphop_rap", "cumbia_latina", "electronic"].includes(trackBucket(track)),
     pickRight: (track) =>
       (track.energy ?? 0.5) <= 0.48 && (track.valence ?? 0.5) <= 0.58,
   },
@@ -482,8 +549,8 @@ const THEMATIC_DUELS: ThematicDuelDefinition[] = [
     key: "rock_vs_urbano",
     leftLabel: "rock",
     rightLabel: "urbano",
-    pickLeft: (track) => ["rock", "indie_alt"].includes(trackBucket(track)),
-    pickRight: (track) => ["urbano", "pop", "cumbia_latina"].includes(trackBucket(track)),
+    pickLeft: (track) => ["rock", "metal_hardrock", "indie_alt"].includes(trackBucket(track)),
+    pickRight: (track) => ["urbano", "hiphop_rap", "pop", "cumbia_latina"].includes(trackBucket(track)),
   },
 ]
 
@@ -752,6 +819,41 @@ async function sanitizeLegacyPlaceholderPreviews(): Promise<void> {
   })
 }
 
+async function clearExpiredDeezerPreviewUrls(): Promise<void> {
+  const deezerTracks = await prisma.track.findMany({
+    where: {
+      previewSource: "deezer",
+      previewUrl: { not: null },
+    },
+    select: {
+      id: true,
+      previewUrl: true,
+    },
+  })
+
+  const expiredTrackIds = deezerTracks
+    .filter((track) => track.previewUrl && isExpiredDeezerPreview(track.previewUrl))
+    .map((track) => track.id)
+
+  if (expiredTrackIds.length === 0) {
+    return
+  }
+
+  await prisma.track.updateMany({
+    where: {
+      id: {
+        in: expiredTrackIds,
+      },
+    },
+    data: {
+      previewUrl: null,
+      previewSource: null,
+      previewCheckedAt: new Date(),
+      spotifyPreviewAvailable: false,
+    },
+  })
+}
+
 async function normalizeLegacyPreviewSources(): Promise<void> {
   await prisma.track.updateMany({
     where: {
@@ -822,7 +924,7 @@ async function suppressStaleExternalTracks(activeTrackIds: string[]): Promise<vo
   await prisma.track.updateMany({
     where: {
       previewSource: {
-        in: ["spotify", "itunes"],
+        in: ["deezer", "spotify", "itunes"],
       },
       id: {
         notIn: activeTrackIds,
@@ -837,8 +939,8 @@ async function suppressStaleExternalTracks(activeTrackIds: string[]): Promise<vo
   })
 }
 
-function hasTrackPreview(track: Pick<Track, "previewUrl">): boolean {
-  return typeof track.previewUrl === "string" && track.previewUrl.trim().length > 0
+function hasTrackPreview(track: Pick<Track, "previewUrl" | "previewSource">): boolean {
+  return hasPlayablePreview(track)
 }
 
 function triggerPreviewBackfillInBackground(): void {
@@ -920,6 +1022,7 @@ export async function ensureBattleCatalog(options?: { forceRefresh?: boolean }):
   assertDatabaseConfigured()
   await seedCatalogIfEmpty()
   await sanitizeLegacyPlaceholderPreviews()
+  await clearExpiredDeezerPreviewUrls()
   await normalizeLegacyPreviewSources()
   triggerPreviewBackfillInBackground()
   const forceRefresh = options?.forceRefresh ?? false
@@ -931,12 +1034,12 @@ export async function ensureBattleCatalog(options?: { forceRefresh?: boolean }):
     return
   }
 
-  const spotifyTracks = (await fetchSpotifyBattleTracks(CATALOG_SYNC_LIMIT)).filter(
+  const deezerTracks = (await fetchDeezerBattleTracks(CATALOG_SYNC_LIMIT)).filter(
     (track) => !isArtistBlocked(track.artist, artistDenylist)
   )
-  const spotifyPreviewTracks = spotifyTracks.filter((track) => hasTrackPreview(track))
+  const deezerPreviewTracks = deezerTracks.filter((track) => hasTrackPreview(track))
 
-  if (spotifyPreviewTracks.length < 2) {
+  if (deezerPreviewTracks.length < 2) {
     const itunesTracks = (await fetchItunesBattleTracks(CATALOG_SYNC_LIMIT)).filter(
       (track) => !isArtistBlocked(track.artist, artistDenylist)
     )
@@ -990,13 +1093,13 @@ export async function ensureBattleCatalog(options?: { forceRefresh?: boolean }):
   }
 
   await prisma.$transaction(
-    spotifyTracks.map((track) =>
+    deezerTracks.map((track) =>
       prisma.track.upsert({
         where: { id: track.id },
         create: {
           ...track,
           catalogBucket: track.catalogBucket ?? DEFAULT_BUCKET,
-          previewSource: track.previewUrl ? "spotify" : null,
+          previewSource: track.previewUrl ? "deezer" : null,
           previewCheckedAt: new Date(),
         },
         update: {
@@ -1007,7 +1110,7 @@ export async function ensureBattleCatalog(options?: { forceRefresh?: boolean }):
           ...(hasTrackPreview(track)
             ? {
                 previewUrl: track.previewUrl,
-                previewSource: "spotify",
+                previewSource: "deezer",
                 previewCheckedAt: new Date(),
               }
             : {}),
@@ -1026,7 +1129,7 @@ export async function ensureBattleCatalog(options?: { forceRefresh?: boolean }):
       })
     )
   )
-  await suppressStaleExternalTracks(spotifyPreviewTracks.map((track) => track.id))
+  await suppressStaleExternalTracks(deezerPreviewTracks.map((track) => track.id))
   lastSpotifySyncAt = Date.now()
   triggerPreviewBackfillInBackground()
 }

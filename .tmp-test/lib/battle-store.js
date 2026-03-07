@@ -24,6 +24,7 @@ const BLOCKED_PREVIEW_URL_FRAGMENTS = ["cdn.example.com", "tests.invalid", ".inv
 const PREVIEW_BACKFILL_BATCH_SIZE = 50;
 const PREVIEW_BACKFILL_MIN_INTERVAL_MS = 1000 * 30;
 const PREVIEW_RECHECK_WINDOW_MS = 1000 * 60 * 60 * 24 * 7;
+const DEEZER_PREVIEW_EXPIRY_SAFETY_SECONDS = 90;
 const DEFAULT_BUCKET = "general";
 const ENABLE_STRICT_EXTERNAL_CATALOG_SYNC = true;
 const INTRA_BUCKET_RATIO = 0.6;
@@ -34,24 +35,32 @@ const MAX_RECENT_TITLE_EXPOSURE = 8;
 const MAX_RECENT_ARTIST_EXPOSURE = 16;
 const MAX_TRACKS_PER_ARTIST_IN_POOL = 3;
 const BUCKET_MATCH_WEIGHTS = {
-    classics_70s_80s_90s: 14,
-    classics_00s_10s: 14,
-    rock: 13,
-    pop: 13,
-    cumbia_latina: 12,
-    urbano: 12,
-    electronic: 11,
-    indie_alt: 11,
+    classics_70s_80s_90s: 12,
+    classics_00s_10s: 12,
+    rock: 11,
+    metal_hardrock: 9,
+    pop: 11,
+    cumbia_latina: 10,
+    folk_regional: 8,
+    urbano: 10,
+    hiphop_rap: 9,
+    rnb_soul: 9,
+    electronic: 10,
+    indie_alt: 10,
     [DEFAULT_BUCKET]: 6,
 };
 const BUCKET_TARGET_SHARE = {
-    classics_70s_80s_90s: 0.13,
-    classics_00s_10s: 0.13,
-    rock: 0.14,
-    pop: 0.15,
-    cumbia_latina: 0.12,
-    urbano: 0.13,
-    electronic: 0.1,
+    classics_70s_80s_90s: 0.1,
+    classics_00s_10s: 0.1,
+    rock: 0.1,
+    metal_hardrock: 0.08,
+    pop: 0.1,
+    cumbia_latina: 0.09,
+    folk_regional: 0.08,
+    urbano: 0.1,
+    hiphop_rap: 0.08,
+    rnb_soul: 0.08,
+    electronic: 0.09,
     indie_alt: 0.1,
     [DEFAULT_BUCKET]: 0,
 };
@@ -111,14 +120,22 @@ function buildDefaultMatchmakingContext() {
     };
 }
 async function countExternalPreviewTracks() {
-    return db_1.prisma.track.count({
+    const tracks = await db_1.prisma.track.findMany({
         where: {
             previewUrl: { not: null },
             previewSource: {
-                in: ["spotify", "itunes"],
+                in: ["deezer", "spotify", "itunes"],
             },
         },
+        select: {
+            previewUrl: true,
+            previewSource: true,
+        },
     });
+    return tracks.filter((track) => hasTrackPreview({
+        previewUrl: track.previewUrl,
+        previewSource: track.previewSource,
+    })).length;
 }
 function countTrackArtistExposure(track, exposureMap) {
     const tokens = (0, catalog_curation_1.extractArtistMatchTokens)(track.artist);
@@ -180,8 +197,44 @@ async function buildMatchmakingContext(userId) {
     }
     return context;
 }
+function extractDeezerPreviewExpiryUnix(previewUrl) {
+    try {
+        const url = new URL(previewUrl);
+        const hdnea = url.searchParams.get("hdnea");
+        if (!hdnea) {
+            return null;
+        }
+        const segments = hdnea.split("~");
+        const expSegment = segments.find((segment) => segment.startsWith("exp="));
+        if (!expSegment) {
+            return null;
+        }
+        const exp = Number.parseInt(expSegment.slice(4), 10);
+        return Number.isFinite(exp) ? exp : null;
+    }
+    catch {
+        return null;
+    }
+}
+function isExpiredDeezerPreview(previewUrl) {
+    const expiryUnix = extractDeezerPreviewExpiryUnix(previewUrl);
+    if (!expiryUnix) {
+        return false;
+    }
+    const nowUnix = Math.floor(Date.now() / 1000);
+    return nowUnix >= expiryUnix - DEEZER_PREVIEW_EXPIRY_SAFETY_SECONDS;
+}
+function hasPlayablePreview(track) {
+    if (typeof track.previewUrl !== "string" || track.previewUrl.trim().length === 0) {
+        return false;
+    }
+    if (track.previewSource === "deezer" && isExpiredDeezerPreview(track.previewUrl)) {
+        return false;
+    }
+    return true;
+}
 function hasPreview(track) {
-    return typeof track.previewUrl === "string" && track.previewUrl.trim().length > 0;
+    return hasPlayablePreview(track);
 }
 function trackBucket(track) {
     return track.catalogBucket ?? DEFAULT_BUCKET;
@@ -301,21 +354,24 @@ const THEMATIC_DUELS = [
         pickLeft: (track) => track.year <= 2008 ||
             trackBucket(track) === "classics_70s_80s_90s" ||
             trackBucket(track) === "classics_00s_10s",
-        pickRight: (track) => track.year >= 2018 && ["pop", "urbano", "electronic", "indie_alt"].includes(trackBucket(track)),
+        pickRight: (track) => track.year >= 2018 &&
+            ["pop", "urbano", "hiphop_rap", "rnb_soul", "electronic", "indie_alt"].includes(trackBucket(track)),
     },
     {
         key: "fiesta_vs_chill",
         leftLabel: "fiesta",
         rightLabel: "chill",
-        pickLeft: (track) => (track.energy ?? 0.6) >= 0.68 || (track.danceability ?? 0.55) >= 0.7 || ["urbano", "cumbia_latina", "electronic"].includes(trackBucket(track)),
+        pickLeft: (track) => (track.energy ?? 0.6) >= 0.68 ||
+            (track.danceability ?? 0.55) >= 0.7 ||
+            ["urbano", "hiphop_rap", "cumbia_latina", "electronic"].includes(trackBucket(track)),
         pickRight: (track) => (track.energy ?? 0.5) <= 0.48 && (track.valence ?? 0.5) <= 0.58,
     },
     {
         key: "rock_vs_urbano",
         leftLabel: "rock",
         rightLabel: "urbano",
-        pickLeft: (track) => ["rock", "indie_alt"].includes(trackBucket(track)),
-        pickRight: (track) => ["urbano", "pop", "cumbia_latina"].includes(trackBucket(track)),
+        pickLeft: (track) => ["rock", "metal_hardrock", "indie_alt"].includes(trackBucket(track)),
+        pickRight: (track) => ["urbano", "hiphop_rap", "pop", "cumbia_latina"].includes(trackBucket(track)),
     },
 ];
 function selectThematicPair(previewTracks) {
@@ -503,6 +559,37 @@ async function sanitizeLegacyPlaceholderPreviews() {
         },
     });
 }
+async function clearExpiredDeezerPreviewUrls() {
+    const deezerTracks = await db_1.prisma.track.findMany({
+        where: {
+            previewSource: "deezer",
+            previewUrl: { not: null },
+        },
+        select: {
+            id: true,
+            previewUrl: true,
+        },
+    });
+    const expiredTrackIds = deezerTracks
+        .filter((track) => track.previewUrl && isExpiredDeezerPreview(track.previewUrl))
+        .map((track) => track.id);
+    if (expiredTrackIds.length === 0) {
+        return;
+    }
+    await db_1.prisma.track.updateMany({
+        where: {
+            id: {
+                in: expiredTrackIds,
+            },
+        },
+        data: {
+            previewUrl: null,
+            previewSource: null,
+            previewCheckedAt: new Date(),
+            spotifyPreviewAvailable: false,
+        },
+    });
+}
 async function normalizeLegacyPreviewSources() {
     await db_1.prisma.track.updateMany({
         where: {
@@ -565,7 +652,7 @@ async function suppressStaleExternalTracks(activeTrackIds) {
     await db_1.prisma.track.updateMany({
         where: {
             previewSource: {
-                in: ["spotify", "itunes"],
+                in: ["deezer", "spotify", "itunes"],
             },
             id: {
                 notIn: activeTrackIds,
@@ -580,7 +667,7 @@ async function suppressStaleExternalTracks(activeTrackIds) {
     });
 }
 function hasTrackPreview(track) {
-    return typeof track.previewUrl === "string" && track.previewUrl.trim().length > 0;
+    return hasPlayablePreview(track);
 }
 function triggerPreviewBackfillInBackground() {
     if (previewBackfillPromise) {
@@ -637,6 +724,7 @@ async function ensureBattleCatalog(options) {
     (0, db_1.assertDatabaseConfigured)();
     await seedCatalogIfEmpty();
     await sanitizeLegacyPlaceholderPreviews();
+    await clearExpiredDeezerPreviewUrls();
     await normalizeLegacyPreviewSources();
     triggerPreviewBackfillInBackground();
     const forceRefresh = options?.forceRefresh ?? false;
@@ -646,9 +734,9 @@ async function ensureBattleCatalog(options) {
     if (!forceRefresh && Date.now() - lastSpotifySyncAt < SPOTIFY_REFRESH_MS && hasHealthyExternalCatalog) {
         return;
     }
-    const spotifyTracks = (await (0, spotify_1.fetchSpotifyBattleTracks)(CATALOG_SYNC_LIMIT)).filter((track) => !(0, catalog_policy_1.isArtistBlocked)(track.artist, artistDenylist));
-    const spotifyPreviewTracks = spotifyTracks.filter((track) => hasTrackPreview(track));
-    if (spotifyPreviewTracks.length < 2) {
+    const deezerTracks = (await (0, spotify_1.fetchDeezerBattleTracks)(CATALOG_SYNC_LIMIT)).filter((track) => !(0, catalog_policy_1.isArtistBlocked)(track.artist, artistDenylist));
+    const deezerPreviewTracks = deezerTracks.filter((track) => hasTrackPreview(track));
+    if (deezerPreviewTracks.length < 2) {
         const itunesTracks = (await (0, spotify_1.fetchItunesBattleTracks)(CATALOG_SYNC_LIMIT)).filter((track) => !(0, catalog_policy_1.isArtistBlocked)(track.artist, artistDenylist));
         if (itunesTracks.length >= 2) {
             await db_1.prisma.$transaction(itunesTracks.map((track) => db_1.prisma.track.upsert({
@@ -690,12 +778,12 @@ async function ensureBattleCatalog(options) {
         triggerPreviewBackfillInBackground();
         return;
     }
-    await db_1.prisma.$transaction(spotifyTracks.map((track) => db_1.prisma.track.upsert({
+    await db_1.prisma.$transaction(deezerTracks.map((track) => db_1.prisma.track.upsert({
         where: { id: track.id },
         create: {
             ...track,
             catalogBucket: track.catalogBucket ?? DEFAULT_BUCKET,
-            previewSource: track.previewUrl ? "spotify" : null,
+            previewSource: track.previewUrl ? "deezer" : null,
             previewCheckedAt: new Date(),
         },
         update: {
@@ -706,7 +794,7 @@ async function ensureBattleCatalog(options) {
             ...(hasTrackPreview(track)
                 ? {
                     previewUrl: track.previewUrl,
-                    previewSource: "spotify",
+                    previewSource: "deezer",
                     previewCheckedAt: new Date(),
                 }
                 : {}),
@@ -723,7 +811,7 @@ async function ensureBattleCatalog(options) {
             danceability: track.danceability,
         },
     })));
-    await suppressStaleExternalTracks(spotifyPreviewTracks.map((track) => track.id));
+    await suppressStaleExternalTracks(deezerPreviewTracks.map((track) => track.id));
     lastSpotifySyncAt = Date.now();
     triggerPreviewBackfillInBackground();
 }

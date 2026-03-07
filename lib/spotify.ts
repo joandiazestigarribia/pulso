@@ -1,5 +1,6 @@
 import type { Track } from "@/lib/mock-data"
 import { INITIAL_ELO_RATING } from "@/lib/elo"
+import { DEEZER_PLAYLIST_SOURCES } from "@/lib/deezer-playlists"
 import {
   buildTrackDuplicateKey,
   isTrackAllowedByManualCuration,
@@ -7,6 +8,7 @@ import {
 
 const SPOTIFY_TOKEN_URL = "https://accounts.spotify.com/api/token"
 const SPOTIFY_API_URL = "https://api.spotify.com/v1"
+const DEEZER_API_URL = "https://api.deezer.com"
 const DEFAULT_MARKET = "AR"
 const SPOTIFY_MIN_POPULARITY = 65
 const ITUNES_RSS_TOP_SONGS_URL = "https://rss.applemarketingtools.com/api/v2/ar/music/most-played/100/songs.json"
@@ -16,9 +18,13 @@ export type CatalogBucket =
   | "classics_70s_80s_90s"
   | "classics_00s_10s"
   | "rock"
+  | "metal_hardrock"
   | "pop"
   | "cumbia_latina"
+  | "folk_regional"
   | "urbano"
+  | "hiphop_rap"
+  | "rnb_soul"
   | "electronic"
   | "indie_alt"
 
@@ -100,6 +106,34 @@ interface ItunesTrackResult {
 
 interface ItunesSearchResponse {
   results?: ItunesTrackResult[]
+}
+
+interface DeezerArtist {
+  name?: string
+}
+
+interface DeezerAlbum {
+  title?: string
+  cover_xl?: string
+  cover_big?: string
+  cover_medium?: string
+  release_date?: string
+}
+
+interface DeezerTrackResult {
+  id?: number
+  title?: string
+  artist?: DeezerArtist
+  album?: DeezerAlbum
+  preview?: string | null
+  duration?: number
+  rank?: number
+  explicit_lyrics?: boolean
+  release_date?: string
+}
+
+interface DeezerPlaylistTracksResponse {
+  data?: DeezerTrackResult[]
 }
 
 interface ItunesRssFeedResult {
@@ -232,6 +266,9 @@ const ITUNES_BUCKET_QUERIES: ItunesBucketQuery[] = [
   },
 ]
 
+const DEEZER_PLAYLIST_MAX_TRACKS = 180
+const DEEZER_PLAYLIST_PAGE_SIZE = 100
+
 let tokenCache: SpotifyTokenCache | null = null
 
 function pickPreferredTrack(current: Track, candidate: Track): Track {
@@ -261,6 +298,13 @@ function parseReleaseYear(releaseDate: string): number {
 
 function formatDuration(durationMs: number): string {
   const totalSeconds = Math.max(0, Math.floor(durationMs / 1000))
+  const minutes = Math.floor(totalSeconds / 60)
+  const seconds = totalSeconds % 60
+  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`
+}
+
+function formatDurationSeconds(durationSeconds: number): string {
+  const totalSeconds = Math.max(0, Math.floor(durationSeconds))
   const minutes = Math.floor(totalSeconds / 60)
   const seconds = totalSeconds % 60
   return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`
@@ -384,6 +428,10 @@ function toHighResItunesArtwork(url?: string): string {
   return url.replace(/\/\d+x\d+bb\./, "/600x600bb.")
 }
 
+function toHighResDeezerArtwork(album?: DeezerAlbum): string {
+  return album?.cover_xl ?? album?.cover_big ?? album?.cover_medium ?? "/placeholder.jpg"
+}
+
 function toItunesBattleTrack(item: ItunesTrackResult): Track | null {
   if (!item.trackId || !item.trackName || !item.artistName) {
     return null
@@ -415,8 +463,97 @@ function toItunesBattleTrack(item: ItunesTrackResult): Track | null {
   }
 }
 
+function parseDeezerYear(item: DeezerTrackResult): number {
+  const releaseDate = item.release_date ?? item.album?.release_date
+  if (!releaseDate) {
+    return new Date().getFullYear()
+  }
+
+  const parsed = Number.parseInt(releaseDate.slice(0, 4), 10)
+  if (Number.isNaN(parsed)) {
+    return new Date().getFullYear()
+  }
+
+  return parsed
+}
+
+function toDeezerBattleTrack(item: DeezerTrackResult, bucketOverride?: CatalogBucket): Track | null {
+  if (!item.id || !item.title || !item.artist?.name) {
+    return null
+  }
+
+  return {
+    id: `deezer_${item.id}`,
+    spotifyTrackId: null,
+    catalogBucket: bucketOverride ?? inferItunesBucket(item.title, item.artist.name),
+    name: item.title,
+    artist: item.artist.name,
+    albumImage: toHighResDeezerArtwork(item.album),
+    previewUrl: item.preview ?? null,
+    previewSource: item.preview ? "deezer" : null,
+    previewCheckedAt: new Date().toISOString(),
+    spotifyPopularity: null,
+    spotifyExplicit: item.explicit_lyrics ?? null,
+    spotifyPreviewAvailable: item.preview ? true : false,
+    eloScore: INITIAL_ELO_RATING,
+    battlesCount: 0,
+    bpm: 120,
+    duration: formatDurationSeconds(item.duration ?? 0),
+    genre: bucketToGenreLabel(bucketOverride ?? inferItunesBucket(item.title, item.artist.name)),
+    year: parseDeezerYear(item),
+    energy: null,
+    valence: null,
+    danceability: null,
+  }
+}
+
+function bucketToGenreLabel(bucket: CatalogBucket): string {
+  const labels: Record<CatalogBucket, string> = {
+    classics_70s_80s_90s: "Classic Rock",
+    classics_00s_10s: "2000s/2010s",
+    rock: "Rock",
+    metal_hardrock: "Metal",
+    pop: "Pop",
+    cumbia_latina: "Cumbia",
+    folk_regional: "Folklore",
+    urbano: "Latin Urban",
+    hiphop_rap: "Hip Hop",
+    rnb_soul: "R&B/Soul",
+    electronic: "Electronic",
+    indie_alt: "Alternative",
+  }
+
+  return labels[bucket]
+}
+
 function inferItunesBucket(trackName: string, artistName: string): CatalogBucket {
   const signal = normalizeForMatch(`${trackName} ${artistName}`)
+
+  if (
+    signal.includes("hip hop") ||
+    signal.includes("hip-hop") ||
+    signal.includes("rap")
+  ) {
+    return "hiphop_rap"
+  }
+
+  if (
+    signal.includes("r&b") ||
+    signal.includes("rnb") ||
+    signal.includes("neo soul") ||
+    signal.includes("soul")
+  ) {
+    return "rnb_soul"
+  }
+
+  if (
+    signal.includes("folklore") ||
+    signal.includes("chacarera") ||
+    signal.includes("zamba") ||
+    signal.includes("cueca")
+  ) {
+    return "folk_regional"
+  }
 
   if (
     signal.includes("feat") ||
@@ -454,6 +591,14 @@ function inferItunesBucket(trackName: string, artistName: string): CatalogBucket
     signal.includes("post punk")
   ) {
     return "indie_alt"
+  }
+
+  if (
+    signal.includes("metal") ||
+    signal.includes("hard rock") ||
+    signal.includes("nu metal")
+  ) {
+    return "metal_hardrock"
   }
 
   if (
@@ -614,6 +759,64 @@ export async function fetchItunesBattleTracks(limit = 120): Promise<Track[]> {
   } catch {
     return []
   }
+}
+
+export async function fetchDeezerBattleTracks(limit = 120): Promise<Track[]> {
+  try {
+    const deduped = new Map<string, Track>()
+    for (const source of DEEZER_PLAYLIST_SOURCES) {
+      const playlistTracks = await fetchDeezerPlaylistTracks(source.playlistId, DEEZER_PLAYLIST_MAX_TRACKS)
+      for (const item of playlistTracks) {
+        const mapped = toDeezerBattleTrack(item, source.bucket)
+        if (!mapped || !mapped.previewUrl || !isTrackAllowedByManualCuration(mapped)) {
+          continue
+        }
+
+        const dedupeKey = buildTrackDuplicateKey(mapped)
+        const current = deduped.get(dedupeKey)
+        if (!current) {
+          deduped.set(dedupeKey, mapped)
+        } else {
+          deduped.set(dedupeKey, pickPreferredTrack(current, mapped))
+        }
+      }
+    }
+
+    return selectBalancedBucketTracks(Array.from(deduped.values()), limit)
+  } catch {
+    return []
+  }
+}
+
+async function fetchDeezerPlaylistTracks(
+  playlistId: string,
+  maxTracks: number
+): Promise<DeezerTrackResult[]> {
+  const collected: DeezerTrackResult[] = []
+
+  for (let index = 0; index < maxTracks; index += DEEZER_PLAYLIST_PAGE_SIZE) {
+    const remaining = maxTracks - index
+    const pageLimit = Math.min(DEEZER_PLAYLIST_PAGE_SIZE, remaining)
+    const url = `${DEEZER_API_URL}/playlist/${encodeURIComponent(playlistId)}/tracks?index=${index}&limit=${pageLimit}`
+    const response = await fetch(url, { cache: "no-store" })
+    if (!response.ok) {
+      break
+    }
+
+    const payload = (await response.json()) as DeezerPlaylistTracksResponse
+    const pageItems = payload.data ?? []
+    if (pageItems.length === 0) {
+      break
+    }
+
+    collected.push(...pageItems)
+
+    if (pageItems.length < pageLimit) {
+      break
+    }
+  }
+
+  return collected
 }
 
 function roundTempoToBpm(tempo: number | null): number {
