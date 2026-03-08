@@ -286,9 +286,9 @@ async function generateSummaryWithOpenAI(aggregated: AggregatedWinners): Promise
   }
 
   const prompt = [
-    "You are a playful music taste analyst for a Music DNA feature.",
-    "Write 2 short sentences (max 45 words total) describing this listener persona in a fun tone.",
-    "Use vivid wording, but keep it friendly and clear. No bullet points and no percentages.",
+    "Sos un analista de gustos musicales para la feature Music DNA.",
+    "Escribi exactamente 2 oraciones cortas (maximo 45 palabras en total), en espanol, con tono divertido y claro.",
+    "No uses bullets, no uses porcentajes, no uses ingles.",
     `Top genres: ${aggregated.topGenres.map((entry) => `${entry.genre} (${entry.count})`).join(", ") || "none"}.`,
     `Top subgenres: ${aggregated.topSubgenres.map((entry) => `${entry.genre} (${entry.count})`).join(", ") || "none"}.`,
     `Dominant genre: ${aggregated.dominantGenre ?? "none"}.`,
