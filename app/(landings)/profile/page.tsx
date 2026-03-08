@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useEffect, useMemo, useState } from "react"
 import { motion } from "framer-motion"
@@ -241,7 +241,7 @@ export default function ProfilePage() {
 
                 {hasUnlocked && (
                   <Link
-                    href="/login?next=%2Fprofile%2Ffull"
+                    href="/login?next=%2Fmusic-dna"
                     onClick={() => {
                       void trackClientEvent({
                         eventName: "auth_prompt_shown",
@@ -266,13 +266,13 @@ export default function ProfilePage() {
             )}
 
             {session?.isAuthenticated && (
-              <Link href="/profile/full">
+              <Link href="/music-dna">
                 <motion.div
                   whileHover={{ scale: 1.03 }}
                   whileTap={{ scale: 0.97 }}
                   className="w-full py-3.5 rounded-2xl font-mono font-black text-sm uppercase tracking-wider text-foreground border border-campfire-purple/40 bg-carbon-lighter/70 flex items-center justify-center gap-2 cursor-pointer"
                 >
-                  Open Full Profile
+                  Open Music DNA
                 </motion.div>
               </Link>
             )}
@@ -282,3 +282,5 @@ export default function ProfilePage() {
     </main>
   )
 }
+
+

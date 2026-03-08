@@ -255,10 +255,10 @@ function buildFallbackSummary(aggregated: AggregatedWinners): string {
   )?.genre
 
   if (topSubgenre) {
-    return `You gravitate toward ${dominantGenre} (${topSubgenre}) with ${varietyBand}. Your winning picks trend ${energyBand} energy, ${valenceBand} mood, and ${danceBand} danceability, with strongest pull from ${topDecade}.`
+    return `You are the kind of listener who turns ${dominantGenre} and ${topSubgenre} into a signature move. Your winners lean ${energyBand} energy, ${valenceBand} mood, and ${danceBand} danceability, with a soft spot for ${topDecade} gems.`
   }
 
-  return `You gravitate toward ${dominantGenre} with ${varietyBand}. Your winning picks trend ${energyBand} energy, ${valenceBand} mood, and ${danceBand} danceability, with strongest pull from ${topDecade}.`
+  return `Your Music DNA locks into ${dominantGenre} with ${varietyBand}. Your winners lean ${energyBand} energy, ${valenceBand} mood, and ${danceBand} danceability, with a clear crush on ${topDecade} tracks.`
 }
 
 function buildTeaserHint(aggregated: AggregatedWinners, completedBattlesCount: number): string {
@@ -276,7 +276,7 @@ function buildTeaserHint(aggregated: AggregatedWinners, completedBattlesCount: n
     return `Your early winners lean toward ${dominantGenre} with ${energyBand} energy. ${PROFILE_UNLOCK_THRESHOLD - completedBattlesCount} more battles to unlock full Music DNA.`
   }
 
-  return "Music DNA is unlocked. Open your full profile for the generated persona."
+  return "Music DNA is unlocked. Open the dedicated landing to reveal your generated personality."
 }
 
 async function generateSummaryWithOpenAI(aggregated: AggregatedWinners): Promise<string | null> {
@@ -286,9 +286,9 @@ async function generateSummaryWithOpenAI(aggregated: AggregatedWinners): Promise
   }
 
   const prompt = [
-    "You are a concise music taste analyst.",
-    "Write 2 short sentences (max 45 words total) describing this listener persona.",
-    "Avoid bullet points and avoid mentioning percentages.",
+    "You are a playful music taste analyst for a Music DNA feature.",
+    "Write 2 short sentences (max 45 words total) describing this listener persona in a fun tone.",
+    "Use vivid wording, but keep it friendly and clear. No bullet points and no percentages.",
     `Top genres: ${aggregated.topGenres.map((entry) => `${entry.genre} (${entry.count})`).join(", ") || "none"}.`,
     `Top subgenres: ${aggregated.topSubgenres.map((entry) => `${entry.genre} (${entry.count})`).join(", ") || "none"}.`,
     `Dominant genre: ${aggregated.dominantGenre ?? "none"}.`,

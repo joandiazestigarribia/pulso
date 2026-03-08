@@ -37,6 +37,6 @@ export const homeFeatures: Feature[] = [
 export const homeModules: Module[] = [
   { name: "Login Tactical", status: "Live", href: "/login" },
   { name: "Battle Arena", status: "Live", href: "/battle" },
-  { name: "Music DNA", status: "In Progress", href: "/profile" },
+  { name: "Music DNA", status: "In Progress", href: "/music-dna" },
   { name: "Leaderboard Global", status: "Planned" },
 ]
