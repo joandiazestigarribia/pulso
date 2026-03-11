@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Playpen+Sans:wght@100..800&display=swap');
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
@@ -148,6 +149,10 @@
 
 .text-glow-magenta {
   text-shadow: 0 0 10px rgba(255, 0, 255, 0.5), 0 0 20px rgba(255, 0, 255, 0.3);
+}
+
+.font-sonic-persona {
+  font-family: 'Playpen Sans', sans-serif;
 }
 
 @layer base {

@@ -1,20 +1,16 @@
 ﻿"use client"
 
 import Image from "next/image"
-import Link from "next/link"
 import { useMemo, useState } from "react"
 import useSWR from "swr"
-import { Megaphone, Sparkles } from "lucide-react"
+import { Megaphone } from "lucide-react"
 import {
-  buildDynamicCode,
-  buildDynamicHandle,
   fetcher,
   getDominantGenres,
   getRadarAxes,
   resolveDynamicPersonaDescription,
   resolveSonicPersona,
   type FullProfileResponse,
-  type IdentitySessionResponse,
 } from "@/lib/music-dna"
 import { RadarChart } from "@/components/landings/music-dna/radar-chart"
 import { ProfileMetricsPanel } from "@/components/landings/music-dna/profile-metrics-panel"
@@ -22,10 +18,6 @@ import { ProfileMetricsPanel } from "@/components/landings/music-dna/profile-met
 export function MusicDnaLanding() {
   const [isRegenerating, setIsRegenerating] = useState(false)
   const [regenerateError, setRegenerateError] = useState<string | null>(null)
-
-  const { data: session } = useSWR<IdentitySessionResponse>("/api/identity/session", fetcher, {
-    revalidateOnFocus: false,
-  })
 
   const { data: profileResponse, mutate: refreshProfile, isLoading } = useSWR<FullProfileResponse>(
     "/api/profile/full",
@@ -43,11 +35,6 @@ export function MusicDnaLanding() {
     () => resolveDynamicPersonaDescription(sonicPersona, profileState, dominantGenres),
     [dominantGenres, profileState, sonicPersona]
   )
-  const sonicPersonaHandle = useMemo(
-    () => buildDynamicHandle(sonicPersona.handleBase, session?.userId ?? null, session?.anonymousId ?? null),
-    [session?.anonymousId, session?.userId, sonicPersona.handleBase]
-  )
-  const sonicPersonaCode = useMemo(() => buildDynamicCode(sonicPersona.codename, profileState), [profileState, sonicPersona.codename])
   const radarAxes = useMemo(() => getRadarAxes(profile ?? null), [profile])
   const intensityScore = radarAxes.find((axis) => axis.key === "energy")?.value ?? 0.5
   const rhythmScore = radarAxes.find((axis) => axis.key === "bpm")?.value ?? 0.5
@@ -56,8 +43,6 @@ export function MusicDnaLanding() {
 
   const totalBattles = profileState?.completedBattlesCount ?? 0
   const analyzedVotes = profile?.generatedFromVotes ?? totalBattles
-  const level = Math.max(1, Math.round(totalBattles / 8))
-  const levelProgress = Math.min(100, Math.round((totalBattles / Math.max(1, profileState?.unlockThreshold ?? 10)) * 100))
 
   const handleRegenerate = async () => {
     if (isRegenerating) {
@@ -91,99 +76,124 @@ export function MusicDnaLanding() {
     return (
       <main className="mx-auto flex min-h-screen w-full max-w-7xl items-center justify-center px-4 pb-8 pt-24">
         <div className="rounded-2xl border-2 border-[#7a4c2a] bg-[#f3dfbf] px-5 py-3 text-sm font-bold text-[#4d2e1c]">
-          Cargando analisis de Sonic DNA...
+          Cargando analisis...
         </div>
       </main>
     )
   }
 
   return (
-    <main className="mx-auto w-full max-w-[1200px] px-3 pb-8 pt-24 md:px-4">
-      <section className="relative overflow-hidden rounded-[24px] border-[3px] border-[#6a3e22] bg-[#f4e0bf] text-[#2a1b14] shadow-[0_14px_0_0_#5d341b]">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.45),transparent_45%),radial-gradient(circle_at_80%_70%,rgba(255,184,108,0.24),transparent_38%),linear-gradient(130deg,#f6e7ca_0%,#efd0a4_100%)]" />
+    <main className="w-full pt-15 md:px-4 bg-[#f4e0bf]">
+      <section className="relative max-w-[1200px] mx-auto overflow-hidden rounded-[28px] text-[#2a1b14]">
+        <div className="pointer-events-none absolute inset-0" />
+        <div className="relative grid gap-4 p-3 md:grid-cols-[350px_minmax(0,1fr)_250px] md:p-4">
+          <aside className="relative overflow-hidden pb-3 px-3">
 
-        <div className="relative grid gap-4 p-3 md:grid-cols-[280px_minmax(0,1fr)_250px] md:p-4">
-          <aside className="rounded-[18px] border-[3px] border-[#7d4f2b] bg-[#efd2a6] p-3 shadow-[0_6px_0_0_#8c6139]">
-            <div className="rounded-[14px] border-2 border-[#5f381f] bg-[#e7bf8b] px-3 py-2 text-center shadow-[inset_0_2px_0_rgba(255,255,255,0.4)]">
-              <p className="text-3xl font-black uppercase leading-[0.95] tracking-tight">Persona Sonica</p>
-              <p className="mt-1 text-3xl font-black uppercase leading-[0.95] tracking-tight">Campamento</p>
+            <div className="relative mx-auto h-[110px] w-full max-w-[310px]">
+              <Image
+                src="/images/music-dna/poster-wood.png"
+                alt="Poster wood title"
+                fill
+                sizes="310px"
+                className=""
+                priority
+              />
+              <div className="absolute inset-0 flex flex-col items-center justify-center pb-1 top-[20px]">
+                <p className="font-sonic-persona text-3xl font-black uppercase leading-[0.95] tracking-tight text-[#2f1c12]">Pulso</p>
+                <p className="font-sonic-persona mt-1 text-2xl font-black uppercase leading-[0.95] tracking-tight text-[#2f1c12]">Campground</p>
+              </div>
             </div>
 
-            <div className="mx-auto mt-4 flex w-full max-w-[210px] justify-center rounded-[20px] border-[3px] border-[#5f381f] bg-[#fae8cc] p-2 shadow-[0_5px_0_0_#8a6040]">
+            <div className="relative mx-auto mt-4 flex w-full max-w-[214px] justify-center rounded-[26px] p-2">
               <Image
                 src={`/images/characters/${sonicPersona.assetFile}`}
                 alt={`${sonicPersona.name} avatar`}
                 width={190}
                 height={220}
-                className="h-auto w-full rounded-[12px] border-2 border-[#6b432a] object-cover"
+                className="h-auto w-full rounded-[12px] object-cover drop-shadow-[0_2px_0_rgba(0,0,0,0.25)]"
                 priority
               />
             </div>
 
-            <div className="mt-4 rounded-[14px] border-[3px] border-[#6f4528] bg-[#f6e9d0] px-3 py-2 text-center shadow-[0_4px_0_0_#8f6341]">
-              <p className="text-3xl font-black uppercase leading-tight">{sonicPersona.name}</p>
-              <p className="text-lg font-bold text-[#583321]">{sonicPersonaHandle}</p>
+            <div className="relative px-1">
+              <div className="relative mx-auto h-[88px] w-full">
+                <Image
+                  src="/images/music-dna/flag-name-character.png"
+                  alt="Sonic persona name plate"
+                  fill
+                  sizes="260px"
+                  className="object-contain"
+                  priority
+                />
+                <div className="absolute inset-0 flex flex-col items-center justify-center pb-1">
+                  <p className="font-sonic-persona text-[28px] font-semibold uppercase leading-none text-[#3b2418]">
+                    {sonicPersona.name}
+                  </p>
+                </div>
+              </div>
             </div>
 
-            <div className="mt-3 rounded-[14px] border-[3px] border-[#6f4528] bg-[#f9e5c5] px-3 py-2 text-left shadow-[0_4px_0_0_#8f6341]">
+            <div className="mt-3 rounded-[18px_12px_18px_10px] bg-[#f9e5c5] px-3 py-2 text-left shadow-[0_10px_16px_rgba(111,69,40,0.16)] ring-1 ring-[#6f4528]/30 relative">
               <p className="text-[10px] font-black uppercase tracking-[0.12em] text-[#6f4528]">Perfil de Persona</p>
               <p className="mt-1 text-xs font-semibold leading-relaxed text-[#4a2a1d]">{sonicPersonaDescription}</p>
             </div>
 
-            <div className="mt-4 rounded-full border-[3px] border-[#23355f] bg-[#152848] p-1">
-              <div className="relative h-7 overflow-hidden rounded-full bg-[#253f6f]">
-                <div
-                  className="h-full rounded-full bg-[linear-gradient(90deg,#f8de54_0%,#f0c42a_38%,#4cca78_72%,#1ea95d_100%)]"
-                  style={{ width: `${levelProgress}%` }}
-                />
-                <span className="absolute inset-0 flex items-center justify-center text-xs font-black uppercase tracking-wide text-[#111]">
-                  Nivel {level}
-                </span>
-              </div>
-            </div>
-
             <div className="mt-4 grid grid-cols-2 gap-3">
-              <article className="rounded-full border-[3px] border-[#8a5e3a] bg-[#d79d5e] p-4 text-center shadow-[0_4px_0_0_#8f623e]">
-                <p className="text-[11px] font-black uppercase tracking-wide">Batallas Totales</p>
-                <p className="mt-1 text-4xl font-black leading-none">{totalBattles}</p>
+              <article className="relative mx-auto aspect-square w-full max-w-[152px]">
+                <Image
+                  src="/images/music-dna/circle-wood-music-dna.png"
+                  alt="Medallon de metrica"
+                  fill
+                  sizes="152px"
+                  className="object-contain"
+                />
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-center top-[-10px]">
+                  <p className="text-[12px] font-black uppercase tracking-wide text-[#4a2a1d] leading-normal w-[60%]">Batallas Totales</p>
+                  <p className="mt-1 text-[44px] font-black text-[#3b2418] leading-[0.8]">{totalBattles}</p>
+                </div>
               </article>
-              <article className="rounded-full border-[3px] border-[#8a5e3a] bg-[#d79d5e] p-4 text-center shadow-[0_4px_0_0_#8f623e]">
-                <p className="text-[11px] font-black uppercase tracking-wide">Votos Analizados</p>
-                <p className="mt-1 text-4xl font-black leading-none">{analyzedVotes}</p>
+              <article className="relative mx-auto aspect-square w-full max-w-[152px]">
+                <Image
+                  src="/images/music-dna/circle-wood-music-dna.png"
+                  alt="Medallon de metrica"
+                  fill
+                  sizes="152px"
+                  className="object-contain"
+                />
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-center top-[-15px]">
+                  <p className="text-[12px] font-black uppercase tracking-wide text-[#4a2a1d] leading-normal w-[60%]">Votos Analizados</p>
+                  <p className="mt-1 text-[44px] font-black text-[#3b2418] leading-[0.8]">{analyzedVotes}</p>
+                </div>
               </article>
             </div>
           </aside>
 
-          <section className="rounded-[18px] border-[3px] border-[#7d4f2b] bg-[#f6e7ca] p-4 shadow-[0_6px_0_0_#9f7347] md:p-5">
+          <section className="rounded-[34px_22px_30px_20px] p-4 md:p-5">
             <div className="flex flex-wrap items-start justify-between gap-3 border-b-2 border-[#9c7049] pb-3">
               <div>
-                <h1 className="text-4xl font-black uppercase leading-none tracking-tight md:text-5xl">Analisis Sonic DNA</h1>
+                <h1 className="text-4xl font-black uppercase leading-none tracking-tight md:text-5xl">Analisis Musical</h1>
                 <p className="mt-2 text-sm font-semibold md:text-base">Tu huella auditiva en base a tus ultimas {analyzedVotes} batallas.</p>
-                <p className="mt-2 inline-flex rounded-full border-2 border-[#845537] bg-[#ecd2ae] px-3 py-1 text-xs font-black uppercase tracking-wide text-[#4a2c1f]">
-                  Persona Asignada: {sonicPersona.name} ({sonicPersonaCode})
-                </p>
               </div>
             </div>
 
-            <div className="mt-4 rounded-[16px] border-[3px] border-[#9f7350] bg-[#eed5ad] p-4 shadow-[inset_0_0_0_2px_rgba(140,94,55,0.4)]">
-              <div className="mx-auto max-w-[560px] rounded-full border-[4px] border-[#9a7351] bg-[#f7ecd8] p-4 md:p-5">
+            <div className="mt-4 rounded-[24px_18px_22px_16px] bg-[#eed5ad] p-4 shadow-[inset_0_0_0_1px_rgba(140,94,55,0.35),0_10px_16px_rgba(140,94,55,0.14)]">
+              <div className="mx-auto max-w-[560px] rounded-full bg-[#f7ecd8] p-4 shadow-[inset_0_0_0_2px_rgba(154,115,81,0.55)] md:p-5">
                 <RadarChart axes={radarAxes} />
               </div>
             </div>
           </section>
 
           <aside className="flex flex-col gap-3">
-            <section className="rounded-[16px] border-[3px] border-[#7d4f2b] bg-[#f0d7b4] p-3 shadow-[0_5px_0_0_#9d7147]">
+            <section className="rounded-[30px_16px_24px_14px] bg-[#f0d7b4] p-3 shadow-[0_10px_16px_rgba(125,79,43,0.16)] ring-1 ring-[#7d4f2b]/30">
               <div className="flex items-center justify-between">
                 <h2 className="text-2xl font-black uppercase tracking-tight">Generos Dominantes</h2>
-                <Sparkles className="h-4 w-4" />
               </div>
               <div className="mt-3 flex flex-wrap gap-2">
                 {(dominantGenres.length > 0 ? dominantGenres : ["Formato Abierto"]).map((genre, index) => (
                   <span
                     key={genre}
-                    className={`rounded-full border-2 px-3 py-1 text-xs font-black uppercase tracking-wide ${
-                      index % 2 === 0 ? "border-[#5f3078] bg-[#e38dde] text-[#351b4a]" : "border-[#1c6176] bg-[#8ad6ef] text-[#103543]"
+                    className={`rounded-full px-3 py-1 text-xs font-black uppercase tracking-wide ring-1 ${
+                      index % 2 === 0 ? "bg-[#e38dde] text-[#351b4a] ring-[#5f3078]/50" : "bg-[#8ad6ef] text-[#103543] ring-[#1c6176]/50"
                     }`}
                   >
                     {genre}

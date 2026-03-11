@@ -1,7 +1,7 @@
 import { ScanlineGrid } from "@/components/auth/scanline-grid"
-import { TacticalHeader } from "@/components/auth/tactical-header"
+import { CampgroundHeader } from "@/components/auth/campground-header"
 
-export default function TacticalLayout({
+export default function CampgroundLayout({
   children,
 }: {
   children: React.ReactNode
@@ -9,7 +9,7 @@ export default function TacticalLayout({
   return (
     <div className="relative min-h-screen bg-carbon overflow-hidden">
       <ScanlineGrid />
-      <TacticalHeader />
+      <CampgroundHeader />
       {children}
     </div>
   )
