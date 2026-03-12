@@ -17,6 +17,7 @@ import {
   VoteError,
 } from "@/lib/battle-store"
 import { trackConversionEventSafe } from "@/lib/conversion-events"
+import { MUSIC_DNA_UNLOCK_THRESHOLD } from "@/lib/music-dna-config"
 
 const voteRequestSchema = z
   .object({
@@ -115,7 +116,7 @@ export async function POST(request: Request) {
     })
 
     const stats = await getUserBattleStats(actorId)
-    if (stats.completedBattlesCount >= 10) {
+    if (stats.completedBattlesCount >= MUSIC_DNA_UNLOCK_THRESHOLD) {
       await trackConversionEventSafe({
         eventName: "profile_unlock_reached",
         request,
@@ -124,7 +125,7 @@ export async function POST(request: Request) {
         battleId: payload.data.battleId,
         metadata: {
           completedBattlesCount: stats.completedBattlesCount,
-          threshold: 10,
+          threshold: MUSIC_DNA_UNLOCK_THRESHOLD,
         },
       })
     }

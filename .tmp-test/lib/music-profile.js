@@ -137,9 +137,9 @@ function buildFallbackSummary(aggregated) {
     const topDecade = Object.entries(aggregated.decadeDistribution)[0]?.[0] ?? "mixed decades";
     const topSubgenre = aggregated.topSubgenres.find((entry) => normalizeGenreLabel(entry.genre) !== normalizeGenreLabel(dominantGenre))?.genre;
     if (topSubgenre) {
-        return `You gravitate toward ${dominantGenre} (${topSubgenre}) with ${varietyBand}. Your winning picks trend ${energyBand} energy, ${valenceBand} mood, and ${danceBand} danceability, with strongest pull from ${topDecade}.`;
+        return `You are the kind of listener who turns ${dominantGenre} and ${topSubgenre} into a signature move. Your winners lean ${energyBand} energy, ${valenceBand} mood, and ${danceBand} danceability, with a soft spot for ${topDecade} gems.`;
     }
-    return `You gravitate toward ${dominantGenre} with ${varietyBand}. Your winning picks trend ${energyBand} energy, ${valenceBand} mood, and ${danceBand} danceability, with strongest pull from ${topDecade}.`;
+    return `Your Music DNA locks into ${dominantGenre} with ${varietyBand}. Your winners lean ${energyBand} energy, ${valenceBand} mood, and ${danceBand} danceability, with a clear crush on ${topDecade} tracks.`;
 }
 function buildTeaserHint(aggregated, completedBattlesCount) {
     if (completedBattlesCount === 0) {
@@ -153,7 +153,7 @@ function buildTeaserHint(aggregated, completedBattlesCount) {
     if (completedBattlesCount < PROFILE_UNLOCK_THRESHOLD) {
         return `Your early winners lean toward ${dominantGenre} with ${energyBand} energy. ${PROFILE_UNLOCK_THRESHOLD - completedBattlesCount} more battles to unlock full Music DNA.`;
     }
-    return "Music DNA is unlocked. Open your full profile for the generated persona.";
+    return "Music DNA is unlocked. Open the dedicated landing to reveal your generated personality.";
 }
 async function generateSummaryWithOpenAI(aggregated) {
     const apiKey = process.env.OPENAI_API_KEY;
@@ -161,9 +161,9 @@ async function generateSummaryWithOpenAI(aggregated) {
         return null;
     }
     const prompt = [
-        "You are a concise music taste analyst.",
-        "Write 2 short sentences (max 45 words total) describing this listener persona.",
-        "Avoid bullet points and avoid mentioning percentages.",
+        "Sos un analista de gustos musicales para la feature Music DNA.",
+        "Escribi exactamente 2 oraciones cortas (maximo 45 palabras en total), en espanol, con tono divertido y claro.",
+        "No uses bullets, no uses porcentajes, no uses ingles.",
         `Top genres: ${aggregated.topGenres.map((entry) => `${entry.genre} (${entry.count})`).join(", ") || "none"}.`,
         `Top subgenres: ${aggregated.topSubgenres.map((entry) => `${entry.genre} (${entry.count})`).join(", ") || "none"}.`,
         `Dominant genre: ${aggregated.dominantGenre ?? "none"}.`,

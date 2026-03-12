@@ -3,13 +3,14 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import useSWR from "swr"
 import { AnimatePresence, motion } from "framer-motion"
-import { PartyPopper, Play, Square, Users, Volume2 } from "lucide-react"
+import { PartyPopper, Play, RefreshCcw, Square, Users, Volume2 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { EloFeedback } from "@/components/landings/elo-feedback"
 import type { Battle, Track } from "@/lib/mock-data"
 import { resolveConversionExperiment } from "@/lib/conversion-experiments"
 import { trackClientEvent } from "@/lib/client-events"
+import { MUSIC_DNA_UNLOCK_THRESHOLD } from "@/lib/music-dna-config"
 
 function isBattle(value: unknown): value is Battle {
   if (!value || typeof value !== "object") {
@@ -81,6 +82,15 @@ interface VoteResponse {
 
 interface BattleStatsResponse {
   completedBattlesCount: number
+}
+
+interface BattleResetResponse {
+  ok: boolean
+  code?: string
+  message?: string
+  data?: {
+    deletedBattles: number
+  }
 }
 
 interface AuthSessionResponse {
@@ -282,7 +292,7 @@ export default function BattlePage() {
   const { data: battle, error: battleError, mutate } = useSWR<Battle>(battleApiUrl, fetcher, {
     revalidateOnFocus: false,
   })
-  const { data: stats } = useSWR<BattleStatsResponse>("/api/battle/stats", jsonFetcher, {
+  const { data: stats, mutate: mutateStats } = useSWR<BattleStatsResponse>("/api/battle/stats", jsonFetcher, {
     revalidateOnFocus: false,
   })
   const { data: session } = useSWR<AuthSessionResponse>("/api/identity/session", jsonFetcher, {
@@ -296,6 +306,8 @@ export default function BattlePage() {
     null
   )
   const [voteError, setVoteError] = useState<string | null>(null)
+  const [resetError, setResetError] = useState<string | null>(null)
+  const [isResetting, setIsResetting] = useState(false)
   const [activePreviewTrackId, setActivePreviewTrackId] = useState<string | null>(null)
   const [hasTrackedPromptShown, setHasTrackedPromptShown] = useState(false)
   const [authConfirmation, setAuthConfirmation] = useState<{
@@ -307,7 +319,7 @@ export default function BattlePage() {
   const completedBattles = stats?.completedBattlesCount ?? 0
   const isAuthenticated = Boolean(session?.isAuthenticated)
   const shouldShowAuthPrompt = !isAuthenticated && completedBattles >= experiment.votePromptThreshold
-  const hasReachedUnlockThreshold = completedBattles >= 10
+  const hasReachedUnlockThreshold = completedBattles >= MUSIC_DNA_UNLOCK_THRESHOLD
 
   useEffect(() => {
     setActivePreviewTrackId(null)
@@ -414,10 +426,49 @@ export default function BattlePage() {
       setVoteFeedback(null)
       setIsVoting(false)
       setBattleKey((prev) => prev + 1)
-      mutate()
+      await Promise.all([mutate(), mutateStats()])
     },
-    [battle, isVoting, mutate]
+    [battle, isVoting, mutate, mutateStats]
   )
+
+  const handleResetProgress = useCallback(async () => {
+    if (isResetting) {
+      return
+    }
+
+    const confirmed = window.confirm(
+      "Esto reiniciara tus battles votadas y tu progreso de Music DNA. Queres continuar?"
+    )
+    if (!confirmed) {
+      return
+    }
+
+    setIsResetting(true)
+    setResetError(null)
+    setVoteError(null)
+    setVoteFeedback(null)
+    setVoteResult(null)
+    setActivePreviewTrackId(null)
+
+    try {
+      const response = await fetch("/api/battle/reset", {
+        method: "POST",
+      })
+
+      const payload = (await response.json().catch(() => ({}))) as BattleResetResponse
+      if (!response.ok || payload.ok === false) {
+        setResetError(payload.message ?? "No se pudo reiniciar el progreso.")
+        return
+      }
+
+      await Promise.all([mutateStats(), mutate()])
+      setBattleKey((prev) => prev + 1)
+    } catch {
+      setResetError("Error de red al reiniciar progreso.")
+    } finally {
+      setIsResetting(false)
+    }
+  }, [isResetting, mutate, mutateStats])
 
   if (battleError) {
     return (
@@ -481,9 +532,9 @@ export default function BattlePage() {
         </div>
       </header>
 
-      {voteError && (
+      {(voteError || resetError) && (
         <div className="relative z-20 mx-auto mt-2 w-[min(95%,520px)] rounded-lg border border-red-500/40 bg-red-900/30 px-4 py-2 text-sm text-red-100">
-          {voteError}
+          {voteError ?? resetError}
         </div>
       )}
 
@@ -540,6 +591,25 @@ export default function BattlePage() {
       )}
 
       <section className="relative z-10 flex flex-1 flex-col gap-4 overflow-hidden p-4 md:p-6 lg:flex-row lg:gap-6">
+        <div className="w-full">
+          <div className="mx-auto mb-4 flex w-[min(96%,980px)] flex-col gap-2 rounded-2xl border-2 border-white/15 bg-black/45 px-4 py-3 backdrop-blur">
+            <div className="flex items-center justify-between gap-3">
+              <p className="font-mono text-xs font-black uppercase tracking-[0.12em] text-[#00F0FF]">
+                {completedBattles}/{MUSIC_DNA_UNLOCK_THRESHOLD} battles votados
+              </p>
+              <p className="text-xs font-semibold text-white/80">No lleva mas de 5 minutos conseguir tu perfil sonoro.</p>
+            </div>
+            <div className="h-2 overflow-hidden rounded-full bg-white/10">
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-[#00F0FF] via-[#00FF66] to-[#FFE600]"
+                style={{
+                  width: `${Math.min(100, (completedBattles / MUSIC_DNA_UNLOCK_THRESHOLD) * 100)}%`,
+                }}
+              />
+            </div>
+          </div>
+        </div>
+
         <AnimatePresence mode="wait">
           <motion.div
             key={battleKey}
@@ -616,9 +686,20 @@ export default function BattlePage() {
           </div>
         </div>
 
-        <button className="shrink-0 rounded-xl border-2 border-white/20 bg-black px-4 py-2 text-sm font-bold text-white transition-all hover:bg-white hover:text-black">
-          SKIP STAGE
-        </button>
+        <div className="flex shrink-0 items-center gap-2">
+          <button className="rounded-xl border-2 border-white/20 bg-black px-4 py-2 text-sm font-bold text-white transition-all hover:bg-white hover:text-black">
+            SKIP STAGE
+          </button>
+          <button
+            type="button"
+            onClick={handleResetProgress}
+            disabled={isResetting}
+            className="inline-flex items-center gap-2 rounded-xl border-2 border-[#ff8e66]/30 bg-[#2a120b] px-4 py-2 text-sm font-bold text-[#ffd7c7] transition-all hover:border-[#ff8e66]/70 hover:bg-[#3a180d] disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            <RefreshCcw className={`h-4 w-4 ${isResetting ? "animate-spin" : ""}`} />
+            {isResetting ? "Reiniciando..." : "Reiniciar juego"}
+          </button>
+        </div>
       </footer>
     </main>
   )

@@ -1,7 +1,8 @@
 import { prisma } from "@/lib/db"
 import { normalizeTrackGenre } from "@/lib/genre-normalization"
+import { MUSIC_DNA_UNLOCK_THRESHOLD } from "@/lib/music-dna-config"
 
-const PROFILE_UNLOCK_THRESHOLD = 10
+const PROFILE_UNLOCK_THRESHOLD = MUSIC_DNA_UNLOCK_THRESHOLD
 const OPENAI_API_URL = "https://api.openai.com/v1/responses"
 const OPENAI_MODEL = process.env.OPENAI_MODEL ?? "gpt-4.1-mini"
 

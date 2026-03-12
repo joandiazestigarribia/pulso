@@ -7,6 +7,7 @@ import Link from "next/link"
 import useSWR from "swr"
 import { resolveConversionExperiment } from "@/lib/conversion-experiments"
 import { trackClientEvent } from "@/lib/client-events"
+import { MUSIC_DNA_UNLOCK_THRESHOLD } from "@/lib/music-dna-config"
 
 const fetcher = (url: string) => fetch(url).then((response) => response.json())
 
@@ -61,7 +62,7 @@ export default function ProfilePage() {
   })
 
   const battlesCompleted = insights?.data?.completedBattlesCount ?? stats?.completedBattlesCount ?? 0
-  const battlesRequired = insights?.data?.unlockThreshold ?? 10
+  const battlesRequired = insights?.data?.unlockThreshold ?? MUSIC_DNA_UNLOCK_THRESHOLD
   const teaserHint = insights?.data?.teaser.hint ?? "Battle more tracks to unlock your full Music DNA profile."
   const teaserTopGenres = insights?.data?.teaser.topGenres ?? []
   const teaserTopSubgenres = insights?.data?.teaser.topSubgenres ?? []

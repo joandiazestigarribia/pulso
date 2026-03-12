@@ -8,9 +8,11 @@ import {
   fetcher,
   getDominantGenres,
   getRadarAxes,
-  resolveDynamicPersonaDescription,
+  resolvePersonaShareCopy,
+  resolveRadarProfile,
   resolveSonicPersona,
   type FullProfileResponse,
+  type IdentitySessionResponse,
 } from "@/lib/music-dna"
 import { RadarChart } from "@/components/landings/music-dna/radar-chart"
 import { ProfileMetricsPanel } from "@/components/landings/music-dna/profile-metrics-panel"
@@ -24,6 +26,9 @@ export function MusicDnaLanding() {
     fetcher,
     { revalidateOnFocus: false }
   )
+  const { data: identitySession } = useSWR<IdentitySessionResponse>("/api/identity/session", fetcher, {
+    revalidateOnFocus: false,
+  })
 
   const profileState = profileResponse?.data
   const profile = profileState?.profile
@@ -31,11 +36,19 @@ export function MusicDnaLanding() {
 
   const dominantGenres = useMemo(() => getDominantGenres(profileState), [profileState])
   const sonicPersona = useMemo(() => resolveSonicPersona(profileState, dominantGenres), [dominantGenres, profileState])
-  const sonicPersonaDescription = useMemo(
-    () => resolveDynamicPersonaDescription(sonicPersona, profileState, dominantGenres),
-    [dominantGenres, profileState, sonicPersona]
+  const shareCopy = useMemo(
+    () =>
+      resolvePersonaShareCopy({
+        persona: sonicPersona,
+        profileState,
+        dominantGenres,
+        userId: identitySession?.userId ?? null,
+        anonymousId: identitySession?.anonymousId ?? null,
+      }),
+    [dominantGenres, identitySession?.anonymousId, identitySession?.userId, profileState, sonicPersona]
   )
-  const radarAxes = useMemo(() => getRadarAxes(profile ?? null), [profile])
+  const radarProfile = useMemo(() => resolveRadarProfile(profileState), [profileState])
+  const radarAxes = useMemo(() => getRadarAxes(radarProfile), [radarProfile])
   const intensityScore = radarAxes.find((axis) => axis.key === "energy")?.value ?? 0.5
   const rhythmScore = radarAxes.find((axis) => axis.key === "bpm")?.value ?? 0.5
   const danceScore = radarAxes.find((axis) => axis.key === "dance")?.value ?? 0.5
@@ -126,7 +139,7 @@ export function MusicDnaLanding() {
                   priority
                 />
                 <div className="absolute inset-0 flex flex-col items-center justify-center pb-1">
-                  <p className="font-sonic-persona text-[28px] font-semibold uppercase leading-none text-[#3b2418]">
+                  <p className="font-sonic-persona text-[20px] font-semibold uppercase leading-none text-[#3b2418]">
                     {sonicPersona.name}
                   </p>
                 </div>
@@ -134,8 +147,10 @@ export function MusicDnaLanding() {
             </div>
 
             <div className="mt-3 rounded-[18px_12px_18px_10px] bg-[#f9e5c5] px-3 py-2 text-left shadow-[0_10px_16px_rgba(111,69,40,0.16)] ring-1 ring-[#6f4528]/30 relative">
-              <p className="text-[10px] font-black uppercase tracking-[0.12em] text-[#6f4528]">Perfil de Persona</p>
-              <p className="mt-1 text-xs font-semibold leading-relaxed text-[#4a2a1d]">{sonicPersonaDescription}</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.12em] text-[#6f4528]">Perfil Sonoro</p>
+              <p className="mt-1 text-xs font-semibold leading-relaxed text-[#4a2a1d]">
+                {shareCopy.description || "Tu seleccion combina energia, ritmo y estilo con una firma sonora unica."}
+              </p>
             </div>
 
             <div className="mt-4 grid grid-cols-2 gap-3">
@@ -168,11 +183,16 @@ export function MusicDnaLanding() {
             </div>
           </aside>
 
-          <section className="rounded-[34px_22px_30px_20px] p-4 md:p-5">
+          <section className="rounded-[34px_22px_30px_20px] bg-[#f6e7ca]/95 p-4 md:p-5">
             <div className="flex flex-wrap items-start justify-between gap-3 border-b-2 border-[#9c7049] pb-3">
               <div>
-                <h1 className="text-4xl font-black uppercase leading-none tracking-tight md:text-5xl">Analisis Musical</h1>
-                <p className="mt-2 text-sm font-semibold md:text-base">Tu huella auditiva en base a tus ultimas {analyzedVotes} batallas.</p>
+                <h1 className="text-4xl font-black uppercase leading-none tracking-tight md:text-5xl">
+                  Tu huella auditiva
+                </h1>
+                <p className="mt-2 text-sm font-semibold md:text-base">En base a tus ultimas {analyzedVotes} batallas.</p>
+                <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-[#6f4528]">
+                  Cuantas mas battles votes, mayor precision tendra tu Music DNA.
+                </p>
               </div>
             </div>
 

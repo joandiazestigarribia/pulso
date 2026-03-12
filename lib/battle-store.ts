@@ -1472,6 +1472,24 @@ export async function getUserBattleStats(userId: string): Promise<{
   return { completedBattlesCount }
 }
 
+export async function resetUserBattleProgress(userId: string): Promise<{ deletedBattles: number }> {
+  assertDatabaseConfigured()
+
+  return prisma.$transaction(async (tx) => {
+    await tx.musicProfile.deleteMany({
+      where: { userId },
+    })
+
+    const deletedBattles = await tx.battle.deleteMany({
+      where: { userId },
+    })
+
+    return {
+      deletedBattles: deletedBattles.count,
+    }
+  })
+}
+
 export async function getLeaderboardTracks(): Promise<Track[]> {
   assertDatabaseConfigured()
   const tracks = await prisma.track.findMany({

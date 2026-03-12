@@ -26,6 +26,9 @@ export interface FullProfileData {
     remainingBattles: number
     topGenres: Array<{ genre: string; count: number }>
     topSubgenres: Array<{ genre: string; count: number }>
+    averageEnergy: number | null
+    averageValence: number | null
+    averageDanceability: number | null
   }
   error: {
     code: "PROFILE_GENERATION_FAILED"
@@ -113,6 +116,150 @@ const sonicPersonas: Record<string, SonicPersona> = {
   },
 }
 
+export type PersonaTone = "low" | "medium" | "high"
+export type HeadlineStyle = "totem" | "signal"
+export type DecadeGroup = "classic" | "retro" | "millennial" | "current"
+
+interface PersonaCopyCatalogEntry {
+  archetypeLabel: string
+  toneCopy: Record<PersonaTone, string>
+  templates: [string, string, string, string]
+}
+
+export interface PersonaShareCopyResult {
+  headline: string
+  description: string
+  meta: {
+    archetype: string
+    tone: PersonaTone
+    templateIndex: number
+    headlineStyle: HeadlineStyle
+    decadeGroup: DecadeGroup
+    seed: number
+  }
+}
+
+export const personaCopyCatalog = {
+  chill_oracle: {
+    archetypeLabel: "Calma Magnetica",
+    toneCopy: {
+      low: "fluyes en modo brisa, sin ruido extra",
+      medium: "equilibras calma y empuje con precision",
+      high: "levantas la energia sin perder elegancia",
+    },
+    templates: [
+      "Tu mapa mezcla {genre} con una lectura fina del ritmo. {toneCopy}.",
+      "Tu criterio en {genre} suena limpio y directo. {toneCopy}.",
+      "Cuando eliges, {genre} gana por textura y detalle. {toneCopy}.",
+      "Tu DNA ordena {genre} con pulso estable y curaduria clara. {toneCopy}.",
+    ],
+  },
+  hyperpop_pilot: {
+    archetypeLabel: "Impulso Neon",
+    toneCopy: {
+      low: "administras la tension para que cada golpe importe",
+      medium: "sostienes aceleracion constante con control",
+      high: "vas al frente con picos brillantes y precisos",
+    },
+    templates: [
+      "Tu radar prioriza {genre} con decision quirurgica. {toneCopy}.",
+      "Lees {genre} como una pista de lanzamiento. {toneCopy}.",
+      "En tus votos, {genre} entra con timing agresivo. {toneCopy}.",
+      "Tu seleccion convierte {genre} en una carrera bien medida. {toneCopy}.",
+    ],
+  },
+  lo_fi_alchemist: {
+    archetypeLabel: "Laboratorio Nocturno",
+    toneCopy: {
+      low: "prefieres capas suaves que dejan espacio al detalle",
+      medium: "combinas intimidad y groove en dosis exacta",
+      high: "subes intensidad sin perder atmosfera",
+    },
+    templates: [
+      "Tu formula cruza {genre} con enfoque artesanal. {toneCopy}.",
+      "Tu perfil en {genre} favorece texturas sobre exceso. {toneCopy}.",
+      "Cada voto refina {genre} con mirada de estudio. {toneCopy}.",
+      "Tu escucha empuja {genre} hacia un balance fino. {toneCopy}.",
+    ],
+  },
+  neon_nomad: {
+    archetypeLabel: "Ruta Hibrida",
+    toneCopy: {
+      low: "exploras con pausa y criterio abierto",
+      medium: "saltas entre climas sin romper continuidad",
+      high: "encadenas contrastes con hambre de descubrimiento",
+    },
+    templates: [
+      "Tu DNA conecta {genre} con rutas poco obvias. {toneCopy}.",
+      "Tu perfil convierte {genre} en territorio de cruce. {toneCopy}.",
+      "Tus elecciones leen {genre} como mapa expandible. {toneCopy}.",
+      "Hay firma viajera en como ordenas {genre}. {toneCopy}.",
+    ],
+  },
+  ranger: {
+    archetypeLabel: "Brigada Central",
+    toneCopy: {
+      low: "mantienes el foco en decisiones consistentes",
+      medium: "equilibras impacto y claridad en cada duelo",
+      high: "aceleras el pulso sin salirte del plan",
+    },
+    templates: [
+      "Tu perfil sostiene {genre} con criterio competitivo. {toneCopy}.",
+      "Tu curaduria de {genre} muestra disciplina y buena lectura. {toneCopy}.",
+      "En batalla, eliges {genre} con enfoque estrategico. {toneCopy}.",
+      "Tu DNA deja una firma estable en torno a {genre}. {toneCopy}.",
+    ],
+  },
+  retro_scout: {
+    archetypeLabel: "Archivo Analogico",
+    toneCopy: {
+      low: "priorizas cadencia y memoria antes que volumen",
+      medium: "mezclas tradicion y actualidad con soltura",
+      high: "reactivas clasicos con energia renovada",
+    },
+    templates: [
+      "Tu estilo lleva {genre} con mirada historica. {toneCopy}.",
+      "Tu seleccion rescata {genre} con sensibilidad de archivo. {toneCopy}.",
+      "En tus votos, {genre} conserva raiz y direccion. {toneCopy}.",
+      "Tu DNA convierte {genre} en puente entre epocas. {toneCopy}.",
+    ],
+  },
+  synth_captain: {
+    archetypeLabel: "Comando Electrico",
+    toneCopy: {
+      low: "prefieres pulsos controlados y lineas limpias",
+      medium: "mantienes groove firme con enfoque tecnico",
+      high: "enciendes la pista con traccion sostenida",
+    },
+    templates: [
+      "Tu firma empuja {genre} con precision mecanica. {toneCopy}.",
+      "Tu lectura de {genre} prioriza arquitectura sonora. {toneCopy}.",
+      "Cada decision en {genre} suena calibrada para movimiento. {toneCopy}.",
+      "Tu DNA electrifica {genre} sin perder estructura. {toneCopy}.",
+    ],
+  },
+  vaporwave_druid: {
+    archetypeLabel: "Mirador Onirico",
+    toneCopy: {
+      low: "sostienes un clima introspectivo y envolvente",
+      medium: "combinas color emocional con paso firme",
+      high: "amplificas la vibra sin romper el hechizo",
+    },
+    templates: [
+      "Tu perfil modela {genre} desde la atmosfera. {toneCopy}.",
+      "Tu seleccion en {genre} prioriza paisaje y sensacion. {toneCopy}.",
+      "En cada duelo, {genre} aparece con narrativa visual. {toneCopy}.",
+      "Tu DNA orienta {genre} hacia un viaje inmersivo. {toneCopy}.",
+    ],
+  },
+} as const satisfies Record<string, PersonaCopyCatalogEntry>
+
+type PersonaArchetype = keyof typeof personaCopyCatalog
+
+function isPersonaArchetype(value: string): value is PersonaArchetype {
+  return value in personaCopyCatalog
+}
+
 export function fetcher<T>(url: string): Promise<T> {
   return fetch(url).then((response) => response.json() as Promise<T>)
 }
@@ -127,6 +274,49 @@ export function toUnit(value: number | null): number {
 
 export function toPercent(value: number): number {
   return Math.round(value * 100)
+}
+
+function normalizedEntropy(counts: number[]): number {
+  const validCounts = counts.filter((count) => Number.isFinite(count) && count > 0)
+  const total = validCounts.reduce((sum, count) => sum + count, 0)
+  if (total <= 0 || validCounts.length <= 1) {
+    return 0.5
+  }
+
+  let entropy = 0
+  for (const count of validCounts) {
+    const probability = count / total
+    entropy -= probability * Math.log2(probability)
+  }
+
+  const maxEntropy = Math.log2(validCounts.length)
+  if (maxEntropy <= 0) {
+    return 0.5
+  }
+
+  return Math.max(0, Math.min(1, entropy / maxEntropy))
+}
+
+function teaserVarietyScore(profileState: FullProfileData | undefined): number {
+  return normalizedEntropy((profileState?.teaser.topGenres ?? []).map((entry) => entry.count))
+}
+
+export function resolveRadarProfile(profileState: FullProfileData | undefined): FullProfileData["profile"] {
+  if (profileState?.profile) {
+    return profileState.profile
+  }
+
+  return {
+    summary: null,
+    dominantGenre: profileState?.teaser.topGenres[0]?.genre ?? null,
+    genreVarietyScore: teaserVarietyScore(profileState),
+    averageEnergy: profileState?.teaser.averageEnergy ?? null,
+    averageValence: profileState?.teaser.averageValence ?? null,
+    averageDanceability: profileState?.teaser.averageDanceability ?? null,
+    decadeDistribution: {},
+    generatedFromVotes: profileState?.completedBattlesCount ?? 0,
+    updatedAt: new Date(0).toISOString(),
+  }
 }
 
 function hasGenreSignal(genreValues: string[], signals: string[]): boolean {
@@ -200,6 +390,227 @@ function levelBand(value: number | null): "baja" | "media" | "alta" {
   return "media"
 }
 
+function hashStringFnv1a(value: string): number {
+  let hash = 0x811c9dc5
+  for (let index = 0; index < value.length; index += 1) {
+    hash ^= value.charCodeAt(index)
+    hash = Math.imul(hash, 0x01000193)
+  }
+  return hash >>> 0
+}
+
+function pickDeterministicIndex(seed: string, slot: string, size: number): number {
+  if (size <= 0) {
+    return 0
+  }
+
+  return hashStringFnv1a(`${seed}|${slot}`) % size
+}
+
+function resolvePersonaTone(profileState: FullProfileData | undefined): PersonaTone {
+  const energy = toUnit(profileState?.profile?.averageEnergy ?? profileState?.teaser.averageEnergy ?? null)
+  const valence = toUnit(profileState?.profile?.averageValence ?? profileState?.teaser.averageValence ?? null)
+  const weightedMood = energy * 0.65 + valence * 0.35
+
+  if (weightedMood < 0.4) {
+    return "low"
+  }
+  if (weightedMood > 0.68) {
+    return "high"
+  }
+
+  return "medium"
+}
+
+function getDominantDecadeLabel(profileState: FullProfileData | undefined): string {
+  const distributionEntries = Object.entries(profileState?.profile?.decadeDistribution ?? {})
+  if (distributionEntries.length === 0) {
+    return "mixed eras"
+  }
+
+  let dominantEntry = distributionEntries[0]
+  for (const currentEntry of distributionEntries.slice(1)) {
+    if (currentEntry[1] > dominantEntry[1]) {
+      dominantEntry = currentEntry
+    }
+  }
+
+  return dominantEntry[0]
+}
+
+function mapDecadeGroup(decadeLabel: string): DecadeGroup {
+  const match = decadeLabel.match(/(\d{4})/)
+  if (!match) {
+    return "millennial"
+  }
+
+  const decade = Number.parseInt(match[1] ?? "", 10)
+  if (!Number.isFinite(decade)) {
+    return "millennial"
+  }
+  if (decade <= 1979) {
+    return "classic"
+  }
+  if (decade <= 1999) {
+    return "retro"
+  }
+  if (decade <= 2014) {
+    return "millennial"
+  }
+
+  return "current"
+}
+
+function getDecadeCopy(group: DecadeGroup): string {
+  const decadeCopyMap: Record<DecadeGroup, string> = {
+    classic: "Ancla tu identidad en eras fundacionales.",
+    retro: "Respiras referencias noventeras y ochenteras con criterio moderno.",
+    millennial: "Tu norte cae en la etapa de transicion digital.",
+    current: "Tu pulso se alinea con la ola mas reciente.",
+  }
+
+  return decadeCopyMap[group]
+}
+
+function getVarietyCopy(varietyScore: number): string {
+  if (varietyScore >= 0.75) {
+    return "Tenes alma exploradora y te gusta abrir senderos entre estilos distintos."
+  }
+  if (varietyScore >= 0.45) {
+    return "Mantenes un equilibrio lindo entre terreno conocido y aventura musical."
+  }
+  return "Tu seleccion va con foco firme y una identidad muy clara en cada ronda."
+}
+
+function getToneSummaryCopy(tone: PersonaTone): string {
+  if (tone === "high") {
+    return "La energia viene alta, como fogata grande en noche fria."
+  }
+  if (tone === "low") {
+    return "El pulso cae mas sereno, ideal para escuchar capas y detalles."
+  }
+  return "El clima queda en punto medio, dinamico y siempre bien domado."
+}
+
+function getArchetypeSignature(archetype: PersonaArchetype): string {
+  const signatures: Record<PersonaArchetype, string> = {
+    chill_oracle: "Tu firma suena a refugio comodo, con detalle fino y cero ruido de mas.",
+    hyperpop_pilot: "Tu firma entra con cohetes, brillo y una punteria que no falla.",
+    lo_fi_alchemist: "Tu firma mezcla humo suave, texturas calidas y mucha intencion.",
+    neon_nomad: "Tu firma arma rutas nuevas, cruza climas y nunca pierde el hilo.",
+    ranger: "Tu firma va de frente, ordenada y estrategica como lider de campamento.",
+    retro_scout: "Tu firma rescata joyas de otras epocas y las trae con actitud fresca.",
+    synth_captain: "Tu firma manda pulsos electricos con precision de consola central.",
+    vaporwave_druid: "Tu firma pinta paisajes sonoros envolventes, casi como un sueño lucido.",
+  }
+
+  return signatures[archetype]
+}
+
+function getTrailInstinctCopy(tone: PersonaTone): string {
+  if (tone === "high") {
+    return "Cuando llega el duelo bravo, elegis con reflejo rapido y mucha seguridad."
+  }
+  if (tone === "low") {
+    return "Cuando llega el duelo bravo, elegis con calma, paciencia y ojo fino."
+  }
+
+  return "Cuando llega el duelo bravo, elegis con temple y buena lectura del momento."
+}
+
+function getCampEraCopy(group: DecadeGroup): string {
+  const eraMap: Record<DecadeGroup, string> = {
+    classic: "Tu carpa esta plantada cerca de la fogata clasica.",
+    retro: "Tu carpa esta plantada en zona retro, con guiños ochenteros y noventeros.",
+    millennial: "Tu carpa esta plantada en terreno millennial, entre nostalgia digital y presente.",
+    current: "Tu carpa esta plantada en la loma actual, donde sopla lo mas nuevo.",
+  }
+
+  return eraMap[group]
+}
+
+function getHeadline(
+  style: HeadlineStyle,
+  persona: SonicPersona,
+  archetypeLabel: string,
+  dominantGenre: string,
+  decadeGroup: DecadeGroup
+): string {
+  if (style === "totem") {
+    return `${persona.name} // ${archetypeLabel}`
+  }
+
+  const decadeTagMap: Record<DecadeGroup, string> = {
+    classic: "Classic Circuit",
+    retro: "Retro Signal",
+    millennial: "Millennial Wave",
+    current: "Current Mode",
+  }
+  return `${decadeTagMap[decadeGroup]}: ${dominantGenre}`
+}
+
+export interface ResolvePersonaShareCopyParams {
+  persona: SonicPersona
+  profileState: FullProfileData | undefined
+  dominantGenres: string[]
+  userId?: string | null
+  anonymousId?: string | null
+}
+
+export function resolvePersonaShareCopy(params: ResolvePersonaShareCopyParams): PersonaShareCopyResult {
+  const { persona, profileState, dominantGenres, userId = null, anonymousId = null } = params
+  const archetype: PersonaArchetype = isPersonaArchetype(persona.id) ? persona.id : "ranger"
+  const catalogEntry = personaCopyCatalog[archetype]
+  const dominantGenre = dominantGenres[0] ?? profileState?.profile?.dominantGenre ?? "sonidos mixtos"
+  const dominantDecadeLabel = getDominantDecadeLabel(profileState)
+  const decadeGroup = mapDecadeGroup(dominantDecadeLabel)
+  const tone = resolvePersonaTone(profileState)
+  const generatedFromVotes = profileState?.profile?.generatedFromVotes ?? profileState?.completedBattlesCount ?? 0
+  const identitySeed = userId ?? anonymousId ?? "guest"
+  const sourceSeed = [
+    persona.id,
+    dominantGenre.toLowerCase(),
+    decadeGroup,
+    String(generatedFromVotes),
+    identitySeed.toLowerCase(),
+  ].join("|")
+  const seed = hashStringFnv1a(sourceSeed)
+  const templateIndex = pickDeterministicIndex(sourceSeed, "template", catalogEntry.templates.length)
+  const headlineStyleIndex = pickDeterministicIndex(sourceSeed, "headline-style", 2)
+  const headlineStyle: HeadlineStyle = headlineStyleIndex === 0 ? "totem" : "signal"
+  const template = catalogEntry.templates[templateIndex]
+  const toneCopy = catalogEntry.toneCopy[tone]
+  const secondaryGenre = dominantGenres[1] ?? "escenas complementarias"
+  const variety = Math.max(0, Math.min(1, profileState?.profile?.genreVarietyScore ?? teaserVarietyScore(profileState)))
+  const sentences = [
+    template.replace("{genre}", dominantGenre).replace("{toneCopy}", toneCopy),
+    `En este campamento sonoro, ${getDecadeCopy(decadeGroup).charAt(0).toLowerCase()}${getDecadeCopy(decadeGroup).slice(1)}`,
+    `Tu genero dominante hoy es ${dominantGenre}, y marca el centro de tus elecciones.`,
+    `Como segundo eje aparecen ${secondaryGenre}, lo que agrega matices a tu mapa.`,
+    getToneSummaryCopy(tone),
+    getVarietyCopy(variety),
+    getArchetypeSignature(archetype),
+    getTrailInstinctCopy(tone),
+    getCampEraCopy(decadeGroup),
+    "Resultado del dia: tenes una identidad sonora definida, divertida y lista para otro round.",
+  ]
+  const description = sentences.join(" ")
+  const headline = getHeadline(headlineStyle, persona, catalogEntry.archetypeLabel, dominantGenre, decadeGroup)
+
+  return {
+    headline,
+    description,
+    meta: {
+      archetype,
+      tone,
+      templateIndex,
+      headlineStyle,
+      decadeGroup,
+      seed,
+    },
+  }
+}
+
 export function resolveDynamicPersonaDescription(
   persona: SonicPersona,
   profileState: FullProfileData | undefined,
@@ -213,7 +624,7 @@ export function resolveDynamicPersonaDescription(
   const dance = levelBand(profile?.averageDanceability ?? null)
   const mood = levelBand(profile?.averageValence ?? null)
 
-  return `${persona.name}: combinás ${mainGenre} con ${secondGenre} como si fueras DJ residente de tu propio festival. Tu estilo cae en energia ${energy}, animo ${mood} y bailabilidad ${dance}, con un guiño fuerte a ${topDecade}; en resumen, criterio fino y cero playlists aburridas.`
+  return `${persona.name}: tu seleccion prioriza ${mainGenre} y ${secondGenre}, con energia ${energy}, animo ${mood} y bailabilidad ${dance}. El patron general muestra una preferencia consistente por ${topDecade}, con un criterio curatorial estable y enfocado.`
 }
 
 export function buildDynamicHandle(base: string, userId: string | null, anonymousId: string | null): string {
