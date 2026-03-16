@@ -474,22 +474,22 @@ function getDecadeCopy(group: DecadeGroup): string {
 
 function getVarietyCopy(varietyScore: number): string {
   if (varietyScore >= 0.75) {
-    return "Tenes alma exploradora y te gusta abrir senderos entre estilos distintos."
+    return "Mostras una inclinacion clara por descubrir contrastes entre estilos."
   }
   if (varietyScore >= 0.45) {
-    return "Mantenes un equilibrio lindo entre terreno conocido y aventura musical."
+    return "Mantenes un equilibrio consistente entre territorio conocido y descubrimiento."
   }
-  return "Tu seleccion va con foco firme y una identidad muy clara en cada ronda."
+  return "Tu seleccion mantiene foco firme y una identidad sonora bien definida."
 }
 
 function getToneSummaryCopy(tone: PersonaTone): string {
   if (tone === "high") {
-    return "La energia viene alta, como fogata grande en noche fria."
+    return "La energia general se mantiene alta y sostenida."
   }
   if (tone === "low") {
-    return "El pulso cae mas sereno, ideal para escuchar capas y detalles."
+    return "El pulso general es sereno, con foco en detalle y matiz."
   }
-  return "El clima queda en punto medio, dinamico y siempre bien domado."
+  return "El clima general queda en un punto medio dinamico y controlado."
 }
 
 function getArchetypeSignature(archetype: PersonaArchetype): string {
@@ -509,21 +509,21 @@ function getArchetypeSignature(archetype: PersonaArchetype): string {
 
 function getTrailInstinctCopy(tone: PersonaTone): string {
   if (tone === "high") {
-    return "Cuando llega el duelo bravo, elegis con reflejo rapido y mucha seguridad."
+    return "Frente a comparaciones exigentes, respondes con decisiones rapidas y firmes."
   }
   if (tone === "low") {
-    return "Cuando llega el duelo bravo, elegis con calma, paciencia y ojo fino."
+    return "Frente a comparaciones exigentes, respondes con calma y criterio fino."
   }
 
-  return "Cuando llega el duelo bravo, elegis con temple y buena lectura del momento."
+  return "Frente a comparaciones exigentes, respondes con equilibrio y buena lectura del contexto."
 }
 
 function getCampEraCopy(group: DecadeGroup): string {
   const eraMap: Record<DecadeGroup, string> = {
-    classic: "Tu carpa esta plantada cerca de la fogata clasica.",
-    retro: "Tu carpa esta plantada en zona retro, con guiños ochenteros y noventeros.",
-    millennial: "Tu carpa esta plantada en terreno millennial, entre nostalgia digital y presente.",
-    current: "Tu carpa esta plantada en la loma actual, donde sopla lo mas nuevo.",
+    classic: "Tu referencia temporal se apoya en catalogo fundacional.",
+    retro: "Tu referencia temporal prioriza catalogo retro con mirada actual.",
+    millennial: "Tu referencia temporal cruza nostalgia digital y produccion moderna.",
+    current: "Tu referencia temporal se alinea con lanzamientos recientes.",
   }
 
   return eraMap[group]
@@ -592,7 +592,7 @@ export function resolvePersonaShareCopy(params: ResolvePersonaShareCopyParams): 
     getArchetypeSignature(archetype),
     getTrailInstinctCopy(tone),
     getCampEraCopy(decadeGroup),
-    "Resultado del dia: tenes una identidad sonora definida, divertida y lista para otro round.",
+    "Resultado general: tenes una identidad sonora definida, consistente y lista para seguir evolucionando.",
   ]
   const description = sentences.join(" ")
   const headline = getHeadline(headlineStyle, persona, catalogEntry.archetypeLabel, dominantGenre, decadeGroup)
