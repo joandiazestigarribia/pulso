@@ -31,7 +31,7 @@ export function ProfileMetricsPanel({
           <span className="text-xl font-black tabular-nums text-[#ff9ffd]">{toPercent(rhythmScore)}%</span>
         </div>
         <div className="flex items-center justify-between gap-3 rounded-[14px] bg-[#10183d]/85 px-3 py-2.5 shadow-[inset_0_0_0_1px_rgba(255,230,0,0.14)] transition-colors hover:bg-[#15204f]">
-          <span className="inline-flex items-center gap-2 text-sm font-bold text-[#dff7ff]"><Trophy className="h-4 w-4 text-[#ffe600]" />Respuesta al baile</span>
+          <span className="inline-flex items-center gap-2 text-sm font-bold text-[#dff7ff]"><Trophy className="h-4 w-4 text-[#ffe600]" />Tendencia al baile</span>
           <span className="text-xl font-black tabular-nums text-[#ffe98f]">{toPercent(danceScore)}%</span>
         </div>
         <div className="flex items-center justify-between gap-3 rounded-[14px] bg-[#11173c]/85 px-3 py-2.5 shadow-[inset_0_0_0_1px_rgba(0,255,102,0.14)] transition-colors hover:bg-[#16214f]">

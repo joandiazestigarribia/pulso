@@ -62,19 +62,19 @@ export function CampgroundHeader() {
             href="/battle"
             className={resolveNavItemClass(pathname, "/battle", "text-[#7be3ff]", "text-[#00f0ff]")}
           >
-            The Arena
+            1 vs 1
           </Link>
           <Link
             href="/music-dna"
             className={resolveNavItemClass(pathname, "/music-dna", "text-[#ffb5fb]", "text-[#ff43f8]")}
           >
-            Sonic Persona
+            Perfil Sonoro
           </Link>
           <Link
             href="/profile"
             className={resolveNavItemClass(pathname, "/profile", "text-[#f8eeaf]", "text-[#ffe600]")}
           >
-            Battle History
+            Perfil
           </Link>
         </nav>
 
@@ -84,7 +84,7 @@ export function CampgroundHeader() {
               href="/login"
               className="rounded-lg border bg-gradient-to-r from-[#00ff66] to-[#00f0ff] text-black shadow-[0_10px_24px_rgba(0,0,0,0.5)] py-1.25 px-2.5 text-xs font-black uppercase tracking-wide transition-colors hover:brightness-110"
             >
-              Sign in
+              Iniciar Sesión
             </Link>
           ) : null}
           {showRegister ? (
@@ -92,7 +92,7 @@ export function CampgroundHeader() {
               href="/register"
               className="rounded-lg border border-[#ff43f8]/45 bg-gradient-to-r from-[#ff2a6d] to-[#ffe600] shadow-[0_10px_24px_rgba(0,0,0,0.5)] py-1.25 px-2.5 text-xs font-black uppercase tracking-wide text-[#0b1129] transition-all hover:brightness-110"
             >
-              Register
+              Registrarse
             </Link>
           ) : null}
           {isAuthenticated ? <SignOutButton /> : null}
