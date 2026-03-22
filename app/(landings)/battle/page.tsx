@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import useSWR from "swr"
 import { AnimatePresence, motion } from "framer-motion"
-import { Flame, Play, RefreshCcw, Square, Volume2 } from "lucide-react"
+import { Play, RefreshCcw, Square, Volume2 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { EloFeedback } from "@/components/landings/elo-feedback"
@@ -104,7 +104,6 @@ interface AuthSessionResponse {
 interface BattleSideProps {
   label: string
   color: string
-  titleColor: string
   track: Track
   voteLabel: string
   keyLabel: string
@@ -128,7 +127,6 @@ const PROFILE_UI_GOAL_VOTES = 40
 function BattleSide({
   label,
   color,
-  titleColor,
   track,
   voteLabel,
   keyLabel,
@@ -184,7 +182,7 @@ function BattleSide({
   return (
     <section className="group relative flex flex-1 flex-col items-center justify-center">
       <div
-        className={`absolute -top-3 z-20 rounded-xl border-2 border-white/40 bg-black/55 px-3 py-1 text-xs font-black uppercase tracking-wide text-white shadow-[0_0_20px_rgba(250,70,255,0.35)] backdrop-blur md:-top-4 md:px-4 md:text-sm ${side === "left" ? "-left-10 -rotate-6 md:-rotate-12" : "-right-10 rotate-6 md:rotate-12"
+        className={`absolute -top-3 z-20 rounded-xl border-2 border-white/40 bg-black/55 px-3 py-1 text-xs font-black uppercase tracking-wide shadow-[0_0_20px_rgba(250,70,255,0.35)] backdrop-blur md:-top-4 md:px-4 md:text-sm ${side === "left" ? "-left-10 -rotate-6 md:-rotate-12 text-[#7be3ff]" : "-right-10 rotate-6 md:rotate-12 text-[#ffb5fb]"
           }`}
       >
         {label}
@@ -239,10 +237,10 @@ function BattleSide({
         <div className="space-y-2.5">
           <div className="flex items-start justify-between gap-2">
             <div>
-              <h2 className="text-base font-black uppercase leading-none tracking-tight text-white md:text-lg" style={{ color: titleColor }}>
+              <h2 className="bg-gradient-to-r from-[#00f0ff] via-[#ff43f8] to-[#ffe600] bg-clip-text text-base font-black uppercase leading-none tracking-tight text-transparent md:text-lg">
                 {track.name}
               </h2>
-              <p className="text-xs font-semibold text-white/80 md:text-sm">{track.artist}</p>
+              <p className="text-xs font-semibold text-[#d8ebff] md:text-sm">{track.artist}</p>
             </div>
           </div>
 
@@ -283,7 +281,8 @@ function BattleSide({
             disabled={isVoting}
             className="flex w-full items-center justify-center gap-3 rounded-xl border-2 py-2.5 text-xs font-black uppercase tracking-[0.18em] text-black shadow-[0_10px_24px_rgba(0,0,0,0.5)] transition-all hover:brightness-110 active:translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60 md:text-sm"
             style={{
-              background: `linear-gradient(130deg, ${color}, #ffe600)`,
+              // background: `linear-gradient(130deg, ${color}, #fff)`,
+              background: `${color}`,
               borderColor: "#1a1a1a",
             }}
           >
@@ -520,25 +519,6 @@ export default function BattlePage() {
       </AnimatePresence>
 
       <section className="relative z-10 mx-auto w-full max-w-300 overflow-hidden rounded-[28px]">
-        <header className="relative z-20 mx-auto mt-3 flex w-[min(96%,1280px)] items-center justify-between gap-3 rounded-2xl border border-white/15 bg-[#111739]/74 px-4 py-3 backdrop-blur">
-          <div className="flex items-center gap-3">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[linear-gradient(130deg,#ff3de2,#9445ff)] shadow-[0_0_16px_rgba(255,61,226,0.55)]">
-              <Flame className="h-4 w-4 text-[#ffe6ff]" />
-            </div>
-            <p className="text-lg font-black uppercase leading-none tracking-wide text-[#eaf7ff]">Pulso Campfire</p>
-          </div>
-          <nav className="hidden items-center gap-5 text-xs font-black uppercase tracking-[0.12em] md:flex">
-            <Link href="/battle" className="text-[#00f0ff] transition-colors hover:text-[#7afff8]">
-              The Arena
-            </Link>
-            <Link href="/music-dna" className="text-[#ff43f8] transition-colors hover:text-[#ff7ef7]">
-              Sonic Persona
-            </Link>
-            <Link href="/profile" className="text-[#00ff9f] transition-colors hover:text-[#7affc9]">
-              Battle History
-            </Link>
-          </nav>
-        </header>
 
         {(voteError || resetError) && (
           <div className="relative z-20 mx-auto mt-3 w-[min(95%,520px)] rounded-xl border-2 border-[#ff6c7b]/45 bg-[#2a0e19]/80 px-4 py-2 text-sm font-semibold text-[#ffd6dd]">
@@ -568,10 +548,10 @@ export default function BattlePage() {
         )}
 
         {shouldShowAuthPrompt && (
-          <section className="relative z-20 mx-auto mt-3 w-[min(96%,760px)] rounded-2xl border border-[#00ff9f]/35 bg-[#111739]/74 px-4 py-3 text-[#eaf7ff] backdrop-blur">
+          <section className="relative z-20 mx-auto mt-3 w-[min(96%,760px)] rounded-2xl border border-[#ff43f8]/30 bg-[#111739]/78 px-4 py-3 text-[#eaf7ff] shadow-[inset_0_0_0_1px_rgba(0,240,255,0.12)] backdrop-blur">
             <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <div>
-                <div className="font-mono text-[11px] uppercase tracking-[0.15em] text-[#00ff9f]">
+                <div className="bg-gradient-to-r from-[#00f0ff] via-[#ff43f8] to-[#ffe600] bg-clip-text text-[11px] font-black uppercase tracking-[0.15em] text-transparent">
                   {hasReachedUnlockThreshold ? "Music DNA unlocked" : "Save your progress"}
                 </div>
                 <p className="text-sm text-[#d8ebff]">
@@ -580,16 +560,16 @@ export default function BattlePage() {
                     : "Keep battling as guest, then sign in to keep progress across devices and prepare playlist export."}
                 </p>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 items-center">
                 <Link
                   href="/profile"
-                  className="rounded-lg border border-white/35 bg-black/40 px-3 py-2 text-xs font-black uppercase tracking-wide text-white hover:bg-white hover:text-black"
+                  className="rounded-lg border border-[#7be3ff]/35 bg-[#0d1636]/72 p-2 text-[8px] font-black uppercase tracking-wide text-[#d8ebff] transition-colors hover:border-[#00f0ff]/55 hover:text-[#eaf7ff] text-center h-fit min-w-25"
                 >
                   View Progress
                 </Link>
                 <Link
                   href="/login?next=%2Fbattle"
-                  className="rounded-lg border border-[#00ff9f]/55 bg-[#00ff9f] px-3 py-2 text-xs font-black uppercase tracking-wide text-black shadow-[0_0_22px_rgba(0,255,159,0.4)] hover:brightness-110"
+                  className="rounded-lg border bg-gradient-to-r from-[#00ff66] to-[#00f0ff] text-black p-2 text-[8px] font-black uppercase tracking-wide transition-all hover:brightness-110 text-center h-fit min-w-25"
                 >
                   Save With Login
                 </Link>
@@ -602,7 +582,7 @@ export default function BattlePage() {
         <div className="w-full">
           <div className="mx-auto mb-3 flex w-[min(96%,820px)] flex-col gap-1.5 rounded-2xl border border-white/15 bg-black/45 px-4 py-2.5 backdrop-blur">
             <div className="flex items-center justify-between gap-3">
-              <p className="font-mono text-xs font-black uppercase tracking-[0.12em] text-[#00f0ff]">
+              <p className="font-mono text-xs font-black uppercase tracking-[0.12em] text-[#f8eeaf]">
                 {completedBattles}/{PROFILE_UI_GOAL_VOTES} battles votados
               </p>
               {completedBattles >= PROFILE_UI_GOAL_VOTES ? (
@@ -614,7 +594,7 @@ export default function BattlePage() {
                   .
                 </p>
               ) : (
-                <p className="text-xs font-semibold text-white/80">Segui votando para desbloquear tu perfil sonoro.</p>
+                <p className="text-xs font-semibold text-white/80">Vota para desbloquear tu perfil sonoro.</p>
               )}
             </div>
             <div className="h-1.5 overflow-hidden rounded-full bg-white/15">
@@ -639,8 +619,7 @@ export default function BattlePage() {
           >
             <BattleSide
               label="Track A"
-              color="#FF2A6D"
-              titleColor="#00F0FF"
+              color="#7be3ff"
               track={battle.trackA}
               voteLabel="Vote Left"
               keyLabel="A"
@@ -661,8 +640,7 @@ export default function BattlePage() {
 
             <BattleSide
               label="Track B"
-              color="#00FF66"
-              titleColor="#FF2A6D"
+              color="#ffb5fb"
               track={battle.trackB}
               voteLabel="Vote Right"
               keyLabel="D"
@@ -680,11 +658,11 @@ export default function BattlePage() {
 
         <footer className="relative z-20 mx-auto mb-4 flex min-h-16 w-[min(92%,860px)] items-center justify-between gap-3 rounded-[22px] border border-white/20 bg-[#111739]/74 px-3 py-2 shadow-[0_0_28px_rgba(0,0,0,0.5)] backdrop-blur md:mb-6 md:px-4">
         <div className="flex shrink-0 items-center gap-3">
-          <div className="flex h-10 w-10 rotate-3 items-center justify-center rounded-xl border border-[#ff4ef5]/60 bg-black/60 shadow-[0_0_18px_rgba(255,78,245,0.3)]">
-            <Volume2 className="h-5 w-5 text-[#ff4ef5]" />
+          <div className="flex h-10 w-10 rotate-3 items-center justify-center rounded-xl border border-[#00f0ff]/45 bg-black/60 shadow-[0_0_18px_rgba(0,240,255,0.32)]">
+            <Volume2 className="h-5 w-5 text-[#7be3ff]" />
           </div>
           <div>
-            <div className="text-[10px] font-black uppercase tracking-[0.2em] text-[#00f0ff] md:text-xs">Now Playing</div>
+            <div className="text-[10px] font-black uppercase tracking-[0.2em] text-[#f8eeaf] md:text-xs">Now Playing</div>
             <div className="text-xs font-semibold text-white md:text-sm">
               {activePreviewTrackId
                 ? [battle.trackA, battle.trackB].find((track) => track.id === activePreviewTrackId)?.name ?? "PREVIEW"

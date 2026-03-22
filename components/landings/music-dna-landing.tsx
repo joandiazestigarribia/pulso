@@ -162,10 +162,10 @@ export function MusicDnaLanding() {
   return (
     <main className="relative min-h-screen w-full overflow-hidden bg-[#080b1a] pb-8 pt-15 text-[#eaf7ff] md:px-4">
       <div className="pointer-events-none fixed inset-0 z-0 opacity-90" style={musicDnaBackgroundStyle} />
-      <section className="relative z-10 mx-auto max-w-300 overflow-hidden rounded-[28px] bg-[#090d25]/45 text-[#eaf7ff] backdrop-blur-sm">
+      <section className="relative z-10 mx-auto max-w-300 overflow-hidden rounded-[28px] bg-[#090d25]/45 text-[#eaf7ff] backdrop-blur-sm mt-5">
         <div className="pointer-events-none absolute inset-0" />
         <div className="relative grid gap-4 pt-0 px-3 md:grid-cols-[350px_minmax(0,1fr)]">
-          <aside className="relative overflow-hidden pb-3 px-3">
+          <aside className="relative overflow-hidden pt-5 pb-3 px-3">
             <div className="mx-auto max-w-77.5 rounded-3xl border border-white/25 bg-black/40 px-4 py-4 text-center shadow-[0_0_32px_rgba(0,240,255,0.18)]">
               <p className="text-xs font-black uppercase tracking-[0.18em] text-[#7be3ff]">Pulso Experience</p>
               <p className="mt-2 bg-gradient-to-r from-[#00f0ff] via-[#ff43f8] to-[#ffe600] bg-clip-text font-sonic-persona text-4xl font-black uppercase leading-[0.95] tracking-tight text-transparent">
