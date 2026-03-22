@@ -3,7 +3,7 @@ import { z } from "zod"
 import { assertDatabaseConfigured, prisma } from "@/lib/db"
 import { calculateElo } from "@/lib/elo"
 import { MOCK_TRACKS, type Battle, type BattleState, type Track } from "@/lib/mock-data"
-import { fetchDeezerBattleTracks, fetchItunesBattleTracks, fetchItunesPreviewUrl } from "@/lib/spotify"
+import { fetchDeezerBattleTracks, fetchItunesBattleTracks, fetchItunesPreviewUrl } from "@/lib/catalog-providers"
 import {
   buildTrackTitleKey,
   extractArtistMatchTokens,
@@ -13,7 +13,7 @@ import {
 import { getActiveArtistDenylist, isArtistBlocked } from "@/lib/catalog-policy"
 
 const MATCHMAKING_ELO_THRESHOLD = 200
-const SPOTIFY_REFRESH_MS = 1000 * 60 * 30
+const CATALOG_REFRESH_MS = 1000 * 60 * 30
 const CATALOG_SYNC_LIMIT = 200
 const EXTERNAL_PREVIEW_TRACK_THRESHOLD = 8
 const LEGACY_PLACEHOLDER_PREVIEW_URL = "https://interactive-examples.mdn.mozilla.net/media/cc0-audio/t-rex-roar.mp3"
@@ -185,7 +185,7 @@ export const voteSchema = z
     path: ["winnerId"],
   })
 
-let lastSpotifySyncAt = 0
+let lastCatalogSyncAt = 0
 let lastPreviewBackfillAt = 0
 let previewBackfillPromise: Promise<void> | null = null
 
@@ -242,7 +242,7 @@ async function countExternalPreviewTracks(): Promise<number> {
     where: {
       previewUrl: { not: null },
       previewSource: {
-        in: ["deezer", "spotify", "itunes"],
+        in: ["deezer", "itunes"],
       },
     },
     select: {
@@ -705,7 +705,6 @@ function selectCrossBucketPair(previewTracks: Track[]): { trackA: Track; trackB:
 
 function toTrack(track: {
   id: string
-  spotifyTrackId: string | null
   catalogBucket: string
   name: string
   artist: string
@@ -713,9 +712,6 @@ function toTrack(track: {
   previewUrl: string | null
   previewSource: string | null
   previewCheckedAt: Date | null
-  spotifyPopularity: number | null
-  spotifyExplicit: boolean | null
-  spotifyPreviewAvailable: boolean | null
   eloScore: number
   battlesCount: number
   bpm: number
@@ -728,7 +724,6 @@ function toTrack(track: {
 }): Track {
   return {
     id: track.id,
-    spotifyTrackId: track.spotifyTrackId,
     catalogBucket: track.catalogBucket,
     name: track.name,
     artist: track.artist,
@@ -736,9 +731,6 @@ function toTrack(track: {
     previewUrl: track.previewUrl,
     previewSource: track.previewSource,
     previewCheckedAt: track.previewCheckedAt?.toISOString() ?? null,
-    spotifyPopularity: track.spotifyPopularity,
-    spotifyExplicit: track.spotifyExplicit,
-    spotifyPreviewAvailable: track.spotifyPreviewAvailable,
     eloScore: track.eloScore,
     battlesCount: track.battlesCount,
     bpm: track.bpm,
@@ -776,10 +768,6 @@ async function seedCatalogIfEmpty(): Promise<void> {
           previewUrl: track.previewUrl,
           previewSource: track.previewSource,
           previewCheckedAt: track.previewCheckedAt,
-          spotifyTrackId: track.spotifyTrackId,
-          spotifyPopularity: track.spotifyPopularity,
-          spotifyExplicit: track.spotifyExplicit,
-          spotifyPreviewAvailable: track.spotifyPreviewAvailable,
           bpm: track.bpm,
           duration: track.duration,
           genre: track.genre,
@@ -814,7 +802,6 @@ async function sanitizeLegacyPlaceholderPreviews(): Promise<void> {
       previewUrl: null,
       previewSource: null,
       previewCheckedAt: new Date(),
-      spotifyPreviewAvailable: false,
     },
   })
 }
@@ -849,7 +836,6 @@ async function clearExpiredDeezerPreviewUrls(): Promise<void> {
       previewUrl: null,
       previewSource: null,
       previewCheckedAt: new Date(),
-      spotifyPreviewAvailable: false,
     },
   })
 }
@@ -857,12 +843,12 @@ async function clearExpiredDeezerPreviewUrls(): Promise<void> {
 async function normalizeLegacyPreviewSources(): Promise<void> {
   await prisma.track.updateMany({
     where: {
-      previewUrl: { not: null },
-      previewSource: null,
-      spotifyTrackId: { not: null },
+      previewSource: {
+        notIn: ["deezer", "itunes"],
+      },
     },
     data: {
-      previewSource: "spotify",
+      previewSource: "itunes",
       previewCheckedAt: new Date(),
     },
   })
@@ -871,7 +857,19 @@ async function normalizeLegacyPreviewSources(): Promise<void> {
     where: {
       previewUrl: { not: null },
       previewSource: null,
-      spotifyTrackId: null,
+      id: { startsWith: "deezer_" },
+    },
+    data: {
+      previewSource: "deezer",
+      previewCheckedAt: new Date(),
+    },
+  })
+
+  await prisma.track.updateMany({
+    where: {
+      previewUrl: { not: null },
+      previewSource: null,
+      id: { not: { startsWith: "deezer_" } },
     },
     data: {
       previewSource: "itunes",
@@ -924,7 +922,7 @@ async function suppressStaleExternalTracks(activeTrackIds: string[]): Promise<vo
   await prisma.track.updateMany({
     where: {
       previewSource: {
-        in: ["deezer", "spotify", "itunes"],
+        in: ["deezer", "itunes"],
       },
       id: {
         notIn: activeTrackIds,
@@ -934,7 +932,6 @@ async function suppressStaleExternalTracks(activeTrackIds: string[]): Promise<vo
       previewUrl: null,
       previewSource: null,
       previewCheckedAt: new Date(),
-      spotifyPreviewAvailable: false,
     },
   })
 }
@@ -1030,7 +1027,7 @@ export async function ensureBattleCatalog(options?: { forceRefresh?: boolean }):
   const externalPreviewTrackCount = await countExternalPreviewTracks()
   const hasHealthyExternalCatalog = externalPreviewTrackCount >= EXTERNAL_PREVIEW_TRACK_THRESHOLD
 
-  if (!forceRefresh && Date.now() - lastSpotifySyncAt < SPOTIFY_REFRESH_MS && hasHealthyExternalCatalog) {
+  if (!forceRefresh && Date.now() - lastCatalogSyncAt < CATALOG_REFRESH_MS && hasHealthyExternalCatalog) {
     return
   }
 
@@ -1067,10 +1064,6 @@ export async function ensureBattleCatalog(options?: { forceRefresh?: boolean }):
                     previewCheckedAt: new Date(),
                   }
                 : {}),
-              spotifyTrackId: track.spotifyTrackId,
-              spotifyPopularity: track.spotifyPopularity,
-              spotifyExplicit: track.spotifyExplicit,
-              spotifyPreviewAvailable: track.spotifyPreviewAvailable,
               bpm: track.bpm,
               duration: track.duration,
               genre: track.genre,
@@ -1085,7 +1078,7 @@ export async function ensureBattleCatalog(options?: { forceRefresh?: boolean }):
 
       await suppressStaleExternalTracks(itunesTracks.filter((track) => hasTrackPreview(track)).map((track) => track.id))
 
-      lastSpotifySyncAt = Date.now()
+      lastCatalogSyncAt = Date.now()
     }
 
     triggerPreviewBackfillInBackground()
@@ -1114,10 +1107,6 @@ export async function ensureBattleCatalog(options?: { forceRefresh?: boolean }):
                 previewCheckedAt: new Date(),
               }
             : {}),
-          spotifyTrackId: track.spotifyTrackId,
-          spotifyPopularity: track.spotifyPopularity,
-          spotifyExplicit: track.spotifyExplicit,
-          spotifyPreviewAvailable: track.spotifyPreviewAvailable,
           bpm: track.bpm,
           duration: track.duration,
           genre: track.genre,
@@ -1130,7 +1119,7 @@ export async function ensureBattleCatalog(options?: { forceRefresh?: boolean }):
     )
   )
   await suppressStaleExternalTracks(deezerPreviewTracks.map((track) => track.id))
-  lastSpotifySyncAt = Date.now()
+  lastCatalogSyncAt = Date.now()
   triggerPreviewBackfillInBackground()
 }
 

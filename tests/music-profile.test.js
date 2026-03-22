@@ -5,6 +5,7 @@ const { prisma } = require("../.tmp-test/lib/db")
 const { MOCK_TRACKS } = require("../.tmp-test/lib/mock-data")
 const { createPendingBattle, completeBattleVote } = require("../.tmp-test/lib/battle-store")
 const { getMusicProfileState } = require("../.tmp-test/lib/music-profile")
+const { MUSIC_DNA_UNLOCK_THRESHOLD } = require("../.tmp-test/lib/music-dna-config")
 const { normalizeTrackGenre } = require("../.tmp-test/lib/genre-normalization")
 
 async function seedBaselineTracks() {
@@ -75,25 +76,26 @@ test.before(async () => {
 })
 
 test("music profile stays locked before threshold and returns teaser", async () => {
+  const targetBattles = Math.max(1, MUSIC_DNA_UNLOCK_THRESHOLD - 7)
   await seedBaselineTracks()
-  await completeBattles("music-profile-locked", 3)
+  await completeBattles("music-profile-locked", targetBattles)
 
   const state = await getMusicProfileState("music-profile-locked")
   assert.equal(state.unlocked, false)
   assert.equal(state.profile, null)
-  assert.equal(state.completedBattlesCount, 3)
+  assert.equal(state.completedBattlesCount, targetBattles)
   assert.equal(state.teaser.remainingBattles, 7)
   assert.equal(state.error, null)
 })
 
 test("music profile is generated at threshold and cached from vote count", async () => {
   await seedBaselineTracks()
-  await completeBattles("music-profile-unlock", 10)
+  await completeBattles("music-profile-unlock", MUSIC_DNA_UNLOCK_THRESHOLD)
 
   const state = await getMusicProfileState("music-profile-unlock")
   assert.equal(state.unlocked, true)
   assert.ok(state.profile)
-  assert.equal(state.profile.generatedFromVotes, 10)
+  assert.equal(state.profile.generatedFromVotes, MUSIC_DNA_UNLOCK_THRESHOLD)
   assert.equal(typeof state.profile.genreVarietyScore, "number")
   assert.equal(state.error, null)
 })
@@ -101,16 +103,16 @@ test("music profile is generated at threshold and cached from vote count", async
 test("music profile regenerates when new battles are completed", async () => {
   await seedBaselineTracks()
   const userId = "music-profile-refresh"
-  await completeBattles(userId, 10)
+  await completeBattles(userId, MUSIC_DNA_UNLOCK_THRESHOLD)
   const initial = await getMusicProfileState(userId)
 
   assert.ok(initial.profile)
-  assert.equal(initial.profile.generatedFromVotes, 10)
+  assert.equal(initial.profile.generatedFromVotes, MUSIC_DNA_UNLOCK_THRESHOLD)
 
   await completeBattles(userId, 1)
   const refreshed = await getMusicProfileState(userId)
   assert.ok(refreshed.profile)
-  assert.equal(refreshed.profile.generatedFromVotes, 11)
+  assert.equal(refreshed.profile.generatedFromVotes, MUSIC_DNA_UNLOCK_THRESHOLD + 1)
 })
 
 test("genre normalization avoids duplicate macro/subgenre labels", async () => {

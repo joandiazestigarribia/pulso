@@ -1,4 +1,4 @@
-import type { CatalogBucket } from "@/lib/spotify"
+import type { CatalogBucket } from "@/lib/catalog-providers"
 
 export interface DeezerPlaylistSource {
   bucket: CatalogBucket

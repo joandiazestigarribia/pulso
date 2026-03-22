@@ -14,7 +14,7 @@
     "lib/elo.ts",
     "lib/db.ts",
     "lib/mock-data.ts",
-    "lib/spotify.ts",
+    "lib/catalog-providers.ts",
     "lib/battle-store.ts",
     "lib/identity.ts",
     "lib/auth.ts",

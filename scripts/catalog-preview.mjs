@@ -4,7 +4,7 @@ import { pathToFileURL } from "node:url"
 function parseArgs(argv) {
   const options = {
     bucket: null,
-    source: "itunes",
+    source: "deezer",
     limit: 200,
     top: 50,
     json: false,
@@ -49,8 +49,8 @@ function parseArgs(argv) {
     options.top = 50
   }
 
-  if (!["itunes", "spotify", "both"].includes(options.source)) {
-    options.source = "itunes"
+  if (!["deezer", "itunes", "both"].includes(options.source)) {
+    options.source = "deezer"
   }
 
   return options
@@ -62,21 +62,21 @@ function trackLabel(track) {
 
 async function main() {
   const options = parseArgs(process.argv.slice(2))
-  const spotifyModulePath = path.resolve(process.cwd(), ".tmp-test/lib/spotify.js")
-  const spotifyModuleUrl = pathToFileURL(spotifyModulePath).href
-  const { fetchItunesBattleTracks, fetchSpotifyBattleTracks } = await import(spotifyModuleUrl)
+  const providersModulePath = path.resolve(process.cwd(), ".tmp-test/lib/catalog-providers.js")
+  const providersModuleUrl = pathToFileURL(providersModulePath).href
+  const { fetchDeezerBattleTracks, fetchItunesBattleTracks } = await import(providersModuleUrl)
 
   let tracks = []
-  if (options.source === "itunes") {
+  if (options.source === "deezer") {
+    tracks = await fetchDeezerBattleTracks(options.limit)
+  } else if (options.source === "itunes") {
     tracks = await fetchItunesBattleTracks(options.limit)
-  } else if (options.source === "spotify") {
-    tracks = await fetchSpotifyBattleTracks(options.limit)
   } else {
-    const [itunesTracks, spotifyTracks] = await Promise.all([
+    const [deezerTracks, itunesTracks] = await Promise.all([
+      fetchDeezerBattleTracks(options.limit),
       fetchItunesBattleTracks(options.limit),
-      fetchSpotifyBattleTracks(options.limit),
     ])
-    tracks = [...itunesTracks, ...spotifyTracks]
+    tracks = [...deezerTracks, ...itunesTracks]
   }
 
   const filtered = options.bucket

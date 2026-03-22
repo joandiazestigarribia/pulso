@@ -2,8 +2,6 @@ export interface IdentitySessionResponse {
   isAuthenticated: boolean
   userId: string | null
   anonymousId: string | null
-  spotifyConnected: boolean
-  spotifyTokenError: string | null
 }
 
 export interface FullProfileData {

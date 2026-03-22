@@ -2,7 +2,6 @@ export type BattleState = "PENDING" | "COMPLETED"
 
 export interface Track {
   id: string
-  spotifyTrackId?: string | null
   catalogBucket?: string
   name: string
   artist: string
@@ -10,9 +9,6 @@ export interface Track {
   previewUrl: string | null
   previewSource?: string | null
   previewCheckedAt?: string | null
-  spotifyPopularity?: number | null
-  spotifyExplicit?: boolean | null
-  spotifyPreviewAvailable?: boolean | null
   eloScore: number
   battlesCount: number
   bpm: number
@@ -38,7 +34,6 @@ export interface Battle {
 export const MOCK_TRACKS: Track[] = [
   {
     id: "1",
-    spotifyTrackId: null,
     catalogBucket: "classics_00s_10s",
     name: "Midnight City",
     artist: "M83",
@@ -46,9 +41,6 @@ export const MOCK_TRACKS: Track[] = [
     previewUrl: null,
     previewSource: null,
     previewCheckedAt: null,
-    spotifyPopularity: 79,
-    spotifyExplicit: false,
-    spotifyPreviewAvailable: false,
     eloScore: 1520,
     battlesCount: 34,
     bpm: 105,
@@ -61,7 +53,6 @@ export const MOCK_TRACKS: Track[] = [
   },
   {
     id: "2",
-    spotifyTrackId: null,
     catalogBucket: "classics_70s_80s_90s",
     name: "Running Up That Hill",
     artist: "Kate Bush",
@@ -69,9 +60,6 @@ export const MOCK_TRACKS: Track[] = [
     previewUrl: null,
     previewSource: null,
     previewCheckedAt: null,
-    spotifyPopularity: 83,
-    spotifyExplicit: false,
-    spotifyPreviewAvailable: false,
     eloScore: 1510,
     battlesCount: 28,
     bpm: 103,
@@ -84,7 +72,6 @@ export const MOCK_TRACKS: Track[] = [
   },
   {
     id: "3",
-    spotifyTrackId: null,
     catalogBucket: "electronic",
     name: "One More Time",
     artist: "Daft Punk",
@@ -92,9 +79,6 @@ export const MOCK_TRACKS: Track[] = [
     previewUrl: null,
     previewSource: null,
     previewCheckedAt: null,
-    spotifyPopularity: 80,
-    spotifyExplicit: false,
-    spotifyPreviewAvailable: false,
     eloScore: 1550,
     battlesCount: 42,
     bpm: 122,
@@ -107,7 +91,6 @@ export const MOCK_TRACKS: Track[] = [
   },
   {
     id: "4",
-    spotifyTrackId: null,
     catalogBucket: "pop",
     name: "Blinding Lights",
     artist: "The Weeknd",
@@ -115,9 +98,6 @@ export const MOCK_TRACKS: Track[] = [
     previewUrl: null,
     previewSource: null,
     previewCheckedAt: null,
-    spotifyPopularity: 92,
-    spotifyExplicit: false,
-    spotifyPreviewAvailable: false,
     eloScore: 1480,
     battlesCount: 38,
     bpm: 171,
@@ -130,7 +110,6 @@ export const MOCK_TRACKS: Track[] = [
   },
   {
     id: "5",
-    spotifyTrackId: null,
     catalogBucket: "rock",
     name: "Smells Like Teen Spirit",
     artist: "Nirvana",
@@ -138,9 +117,6 @@ export const MOCK_TRACKS: Track[] = [
     previewUrl: null,
     previewSource: null,
     previewCheckedAt: null,
-    spotifyPopularity: 84,
-    spotifyExplicit: true,
-    spotifyPreviewAvailable: false,
     eloScore: 1530,
     battlesCount: 45,
     bpm: 117,
@@ -153,7 +129,6 @@ export const MOCK_TRACKS: Track[] = [
   },
   {
     id: "6",
-    spotifyTrackId: null,
     catalogBucket: "urbano",
     name: "Titi Me Pregunto",
     artist: "Bad Bunny",
@@ -161,9 +136,6 @@ export const MOCK_TRACKS: Track[] = [
     previewUrl: null,
     previewSource: null,
     previewCheckedAt: null,
-    spotifyPopularity: 88,
-    spotifyExplicit: true,
-    spotifyPreviewAvailable: false,
     eloScore: 1490,
     battlesCount: 31,
     bpm: 130,

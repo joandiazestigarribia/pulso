@@ -43,7 +43,7 @@ function parseArgs(argv) {
     limit: 50,
     top: 15,
     timeoutMs: 8000,
-    compare: "both",
+    compare: "itunes",
     market: "AR",
     deezerPlaylistId: null,
     out: null,
@@ -148,8 +148,8 @@ function parseArgs(argv) {
     options.timeoutMs = 8000
   }
 
-  if (!["none", "itunes", "spotify", "both"].includes(options.compare)) {
-    options.compare = "both"
+  if (!["none", "itunes", "both"].includes(options.compare)) {
+    options.compare = "itunes"
   }
 
   return options
@@ -247,42 +247,7 @@ function withTimeoutSignal(timeoutMs) {
   }
 }
 
-async function fetchSpotifyAccessToken(timeoutMs) {
-  const clientId = process.env.SPOTIFY_CLIENT_ID
-  const clientSecret = process.env.SPOTIFY_CLIENT_SECRET
-  if (!clientId || !clientSecret) {
-    return null
-  }
-
-  const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString("base64")
-  const timeout = withTimeoutSignal(timeoutMs)
-
-  try {
-    const response = await fetch("https://accounts.spotify.com/api/token", {
-      method: "POST",
-      headers: {
-        Authorization: `Basic ${credentials}`,
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-      body: "grant_type=client_credentials",
-      signal: timeout.signal,
-      cache: "no-store",
-    })
-
-    if (!response.ok) {
-      return null
-    }
-
-    const payload = await response.json()
-    return typeof payload?.access_token === "string" ? payload.access_token : null
-  } catch {
-    return null
-  } finally {
-    timeout.clear()
-  }
-}
-
-async function fetchProviderSearch(provider, term, options, spotifyAccessToken) {
+async function fetchProviderSearch(provider, term, options) {
   const startedAt = Date.now()
   const timeout = withTimeoutSignal(options.timeoutMs)
 
@@ -308,33 +273,18 @@ async function fetchProviderSearch(provider, term, options, spotifyAccessToken) 
       url.searchParams.set("country", options.market)
       url.searchParams.set("term", term)
     } else {
-      if (!spotifyAccessToken) {
-        return {
-          provider,
-          term,
-          ok: false,
-          skipped: true,
-          status: null,
-          latencyMs: 0,
-          resultCount: 0,
-          tracks: [],
-          errorCode: "spotify_missing_credentials",
-          errorMessage: "Missing SPOTIFY_CLIENT_ID/SPOTIFY_CLIENT_SECRET or token unavailable.",
-          url: null,
-        }
-      }
-
-      url = new URL("https://api.spotify.com/v1/search")
-      url.searchParams.set("q", term)
-      url.searchParams.set("type", "track")
-      url.searchParams.set("limit", String(options.limit))
-      url.searchParams.set("market", options.market)
-      requestInit = {
-        ...requestInit,
-        headers: {
-          ...requestInit.headers,
-          Authorization: `Bearer ${spotifyAccessToken}`,
-        },
+      return {
+        provider,
+        term,
+        ok: false,
+        skipped: true,
+        status: null,
+        latencyMs: 0,
+        resultCount: 0,
+        tracks: [],
+        errorCode: "unsupported_provider",
+        errorMessage: "Provider not supported by this probe.",
+        url: null,
       }
     }
 
@@ -392,20 +342,7 @@ async function fetchProviderSearch(provider, term, options, spotifyAccessToken) 
           link: item.trackViewUrl ?? null,
         }))
     } else {
-      const rawTracks = Array.isArray(payload?.tracks?.items) ? payload.tracks.items : []
-      tracks = rawTracks.map((item) => ({
-        provider,
-        id: item.id ?? null,
-        title: item.name ?? null,
-        artist: Array.isArray(item.artists) ? item.artists.map((artist) => artist.name).join(", ") : null,
-        album: item.album?.name ?? null,
-        rank: item.popularity ?? null,
-        durationSec:
-          typeof item.duration_ms === "number" ? Math.floor(item.duration_ms / 1000) : null,
-        explicitLyrics: item.explicit ?? null,
-        previewUrl: item.preview_url ?? null,
-        link: item.external_urls?.spotify ?? null,
-      }))
+      tracks = []
     }
 
     return {
@@ -779,18 +716,11 @@ async function main() {
   if (options.compare === "itunes" || options.compare === "both") {
     providers.push("itunes")
   }
-  if (options.compare === "spotify" || options.compare === "both") {
-    providers.push("spotify")
-  }
-
-  const spotifyAccessToken = providers.includes("spotify")
-    ? await fetchSpotifyAccessToken(options.timeoutMs)
-    : null
 
   const queries = []
   for (const term of options.terms) {
     for (const provider of providers) {
-      queries.push(await fetchProviderSearch(provider, term, options, spotifyAccessToken))
+      queries.push(await fetchProviderSearch(provider, term, options))
     }
   }
 
@@ -807,15 +737,6 @@ async function main() {
       }
     }
   }
-  if (providers.includes("spotify")) {
-    for (const term of options.terms) {
-      const result = compareProvidersByTerm(queries, term, "deezer", "spotify")
-      if (result) {
-        comparisons.push(result)
-      }
-    }
-  }
-
   const report = {
     version: 2,
     generatedAt: new Date().toISOString(),
@@ -823,7 +744,6 @@ async function main() {
     providers,
     notes: {
       compareMode: options.compare,
-      spotifyTokenAvailable: Boolean(spotifyAccessToken),
       qualityFormula: "usableRate*0.6 + previewRate*0.2 + uniquenessRate*0.15 + (100-mojibakeRate)*0.05",
       filtersApplied: [
         "cover markers",

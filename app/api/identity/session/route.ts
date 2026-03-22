@@ -1,6 +1,5 @@
 import { z } from "zod"
 import { NextResponse } from "next/server"
-import { getServerSession } from "next-auth"
 import { ensureUserExists, mergeAnonymousBattlesToUser } from "@/lib/auth"
 import {
   ANON_SESSION_COOKIE,
@@ -8,7 +7,6 @@ import {
   resolveRequestIdentity,
   shouldUseSecureCookies,
 } from "@/lib/identity"
-import { authOptions } from "@/lib/next-auth"
 import { trackConversionEventSafe } from "@/lib/conversion-events"
 
 const sessionRequestSchema = z.object({
@@ -22,14 +20,11 @@ const sessionRequestSchema = z.object({
 
 export async function GET(request: Request) {
   const identity = resolveRequestIdentity(request)
-  const session = await getServerSession(authOptions)
 
   return NextResponse.json({
     isAuthenticated: Boolean(identity.userId),
     userId: identity.userId,
     anonymousId: identity.anonymousId,
-    spotifyConnected: Boolean(session?.spotifyAccessToken),
-    spotifyTokenError: session?.spotifyTokenError ?? null,
   })
 }
 

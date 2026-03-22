@@ -46,8 +46,6 @@ interface AuthSessionResponse {
   isAuthenticated: boolean
   userId: string | null
   anonymousId: string | null
-  spotifyConnected: boolean
-  spotifyTokenError: string | null
 }
 
 export default function ProfilePage() {

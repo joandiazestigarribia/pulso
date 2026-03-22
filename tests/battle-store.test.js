@@ -87,14 +87,14 @@ async function ensureHealthyExternalPreviewCatalog() {
   await prisma.track.updateMany({
     data: {
       previewUrl: "https://p.scdn.co/mp3-preview/pulso-test.mp3",
-      previewSource: "spotify",
+      previewSource: "deezer",
     },
   })
 
   const externalCount = await prisma.track.count({
     where: {
       previewUrl: { not: null },
-      previewSource: { in: ["spotify", "itunes"] },
+      previewSource: { in: ["deezer", "itunes"] },
     },
   })
 
@@ -109,7 +109,7 @@ async function ensureHealthyExternalPreviewCatalog() {
         artist: `External Artist ${index}`,
         albumImage: "/placeholder.jpg",
         previewUrl: "https://p.scdn.co/mp3-preview/pulso-health.mp3",
-        previewSource: "spotify",
+        previewSource: "deezer",
         eloScore: 1500,
         battlesCount: 0,
         bpm: 120,
@@ -119,7 +119,7 @@ async function ensureHealthyExternalPreviewCatalog() {
       },
       update: {
         previewUrl: "https://p.scdn.co/mp3-preview/pulso-health.mp3",
-        previewSource: "spotify",
+        previewSource: "deezer",
       },
     })
   }

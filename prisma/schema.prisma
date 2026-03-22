@@ -46,7 +46,6 @@ model User {
 
 model Track {
   id           String   @id
-  spotifyTrackId String?  @unique
   catalogBucket String   @default("general")
   name         String
   artist       String
@@ -54,9 +53,6 @@ model Track {
   previewUrl   String?
   previewSource String?
   previewCheckedAt DateTime?
-  spotifyPopularity Int?
-  spotifyExplicit Boolean?
-  spotifyPreviewAvailable Boolean?
   eloScore     Int      @default(1500)
   battlesCount Int      @default(0)
   bpm          Int
