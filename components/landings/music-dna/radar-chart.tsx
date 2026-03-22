@@ -7,8 +7,8 @@ interface RadarChartProps {
 export function RadarChart({ axes }: RadarChartProps) {
   return (
     <svg viewBox="0 0 360 360" className="h-auto w-full">
-      <circle cx="180" cy="180" r="94" fill="none" stroke="#8f735b" strokeWidth="1.6" />
-      <circle cx="180" cy="180" r="62" fill="none" stroke="#a18269" strokeWidth="1.2" />
+      <circle cx="180" cy="180" r="94" fill="none" stroke="rgba(0,240,255,0.42)" strokeWidth="1.4" />
+      <circle cx="180" cy="180" r="62" fill="none" stroke="rgba(255,67,248,0.34)" strokeWidth="1.1" />
 
       {axes.map((axis, index) => {
         const edge = polarPoint(index, axes.length, 128, 180)
@@ -18,8 +18,7 @@ export function RadarChart({ axes }: RadarChartProps) {
 
         return (
           <g key={axis.key}>
-            <line x1={180} y1={180} x2={edge.x} y2={edge.y} stroke="#7b624e" strokeWidth="1.1" />
-            <rect x={labelX - 34} y={labelY - 11} width={68} height={22} rx={10} fill="rgba(248,236,214,0.85)" />
+            <line x1={180} y1={180} x2={edge.x} y2={edge.y} stroke="rgba(173,233,255,0.34)" strokeWidth="1" />
             <text
               x={labelX}
               y={labelY}
@@ -27,7 +26,7 @@ export function RadarChart({ axes }: RadarChartProps) {
               dominantBaseline="middle"
               fontSize="11"
               fontWeight="800"
-              fill="#3f2b20"
+              fill="#dff7ff"
             >
               {axis.label.toUpperCase()}
             </text>
@@ -42,14 +41,14 @@ export function RadarChart({ axes }: RadarChartProps) {
           180
         )}
         fill="none"
-        stroke="#b39a80"
+        stroke="rgba(255,230,0,0.36)"
         strokeWidth="1"
       />
-      <path d={buildRadarPath(axes, 128, 180)} fill="rgba(79,132,201,0.2)" stroke="#2d5f9f" strokeWidth="3" />
+      <path d={buildRadarPath(axes, 128, 180)} fill="rgba(0,240,255,0.18)" stroke="#00f0ff" strokeWidth="3" />
 
       {axes.map((axis, index) => {
         const point = polarPoint(index, axes.length, 128 * axis.value, 180)
-        return <circle key={`${axis.key}-dot`} cx={point.x} cy={point.y} r="6" fill="#f0bf29" stroke="#7d4f2a" strokeWidth="2" />
+        return <circle key={`${axis.key}-dot`} cx={point.x} cy={point.y} r="6" fill="#ff43f8" stroke="#00f0ff" strokeWidth="1.8" />
       })}
     </svg>
   )

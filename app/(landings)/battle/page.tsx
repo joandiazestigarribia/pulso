@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import useSWR from "swr"
 import { AnimatePresence, motion } from "framer-motion"
-import { PartyPopper, Play, RefreshCcw, Square, Users, Volume2 } from "lucide-react"
+import { Flame, Play, RefreshCcw, Square, Volume2 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { EloFeedback } from "@/components/landings/elo-feedback"
@@ -33,9 +33,9 @@ const fetcher = async (url: string): Promise<Battle> => {
   if (!response.ok) {
     const message =
       payload &&
-      typeof payload === "object" &&
-      "error" in payload &&
-      typeof (payload as { error?: unknown }).error === "string"
+        typeof payload === "object" &&
+        "error" in payload &&
+        typeof (payload as { error?: unknown }).error === "string"
         ? (payload as { error: string }).error
         : "Unable to fetch battle"
     throw new Error(message)
@@ -117,6 +117,14 @@ interface BattleSideProps {
   side: "left" | "right"
 }
 
+const battleBackgroundStyle = {
+  backgroundImage: "url('/images/battle/neon_campfire_background.png')",
+  backgroundPosition: "center",
+  backgroundSize: "contain",
+} as const
+
+const PROFILE_UI_GOAL_VOTES = 40
+
 function BattleSide({
   label,
   color,
@@ -176,16 +184,15 @@ function BattleSide({
   return (
     <section className="group relative flex flex-1 flex-col items-center justify-center">
       <div
-        className={`absolute -top-3 z-20 rounded-xl border-4 border-black px-3 py-1 text-xs font-black uppercase tracking-wide text-black shadow-[0_8px_0_0_rgba(0,0,0,0.25)] md:-top-4 md:px-4 md:text-sm ${
-          side === "left" ? "-left-1 -rotate-6 md:-left-2 md:-rotate-12" : "-right-1 rotate-6 md:-right-2 md:rotate-12"
-        }`}
-        style={{ backgroundColor: color }}
+        className={`absolute -top-3 z-20 rounded-xl border-2 border-white/40 bg-black/55 px-3 py-1 text-xs font-black uppercase tracking-wide text-white shadow-[0_0_20px_rgba(250,70,255,0.35)] backdrop-blur md:-top-4 md:px-4 md:text-sm ${side === "left" ? "-left-10 -rotate-6 md:-rotate-12" : "-right-10 rotate-6 md:rotate-12"
+          }`}
       >
         {label}
       </div>
 
       <motion.div
-        className="w-full max-w-[430px] rounded-[28px] border-[4px] border-black bg-[#171717] p-3.5 shadow-[0_8px_0_0_rgba(0,0,0,0.25)] md:max-w-[460px] md:rounded-[32px] md:p-4.5"
+        className="w-full max-w-[300px] rounded-[20px] border-2 bg-black/45 p-2.5 shadow-[0_0_22px_rgba(0,0,0,0.5)] backdrop-blur-none md:max-w-[320px] md:rounded-[22px] md:p-2.5"
+        style={{ borderColor: color, boxShadow: `0 0 26px ${color}75` }}
         initial={{ opacity: 0, y: 16 }}
         animate={
           isLoser
@@ -196,7 +203,7 @@ function BattleSide({
         }
         transition={isWinner ? { duration: 0.55 } : { duration: 0.35 }}
       >
-        <div className="relative mb-3 aspect-[5/4] overflow-hidden rounded-[20px] border-4 border-black md:mb-4 md:rounded-[24px]">
+        <div className="relative mb-2.5 aspect-[5/4] overflow-hidden rounded-[14px] border-2 border-white/35 md:mb-3 md:rounded-[16px]">
           <Image
             src={track.albumImage}
             alt={`${track.name} cover art`}
@@ -206,8 +213,9 @@ function BattleSide({
             style={{ filter: isLoser ? "grayscale(100%)" : "grayscale(20%)" }}
             unoptimized
           />
-          <div className="pointer-events-none absolute inset-0 m-4 flex items-center justify-center rounded-[20px] border-[6px] border-white/20 opacity-0 transition-opacity group-hover:opacity-100">
-            <div className="h-16 w-16 animate-ping rounded-full border-4 border-white/80" />
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+          <div className="pointer-events-none absolute inset-0 m-4 flex items-center justify-center rounded-[20px] border border-white/20 opacity-0 transition-opacity group-hover:opacity-100">
+            <div className="h-16 w-16 animate-ping rounded-full border border-white/70" />
           </div>
         </div>
 
@@ -228,57 +236,59 @@ function BattleSide({
           onEnded={() => onPreviewEnded(track.id)}
         />
 
-        <div className="space-y-3">
-          <div className="flex items-start justify-between gap-3">
+        <div className="space-y-2.5">
+          <div className="flex items-start justify-between gap-2">
             <div>
-              <h2 className="text-xl font-black uppercase leading-none tracking-tight text-white drop-shadow-[2px_2px_0_rgba(0,0,0,1)] md:text-2xl" style={{ color: titleColor }}>
+              <h2 className="text-base font-black uppercase leading-none tracking-tight text-white md:text-lg" style={{ color: titleColor }}>
                 {track.name}
               </h2>
-              <p className="text-sm font-semibold text-white/80 md:text-base">{track.artist}</p>
-            </div>
-            <div className="rounded-lg border-2 border-black bg-[#FFE600] px-2 py-1 font-mono text-xs font-bold text-black md:text-sm">
-              {track.bpm} BPM
+              <p className="text-xs font-semibold text-white/80 md:text-sm">{track.artist}</p>
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={() => onTogglePreview(track)}
-            disabled={!hasPreview}
-            className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-white/30 bg-black/70 px-3 py-2 text-xs font-black uppercase tracking-[0.15em] text-white transition-all hover:border-white/70 hover:bg-black disabled:cursor-not-allowed disabled:opacity-40 md:py-2.5"
-          >
-            {isPreviewPlaying ? <Square className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-            {hasPreview ? (isPreviewPlaying ? "Stop Preview" : "Play Preview") : "Preview Unavailable"}
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => onTogglePreview(track)}
+              disabled={!hasPreview}
+              className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/25 bg-black/45 text-white transition-all hover:border-white/45 hover:bg-black/70 disabled:cursor-not-allowed disabled:opacity-40"
+              aria-label={hasPreview ? (isPreviewPlaying ? "Stop preview" : "Play preview") : "Preview unavailable"}
+            >
+              {isPreviewPlaying ? <Square className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+            </button>
 
-          <div className={`rounded-xl border px-3 py-2 ${isPreviewPlaying ? "border-[#00F0FF]/60 bg-[#00F0FF]/10" : "border-white/10 bg-black/40"}`}>
-            <div className="mb-1 flex items-center justify-between text-[10px] font-mono uppercase tracking-[0.15em] text-white/70">
-              <span>{hasPreview ? (isPreviewPlaying ? "Preview Live" : "Preview Ready") : "No Preview"}</span>
-              <span>
-                {formatAudioTime(previewCurrentTime)} / {formatAudioTime(previewDuration)}
-              </span>
-            </div>
-            <div className="h-1.5 overflow-hidden rounded-full bg-white/15">
-              <div
-                className="h-full rounded-full bg-gradient-to-r from-[#00F0FF] to-[#FFE600] transition-all duration-150"
-                style={{
-                  width: `${Math.min(
-                    100,
-                    Math.max(0, previewDuration > 0 ? (previewCurrentTime / previewDuration) * 100 : 0)
-                  )}%`,
-                }}
-              />
+            <div className={`min-w-0 flex-1 rounded-lg border px-2 py-1.5 ${isPreviewPlaying ? "border-[#00f0ff]/45 bg-[#00f0ff]/10" : "border-white/20 bg-black/40"}`}>
+              <div className="mb-1 flex items-center justify-between text-[9px] font-mono uppercase tracking-[0.12em] text-white/75">
+                <span>{hasPreview ? (isPreviewPlaying ? "Preview Live" : "Preview Ready") : "No Preview"}</span>
+                <span>
+                  {formatAudioTime(previewCurrentTime)} / {formatAudioTime(previewDuration)}
+                </span>
+              </div>
+              <div className="h-1.5 overflow-hidden rounded-full bg-white/15">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-[#00f0ff] via-[#ff43f8] to-[#ffe600] transition-all duration-150"
+                  style={{
+                    width: `${Math.min(
+                      100,
+                      Math.max(0, previewDuration > 0 ? (previewCurrentTime / previewDuration) * 100 : 0)
+                    )}%`,
+                  }}
+                />
+              </div>
             </div>
           </div>
 
           <button
             onClick={onVote}
             disabled={isVoting}
-            className="flex w-full items-center justify-center gap-3 rounded-2xl border-4 border-black bg-[#00F0FF] py-3 text-sm font-black uppercase tracking-[0.18em] text-black shadow-[0_8px_0_0_rgba(0,0,0,0.25)] transition-all hover:brightness-110 active:translate-y-1 active:shadow-none disabled:cursor-not-allowed disabled:opacity-60 md:py-3.5 md:text-base"
-            style={{ backgroundColor: color }}
+            className="flex w-full items-center justify-center gap-3 rounded-xl border-2 py-2.5 text-xs font-black uppercase tracking-[0.18em] text-black shadow-[0_10px_24px_rgba(0,0,0,0.5)] transition-all hover:brightness-110 active:translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60 md:text-sm"
+            style={{
+              background: `linear-gradient(130deg, ${color}, #ffe600)`,
+              borderColor: "#1a1a1a",
+            }}
           >
             {voteLabel}
-            <span className="rounded-lg bg-black/10 px-2 text-xs">[{keyLabel}]</span>
+            <span className="rounded-lg bg-black/15 px-2 text-xs">[{keyLabel}]</span>
           </button>
         </div>
       </motion.div>
@@ -472,8 +482,9 @@ export default function BattlePage() {
 
   if (battleError) {
     return (
-      <main className="relative z-10 flex min-h-screen items-center justify-center bg-black px-4">
-        <div className="w-full max-w-xl rounded-lg border border-red-500/40 bg-red-900/20 p-4 text-sm text-red-100">
+      <main className="relative mx-auto flex min-h-screen w-full max-w-7xl items-center justify-center overflow-hidden px-4 pb-8 pt-24">
+        <div className="pointer-events-none fixed inset-0 z-0 opacity-90" style={battleBackgroundStyle} />
+        <div className="relative z-10 rounded-2xl border-2 border-[#ff4ef5]/45 bg-[#2a0e19]/80 px-5 py-3 text-sm font-bold text-[#ffd6dd]">
           {battleError instanceof Error
             ? battleError.message
             : "Battle service unavailable. Configure server database (`DATABASE_URL`) and retry."}
@@ -484,126 +495,133 @@ export default function BattlePage() {
 
   if (!battle) {
     return (
-      <main className="relative z-10 flex min-h-screen items-center justify-center bg-black">
-        <motion.div className="flex flex-col items-center gap-4" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+      <main className="relative mx-auto flex min-h-screen w-full max-w-7xl items-center justify-center overflow-hidden px-4 pb-8 pt-24">
+        <div className="pointer-events-none fixed inset-0 z-0 opacity-90" style={battleBackgroundStyle} />
+        <div className="pointer-events-none fixed inset-0 z-0 bg-[radial-gradient(circle_at_30%_20%,rgba(0,240,255,0.14),transparent_45%),radial-gradient(circle_at_75%_15%,rgba(255,67,248,0.2),transparent_45%),linear-gradient(180deg,rgba(8,11,26,0.74),rgba(8,11,26,0.92))]" />
+        <motion.div className="relative z-10 flex flex-col items-center gap-4" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
           <motion.div
-            className="h-10 w-10 rounded-full border-2 border-[#00F0FF]/40 border-t-[#00F0FF]"
+            className="h-10 w-10 rounded-full border-2 border-[#00f0ff]/40 border-t-[#00f0ff]"
             animate={{ rotate: 360 }}
             transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
           />
-          <span className="font-mono text-xs uppercase tracking-[0.2em] text-white/60">Loading Battle...</span>
+          <span className="font-mono text-xs uppercase tracking-[0.2em] text-white/80">Loading Battle...</span>
         </motion.div>
       </main>
     )
   }
 
   return (
-    <main className="relative z-10 flex min-h-screen flex-col overflow-hidden bg-black pb-32 text-white selection:bg-[#FFE600] selection:text-black">
-      <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden opacity-40">
-        <div className="absolute -left-[5%] -top-[10%] h-[40%] w-[40%] rounded-full bg-[#AD00FF] blur-[120px]" />
-        <div className="absolute -bottom-[10%] -right-[5%] h-[40%] w-[40%] rounded-full bg-[#00F0FF] blur-[120px]" />
-        <div className="absolute bottom-0 left-0 h-32 w-full bg-gradient-to-t from-black to-transparent" />
-      </div>
+    <main className="relative mx-auto min-h-screen w-full max-w-7xl overflow-hidden px-4 pb-8 pt-24 text-[#eaf7ff] selection:bg-[#ff4ef5] selection:text-black">
+      <div className="pointer-events-none fixed inset-0 z-0 opacity-90" style={battleBackgroundStyle} />
+      <div className="pointer-events-none fixed inset-0 z-0 bg-[radial-gradient(circle_at_30%_20%,rgba(0,240,255,0.14),transparent_45%),radial-gradient(circle_at_75%_15%,rgba(255,67,248,0.2),transparent_45%),linear-gradient(180deg,rgba(8,11,26,0.74),rgba(8,11,26,0.92))]" />
 
       <AnimatePresence>
         {voteFeedback && <EloFeedback winner={voteFeedback.winner} loser={voteFeedback.loser} />}
       </AnimatePresence>
 
-      <header className="relative z-10 flex min-h-20 flex-wrap items-center justify-between gap-3 px-4 py-4 md:px-6 lg:px-8">
-        <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 -rotate-3 items-center justify-center rounded-2xl border-4 border-black bg-[#FFE600] shadow-[0_8px_0_0_rgba(0,0,0,0.25)]">
-            <PartyPopper className="h-5 w-5 text-black" />
+      <section className="relative z-10 mx-auto w-full max-w-300 overflow-hidden rounded-[28px]">
+        <header className="relative z-20 mx-auto mt-3 flex w-[min(96%,1280px)] items-center justify-between gap-3 rounded-2xl border border-white/15 bg-[#111739]/74 px-4 py-3 backdrop-blur">
+          <div className="flex items-center gap-3">
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[linear-gradient(130deg,#ff3de2,#9445ff)] shadow-[0_0_16px_rgba(255,61,226,0.55)]">
+              <Flame className="h-4 w-4 text-[#ffe6ff]" />
+            </div>
+            <p className="text-lg font-black uppercase leading-none tracking-wide text-[#eaf7ff]">Pulso Campfire</p>
           </div>
-          <h1 className="text-2xl font-black uppercase tracking-tight drop-shadow-[2px_2px_0_rgba(0,0,0,1)]">
-            Sonic <span className="text-[#00F0FF]">Festival</span>
-          </h1>
-        </div>
+          <nav className="hidden items-center gap-5 text-xs font-black uppercase tracking-[0.12em] md:flex">
+            <Link href="/battle" className="text-[#00f0ff] transition-colors hover:text-[#7afff8]">
+              The Arena
+            </Link>
+            <Link href="/music-dna" className="text-[#ff43f8] transition-colors hover:text-[#ff7ef7]">
+              Sonic Persona
+            </Link>
+            <Link href="/profile" className="text-[#00ff9f] transition-colors hover:text-[#7affc9]">
+              Battle History
+            </Link>
+          </nav>
+        </header>
 
-        <div className="flex items-center gap-4 lg:gap-6">
-          <div className="hidden items-center gap-2 rounded-full border-2 border-white/10 bg-black/40 px-4 py-2 backdrop-blur lg:flex">
-            <span className="h-3 w-3 animate-pulse rounded-full bg-[#00FF66] shadow-[0_0_10px_#00FF66]" />
-            <span className="font-mono text-xs font-bold uppercase tracking-tight">Arena Live</span>
+        {(voteError || resetError) && (
+          <div className="relative z-20 mx-auto mt-3 w-[min(95%,520px)] rounded-xl border-2 border-[#ff6c7b]/45 bg-[#2a0e19]/80 px-4 py-2 text-sm font-semibold text-[#ffd6dd]">
+            {voteError ?? resetError}
           </div>
-          <div className="flex items-center gap-3 rounded-full border-[3px] border-black bg-white px-4 py-1.5 font-bold text-black shadow-[0_8px_0_0_rgba(0,0,0,0.25)]">
-            <div className="h-8 w-8 rounded-full border-2 border-black bg-[linear-gradient(135deg,#AD00FF,#00F0FF)]" />
-            <span className="text-sm">KAI.WAV</span>
-            <span className="rounded-md bg-[#AD00FF] px-2 py-0.5 text-[10px] uppercase text-white">LVL 14</span>
-          </div>
-        </div>
-      </header>
+        )}
 
-      {(voteError || resetError) && (
-        <div className="relative z-20 mx-auto mt-2 w-[min(95%,520px)] rounded-lg border border-red-500/40 bg-red-900/30 px-4 py-2 text-sm text-red-100">
-          {voteError ?? resetError}
-        </div>
-      )}
+        {authConfirmation && (
+          <section className="relative z-20 mx-auto mt-3 w-[min(96%,760px)] rounded-2xl border border-[#00f0ff]/30 bg-[#111739]/74 px-4 py-3 text-[#eaf7ff] backdrop-blur">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-sm text-[#d8ebff]">
+                Progress linked successfully.
+                {" "}
+                {authConfirmation.movedBattles > 0
+                  ? `${authConfirmation.movedBattles} battle records were preserved after login.`
+                  : "Your current progress is now attached to your account."}
+              </p>
+              <button
+                type="button"
+                onClick={() => setAuthConfirmation(null)}
+                className="rounded border border-white/35 px-2 py-1 text-xs font-black uppercase tracking-wide text-white hover:bg-white hover:text-black"
+              >
+                Dismiss
+              </button>
+            </div>
+          </section>
+        )}
 
-      {authConfirmation && (
-        <section className="relative z-20 mx-auto mt-3 w-[min(96%,760px)] rounded-2xl border-2 border-[#00F0FF]/30 bg-[#091a26]/90 px-4 py-3 text-white">
-          <div className="flex items-center justify-between gap-2">
-            <p className="text-sm text-white/90">
-              Progress linked successfully.
-              {" "}
-              {authConfirmation.movedBattles > 0
-                ? `${authConfirmation.movedBattles} battle records were preserved after login.`
-                : "Your current progress is now attached to your account."}
-            </p>
-            <button
-              type="button"
-              onClick={() => setAuthConfirmation(null)}
-              className="rounded border border-white/30 px-2 py-1 text-xs font-black uppercase tracking-wide text-white hover:bg-white hover:text-black"
-            >
-              Dismiss
-            </button>
-          </div>
-        </section>
-      )}
-
-      {shouldShowAuthPrompt && (
-        <section className="relative z-20 mx-auto mt-3 w-[min(96%,760px)] rounded-2xl border-2 border-[#00FF66]/30 bg-[#0f1f15]/90 px-4 py-3 text-white">
-          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-            <div>
-              <div className="font-mono text-[11px] uppercase tracking-[0.15em] text-[#00FF66]">
-                {hasReachedUnlockThreshold ? "Music DNA unlocked" : "Save your progress"}
+        {shouldShowAuthPrompt && (
+          <section className="relative z-20 mx-auto mt-3 w-[min(96%,760px)] rounded-2xl border border-[#00ff9f]/35 bg-[#111739]/74 px-4 py-3 text-[#eaf7ff] backdrop-blur">
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div>
+                <div className="font-mono text-[11px] uppercase tracking-[0.15em] text-[#00ff9f]">
+                  {hasReachedUnlockThreshold ? "Music DNA unlocked" : "Save your progress"}
+                </div>
+                <p className="text-sm text-[#d8ebff]">
+                  {experiment.copyVariant === "unlock_dna"
+                    ? "Sign in now to sync your battle streak and unlock full Music DNA insights."
+                    : "Keep battling as guest, then sign in to keep progress across devices and prepare playlist export."}
+                </p>
               </div>
-              <p className="text-sm text-white/85">
-                {experiment.copyVariant === "unlock_dna"
-                  ? "Sign in now to sync your battle streak and unlock full Music DNA insights."
-                  : "Keep battling as guest, then sign in to keep progress across devices and prepare playlist export."}
-              </p>
+              <div className="flex gap-2">
+                <Link
+                  href="/profile"
+                  className="rounded-lg border border-white/35 bg-black/40 px-3 py-2 text-xs font-black uppercase tracking-wide text-white hover:bg-white hover:text-black"
+                >
+                  View Progress
+                </Link>
+                <Link
+                  href="/login?next=%2Fbattle"
+                  className="rounded-lg border border-[#00ff9f]/55 bg-[#00ff9f] px-3 py-2 text-xs font-black uppercase tracking-wide text-black shadow-[0_0_22px_rgba(0,255,159,0.4)] hover:brightness-110"
+                >
+                  Save With Login
+                </Link>
+              </div>
             </div>
-            <div className="flex gap-2">
-              <Link
-                href="/profile"
-                className="rounded-lg border border-white/25 px-3 py-2 text-xs font-black uppercase tracking-wide text-white hover:bg-white hover:text-black"
-              >
-                View Progress
-              </Link>
-              <Link
-                href="/login?next=%2Fbattle"
-                className="rounded-lg border-2 border-black bg-[#00FF66] px-3 py-2 text-xs font-black uppercase tracking-wide text-black shadow-[0_6px_0_0_rgba(0,0,0,0.25)] hover:brightness-110"
-              >
-                Save With Login
-              </Link>
-            </div>
-          </div>
-        </section>
-      )}
+          </section>
+        )}
 
-      <section className="relative z-10 flex flex-1 flex-col gap-4 overflow-hidden p-4 md:p-6 lg:flex-row lg:gap-6">
+        <section className="relative z-10 mx-auto flex w-[min(96%,1120px)] flex-1 flex-col gap-4 overflow-hidden p-4 md:p-5 lg:gap-4">
         <div className="w-full">
-          <div className="mx-auto mb-4 flex w-[min(96%,980px)] flex-col gap-2 rounded-2xl border-2 border-white/15 bg-black/45 px-4 py-3 backdrop-blur">
+          <div className="mx-auto mb-3 flex w-[min(96%,820px)] flex-col gap-1.5 rounded-2xl border border-white/15 bg-black/45 px-4 py-2.5 backdrop-blur">
             <div className="flex items-center justify-between gap-3">
-              <p className="font-mono text-xs font-black uppercase tracking-[0.12em] text-[#00F0FF]">
-                {completedBattles}/{MUSIC_DNA_UNLOCK_THRESHOLD} battles votados
+              <p className="font-mono text-xs font-black uppercase tracking-[0.12em] text-[#00f0ff]">
+                {completedBattles}/{PROFILE_UI_GOAL_VOTES} battles votados
               </p>
-              <p className="text-xs font-semibold text-white/80">No lleva mas de 5 minutos conseguir tu perfil sonoro.</p>
+              {completedBattles >= PROFILE_UI_GOAL_VOTES ? (
+                <p className="text-xs font-semibold text-white/85">
+                  Llegaste a la cantidad necesaria. Revisa tu perfil sonoro{" "}
+                  <Link href="/music-dna" className="font-black text-[#00ff9f] underline underline-offset-2 hover:text-[#7affc9]">
+                    aqui
+                  </Link>
+                  .
+                </p>
+              ) : (
+                <p className="text-xs font-semibold text-white/80">Segui votando para desbloquear tu perfil sonoro.</p>
+              )}
             </div>
-            <div className="h-2 overflow-hidden rounded-full bg-white/10">
+            <div className="h-1.5 overflow-hidden rounded-full bg-white/15">
               <div
-                className="h-full rounded-full bg-gradient-to-r from-[#00F0FF] via-[#00FF66] to-[#FFE600]"
+                className="h-full rounded-full bg-gradient-to-r from-[#00f0ff] via-[#ff43f8] to-[#ffe600]"
                 style={{
-                  width: `${Math.min(100, (completedBattles / MUSIC_DNA_UNLOCK_THRESHOLD) * 100)}%`,
+                  width: `${Math.min(100, (completedBattles / PROFILE_UI_GOAL_VOTES) * 100)}%`,
                 }}
               />
             </div>
@@ -613,7 +631,7 @@ export default function BattlePage() {
         <AnimatePresence mode="wait">
           <motion.div
             key={battleKey}
-            className="flex w-full flex-col items-center gap-6 lg:flex-row"
+            className="flex w-full flex-col items-center gap-4 lg:flex-row lg:justify-center max-w-200 m-auto"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -635,20 +653,9 @@ export default function BattlePage() {
               side="left"
             />
 
-            <div className="flex w-full flex-row items-center justify-center gap-3 lg:w-32 lg:flex-col lg:gap-6">
-              <div className="animate-[floating_3s_ease-in-out_infinite] flex h-20 w-20 rotate-12 items-center justify-center rounded-[28px] border-4 border-black bg-[#AD00FF] shadow-[0_8px_0_0_rgba(0,0,0,0.25)] md:h-24 md:w-24 md:rounded-[32px]">
-                <span className="text-3xl font-black uppercase drop-shadow-[2px_2px_0_rgba(0,0,0,1)] md:text-4xl">VS</span>
-              </div>
-              <div className="rounded-2xl border-4 border-black bg-white px-4 py-2 text-center text-black shadow-[0_8px_0_0_rgba(0,0,0,0.25)] md:px-6 md:py-3">
-                <div className="mb-1 text-[10px] leading-none">LIVE</div>
-                <div className="text-3xl leading-none">NOW</div>
-              </div>
-              <div className="hidden h-24 w-1 rounded-full bg-white/20 lg:block" />
-              <div className="hidden flex-col items-center gap-2 lg:flex">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full border-[3px] border-black bg-[#00FF66] shadow-[0_8px_0_0_rgba(0,0,0,0.25)]">
-                  <Users className="h-4 w-4 text-black" />
-                </div>
-                <span className="font-mono text-[10px] font-bold">LIVE VOTING</span>
+            <div className="flex w-full flex-row items-center justify-center gap-3 lg:w-28 lg:flex-col lg:gap-4">
+              <div className="animate-[floating_3s_ease-in-out_infinite] flex h-20 w-20 rotate-6 items-center justify-center rounded-[28px] border border-[#ffe600]/70 bg-black/60 shadow-[0_0_26px_rgba(255,230,0,0.35)] md:h-24 md:w-24 md:rounded-[32px]">
+                <span className="text-3xl font-black uppercase text-[#ffe600] md:text-4xl">VS</span>
               </div>
             </div>
 
@@ -669,16 +676,16 @@ export default function BattlePage() {
             />
           </motion.div>
         </AnimatePresence>
-      </section>
+        </section>
 
-      <footer className="relative z-10 mb-4 flex min-h-20 items-center justify-between gap-4 border-t-4 border-black bg-black/80 px-4 py-3 backdrop-blur-xl md:mb-10 md:h-24 md:px-6 lg:px-8">
+        <footer className="relative z-20 mx-auto mb-4 flex min-h-16 w-[min(92%,860px)] items-center justify-between gap-3 rounded-[22px] border border-white/20 bg-[#111739]/74 px-3 py-2 shadow-[0_0_28px_rgba(0,0,0,0.5)] backdrop-blur md:mb-6 md:px-4">
         <div className="flex shrink-0 items-center gap-3">
-          <div className="flex h-14 w-14 rotate-3 items-center justify-center rounded-2xl border-4 border-black bg-[#AD00FF] shadow-[0_8px_0_0_rgba(0,0,0,0.25)]">
-            <Volume2 className="h-7 w-7 text-white" />
+          <div className="flex h-10 w-10 rotate-3 items-center justify-center rounded-xl border border-[#ff4ef5]/60 bg-black/60 shadow-[0_0_18px_rgba(255,78,245,0.3)]">
+            <Volume2 className="h-5 w-5 text-[#ff4ef5]" />
           </div>
           <div>
-            <div className="text-[10px] font-black uppercase tracking-[0.2em] text-[#00F0FF] md:text-xs">Now Playing</div>
-            <div className="text-sm font-semibold text-white md:text-base lg:text-lg">
+            <div className="text-[10px] font-black uppercase tracking-[0.2em] text-[#00f0ff] md:text-xs">Now Playing</div>
+            <div className="text-xs font-semibold text-white md:text-sm">
               {activePreviewTrackId
                 ? [battle.trackA, battle.trackB].find((track) => track.id === activePreviewTrackId)?.name ?? "PREVIEW"
                 : "Preview Stopped"}
@@ -687,20 +694,21 @@ export default function BattlePage() {
         </div>
 
         <div className="flex shrink-0 items-center gap-2">
-          <button className="rounded-xl border-2 border-white/20 bg-black px-4 py-2 text-sm font-bold text-white transition-all hover:bg-white hover:text-black">
+          <button className="rounded-xl border border-white/30 bg-black/45 px-3 py-1.5 text-xs font-bold text-white transition-all hover:bg-white hover:text-black">
             SKIP STAGE
           </button>
           <button
             type="button"
             onClick={handleResetProgress}
             disabled={isResetting}
-            className="inline-flex items-center gap-2 rounded-xl border-2 border-[#ff8e66]/30 bg-[#2a120b] px-4 py-2 text-sm font-bold text-[#ffd7c7] transition-all hover:border-[#ff8e66]/70 hover:bg-[#3a180d] disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex items-center gap-2 rounded-xl border border-[#ff806d]/45 bg-[#2f1419]/75 px-3 py-1.5 text-xs font-bold text-[#ffd2c9] transition-all hover:border-[#ff806d]/80 hover:bg-[#3a1820] disabled:cursor-not-allowed disabled:opacity-60"
           >
             <RefreshCcw className={`h-4 w-4 ${isResetting ? "animate-spin" : ""}`} />
             {isResetting ? "Reiniciando..." : "Reiniciar juego"}
           </button>
         </div>
-      </footer>
+        </footer>
+      </section>
     </main>
   )
 }
