@@ -36,6 +36,7 @@ export default function BattlePage() {
     maxConsecutiveSkips,
     isSkipLimitModalOpen,
     activePreviewTrackId,
+    refreshingPreviewTrackId,
     authConfirmation,
     shouldShowAuthPrompt,
     hasReachedUnlockThreshold,
@@ -45,6 +46,7 @@ export default function BattlePage() {
     setAuthConfirmation,
     handleTogglePreview,
     handlePreviewEnded,
+    handlePreviewError,
     handleVote,
     handleResetProgress,
     handleSkipStage,
@@ -135,7 +137,9 @@ export default function BattlePage() {
                 isVoting={isVoting}
                 result={voteResult ? (voteResult.winner === battle.trackA.id ? "winner" : "loser") : null}
                 activePreviewTrackId={activePreviewTrackId}
+                refreshingPreviewTrackId={refreshingPreviewTrackId}
                 onPreviewEnded={handlePreviewEnded}
+                onPreviewError={handlePreviewError}
                 onTogglePreview={handleTogglePreview}
                 onVote={() => handleVote(battle.trackA.id)}
                 side="left"
@@ -156,7 +160,9 @@ export default function BattlePage() {
                 isVoting={isVoting}
                 result={voteResult ? (voteResult.winner === battle.trackB.id ? "winner" : "loser") : null}
                 activePreviewTrackId={activePreviewTrackId}
+                refreshingPreviewTrackId={refreshingPreviewTrackId}
                 onPreviewEnded={handlePreviewEnded}
+                onPreviewError={handlePreviewError}
                 onTogglePreview={handleTogglePreview}
                 onVote={() => handleVote(battle.trackB.id)}
                 side="right"

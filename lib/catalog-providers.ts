@@ -70,6 +70,10 @@ interface DeezerPlaylistTracksResponse {
   data?: DeezerTrackResult[]
 }
 
+interface DeezerTrackResponse {
+  preview?: string | null
+}
+
 interface ItunesRssFeedResult {
   id: string
 }
@@ -532,5 +536,25 @@ export async function fetchDeezerBattleTracks(limit = 120): Promise<Track[]> {
     return selectBalancedBucketTracks(Array.from(deduped.values()), limit)
   } catch {
     return []
+  }
+}
+
+export async function fetchDeezerPreviewUrlByTrackId(trackId: string): Promise<string | null> {
+  const safeTrackId = trackId.trim()
+  if (!/^\d+$/.test(safeTrackId)) {
+    return null
+  }
+
+  try {
+    const url = `${DEEZER_API_URL}/track/${encodeURIComponent(safeTrackId)}`
+    const response = await fetch(url, { cache: "no-store" })
+    if (!response.ok) {
+      return null
+    }
+
+    const payload = (await response.json()) as DeezerTrackResponse
+    return typeof payload.preview === "string" && payload.preview.length > 0 ? payload.preview : null
+  } catch {
+    return null
   }
 }

@@ -3,7 +3,12 @@ import { z } from "zod"
 import { assertDatabaseConfigured, prisma } from "@/lib/db"
 import { calculateElo } from "@/lib/elo"
 import { MOCK_TRACKS, type Battle, type BattleState, type Track } from "@/lib/mock-data"
-import { fetchDeezerBattleTracks, fetchItunesBattleTracks, fetchItunesPreviewUrl } from "@/lib/catalog-providers"
+import {
+  fetchDeezerBattleTracks,
+  fetchDeezerPreviewUrlByTrackId,
+  fetchItunesBattleTracks,
+  fetchItunesPreviewUrl,
+} from "@/lib/catalog-providers"
 import {
   buildTrackTitleKey,
   extractArtistMatchTokens,
@@ -1486,4 +1491,58 @@ export async function getLeaderboardTracks(): Promise<Track[]> {
   })
 
   return tracks.map(toTrack)
+}
+
+export async function refreshTrackPreview(trackId: string): Promise<{
+  trackId: string
+  previewUrl: string | null
+  previewSource: string | null
+}> {
+  assertDatabaseConfigured()
+
+  const track = await prisma.track.findUnique({
+    where: { id: trackId },
+    select: {
+      id: true,
+      name: true,
+      artist: true,
+      previewSource: true,
+    },
+  })
+
+  if (!track) {
+    throw new Error("Track not found")
+  }
+
+  let refreshedPreviewUrl: string | null = null
+  let refreshedPreviewSource: string | null = null
+
+  if (track.id.startsWith("deezer_")) {
+    const deezerId = track.id.slice("deezer_".length)
+    refreshedPreviewUrl = await fetchDeezerPreviewUrlByTrackId(deezerId)
+    refreshedPreviewSource = refreshedPreviewUrl ? "deezer" : null
+  }
+
+  if (!refreshedPreviewUrl) {
+    refreshedPreviewUrl = await fetchItunesPreviewUrl({
+      trackName: track.name,
+      artistName: track.artist,
+    })
+    refreshedPreviewSource = refreshedPreviewUrl ? "itunes" : null
+  }
+
+  await prisma.track.update({
+    where: { id: track.id },
+    data: {
+      previewUrl: refreshedPreviewUrl,
+      previewSource: refreshedPreviewSource,
+      previewCheckedAt: new Date(),
+    },
+  })
+
+  return {
+    trackId: track.id,
+    previewUrl: refreshedPreviewUrl,
+    previewSource: refreshedPreviewSource,
+  }
 }

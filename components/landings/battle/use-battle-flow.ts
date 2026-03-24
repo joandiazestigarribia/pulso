@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import useSWR from "swr"
 import type { Battle, Track } from "@/lib/mock-data"
 import { resolveConversionExperiment } from "@/lib/conversion-experiments"
@@ -64,6 +64,18 @@ interface VoteResponse {
   loser: VoteTrackResult
 }
 
+interface VoteErrorResponse {
+  error: string
+  code?: string
+}
+
+interface PreviewRefreshResponse {
+  ok: boolean
+  trackId: string
+  previewUrl: string | null
+  previewSource: string | null
+}
+
 interface BattleStatsResponse {
   completedBattlesCount: number
 }
@@ -111,8 +123,11 @@ export function useBattleFlow() {
   const [consecutiveSkips, setConsecutiveSkips] = useState(0)
   const [isSkipLimitModalOpen, setIsSkipLimitModalOpen] = useState(false)
   const [activePreviewTrackId, setActivePreviewTrackId] = useState<string | null>(null)
+  const [refreshingPreviewTrackId, setRefreshingPreviewTrackId] = useState<string | null>(null)
   const [hasTrackedPromptShown, setHasTrackedPromptShown] = useState(false)
   const [authConfirmation, setAuthConfirmation] = useState<{ movedBattles: number } | null>(null)
+  const voteRequestInFlightRef = useRef(false)
+  const previewRefreshAttemptsRef = useRef<Map<string, number>>(new Map())
 
   const identitySeed = session?.userId ?? session?.anonymousId ?? "guest"
   const experiment = useMemo(() => resolveConversionExperiment(identitySeed), [identitySeed])
@@ -123,6 +138,7 @@ export function useBattleFlow() {
 
   useEffect(() => {
     setActivePreviewTrackId(null)
+    previewRefreshAttemptsRef.current.clear()
   }, [battle?.id])
 
   useEffect(() => {
@@ -171,12 +187,82 @@ export function useBattleFlow() {
     setActivePreviewTrackId((prev) => (prev === trackId ? null : prev))
   }, [])
 
-  const handleVote = useCallback(
-    async (winnerId: string) => {
-      if (isVoting || !battle) {
+  const handlePreviewError = useCallback(
+    async (track: Track) => {
+      if (!battle || refreshingPreviewTrackId === track.id) {
         return
       }
 
+      const refreshAttempts = previewRefreshAttemptsRef.current.get(track.id) ?? 0
+      if (refreshAttempts >= 1) {
+        setVoteError("No se pudo actualizar la vista previa de esta cancion.")
+        return
+      }
+      previewRefreshAttemptsRef.current.set(track.id, refreshAttempts + 1)
+
+      setRefreshingPreviewTrackId(track.id)
+      setActivePreviewTrackId(null)
+
+      try {
+        const response = await fetch("/api/battle/preview", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ trackId: track.id }),
+        })
+
+        const payload = (await response.json().catch(() => null)) as PreviewRefreshResponse | null
+        if (!response.ok || !payload || payload.trackId !== track.id) {
+          setVoteError("No se pudo refrescar la vista previa. Intenta con otra cancion.")
+          return
+        }
+
+        if (!payload.previewUrl) {
+          setVoteError("Vista previa no disponible para esta cancion.")
+        }
+
+        const updatedBattle: Battle = {
+          ...battle,
+          trackA:
+            battle.trackA.id === track.id
+              ? {
+                  ...battle.trackA,
+                  previewUrl: payload.previewUrl,
+                  previewSource: payload.previewSource,
+                  previewCheckedAt: new Date().toISOString(),
+                }
+              : battle.trackA,
+          trackB:
+            battle.trackB.id === track.id
+              ? {
+                  ...battle.trackB,
+                  previewUrl: payload.previewUrl,
+                  previewSource: payload.previewSource,
+                  previewCheckedAt: new Date().toISOString(),
+                }
+              : battle.trackB,
+        }
+
+        await mutate(updatedBattle, { revalidate: false })
+
+        if (payload.previewUrl) {
+          setActivePreviewTrackId(track.id)
+        }
+      } catch {
+        setVoteError("Error al actualizar la vista previa.")
+      } finally {
+        setRefreshingPreviewTrackId(null)
+      }
+    },
+    [battle, mutate, refreshingPreviewTrackId]
+  )
+
+  const handleVote = useCallback(
+    async (winnerId: string) => {
+      if (isVoting || !battle || voteRequestInFlightRef.current) {
+        return
+      }
+
+      voteRequestInFlightRef.current = true
       setVoteError(null)
       setIsVoting(true)
       setActivePreviewTrackId(null)
@@ -191,10 +277,22 @@ export function useBattleFlow() {
           body: JSON.stringify({ battleId: battle.id, winnerId, loserId, userId: battle.userId }),
         })
 
-        const result = (await response.json()) as VoteResponse | { error: string }
+        const result = (await response.json()) as VoteResponse | VoteErrorResponse
 
         if (!response.ok || !("winner" in result) || !("loser" in result)) {
-          setVoteError("Could not save your vote. Please try again.")
+          if (
+            response.status === 409 &&
+            "code" in result &&
+            result.code === "battle_already_completed"
+          ) {
+            setVoteResult(null)
+            await Promise.all([mutate(), mutateStats()])
+            setIsVoting(false)
+            return
+          }
+
+          const serverError = "error" in result && typeof result.error === "string" ? result.error : null
+          setVoteError(serverError ?? "Could not save your vote. Please try again.")
           setVoteResult(null)
           setIsVoting(false)
           return
@@ -206,6 +304,8 @@ export function useBattleFlow() {
         setVoteResult(null)
         setIsVoting(false)
         return
+      } finally {
+        voteRequestInFlightRef.current = false
       }
 
       await new Promise((resolve) => setTimeout(resolve, 1400))
@@ -300,6 +400,7 @@ export function useBattleFlow() {
     maxConsecutiveSkips: MAX_CONSECUTIVE_SKIPS,
     isSkipLimitModalOpen,
     activePreviewTrackId,
+    refreshingPreviewTrackId,
     authConfirmation,
     shouldShowAuthPrompt,
     hasReachedUnlockThreshold,
@@ -309,6 +410,7 @@ export function useBattleFlow() {
     setAuthConfirmation,
     handleTogglePreview,
     handlePreviewEnded,
+    handlePreviewError,
     handleVote,
     handleResetProgress,
     handleSkipStage,

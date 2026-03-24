@@ -149,7 +149,10 @@ export async function POST(request: Request) {
         vote_same_track: 400,
       }
 
-      return NextResponse.json({ error: error.message }, { status: statusByCode[error.code] })
+      return NextResponse.json(
+        { error: error.message, code: error.code },
+        { status: statusByCode[error.code] }
+      )
     }
 
     return NextResponse.json({ error: "Unexpected vote failure" }, { status: 500 })

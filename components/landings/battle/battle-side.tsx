@@ -15,7 +15,9 @@ interface BattleSideProps {
   isVoting: boolean
   result: "winner" | "loser" | null
   activePreviewTrackId: string | null
+  refreshingPreviewTrackId: string | null
   onPreviewEnded: (trackId: string) => void
+  onPreviewError: (track: Track) => void
   onTogglePreview: (track: Track) => void
   onVote: () => void
   side: "left" | "right"
@@ -41,7 +43,9 @@ export function BattleSide({
   isVoting,
   result,
   activePreviewTrackId,
+  refreshingPreviewTrackId,
   onPreviewEnded,
+  onPreviewError,
   onTogglePreview,
   onVote,
   side,
@@ -50,6 +54,7 @@ export function BattleSide({
   const isWinner = result === "winner"
   const isLoser = result === "loser"
   const hasPreview = Boolean(track.previewUrl)
+  const isRefreshingPreview = refreshingPreviewTrackId === track.id
   const isPreviewPlaying = hasPreview && activePreviewTrackId === track.id
   const [previewCurrentTime, setPreviewCurrentTime] = useState(0)
   const [previewDuration, setPreviewDuration] = useState(30)
@@ -71,6 +76,7 @@ export function BattleSide({
 
     if (isPreviewPlaying) {
       void audio.play().catch(() => {
+        onPreviewError(track)
         onPreviewEnded(track.id)
       })
       return
@@ -79,7 +85,7 @@ export function BattleSide({
     audio.pause()
     audio.currentTime = 0
     setPreviewCurrentTime(0)
-  }, [hasPreview, isPreviewPlaying, onPreviewEnded, track.id])
+  }, [hasPreview, isPreviewPlaying, onPreviewEnded, onPreviewError, track, track.id, track.previewUrl])
 
   useEffect(() => {
     return () => {
@@ -125,7 +131,7 @@ export function BattleSide({
         </div>
 
         <audio
-          key={track.id}
+          key={`${track.id}:${track.previewUrl ?? "no-preview"}`}
           ref={audioRef}
           preload="none"
           src={track.previewUrl ?? undefined}
@@ -139,6 +145,7 @@ export function BattleSide({
             setPreviewCurrentTime(event.currentTarget.currentTime)
           }}
           onEnded={() => onPreviewEnded(track.id)}
+          onError={() => onPreviewError(track)}
         />
 
         <div className="space-y-2.5">
@@ -155,7 +162,7 @@ export function BattleSide({
             <button
               type="button"
               onClick={() => onTogglePreview(track)}
-              disabled={!hasPreview}
+              disabled={!hasPreview || isRefreshingPreview}
               className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/25 bg-black/45 text-white transition-all hover:border-white/45 hover:bg-black/70 disabled:cursor-not-allowed disabled:opacity-40"
               aria-label={hasPreview ? (isPreviewPlaying ? "Stop preview" : "Play preview") : "Preview unavailable"}
             >
@@ -164,7 +171,13 @@ export function BattleSide({
 
             <div className={`min-w-0 flex-1 rounded-lg border px-2 py-1.5 ${isPreviewPlaying ? "border-[#00f0ff]/45 bg-[#00f0ff]/10" : "border-white/20 bg-black/40"}`}>
               <div className="mb-1 flex items-center justify-between text-[9px] font-mono uppercase tracking-[0.12em] text-white/75">
-                <span>{hasPreview ? (isPreviewPlaying ? "Reproduciendo" : "Reproduce vista previa") : "Sin vista previa"}</span>
+                <span>
+                  {isRefreshingPreview
+                    ? "Actualizando preview"
+                    : hasPreview
+                      ? (isPreviewPlaying ? "Reproduciendo" : "Reproduce vista previa")
+                      : "Sin vista previa"}
+                </span>
                 <span>
                   {formatAudioTime(previewCurrentTime)} / {formatAudioTime(previewDuration)}
                 </span>

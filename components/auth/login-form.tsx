@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 import { Smile, KeyRound, Zap } from "lucide-react"
@@ -44,7 +45,7 @@ export function LoginForm() {
       })
 
       if (!response.ok) {
-        setError("Could not start your session. Use a valid callsign.")
+        setError("No se pudo iniciar la sesion. Usa un alias valido.")
         setIsSubmitting(false)
         return
       }
@@ -61,7 +62,7 @@ export function LoginForm() {
       router.push(redirectedPath)
       router.refresh()
     } catch {
-      setError("Network error while starting your session.")
+      setError("Error de red al iniciar la sesion.")
       setIsSubmitting(false)
       return
     }
@@ -73,60 +74,58 @@ export function LoginForm() {
       initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease: "easeOut" }}
-      className="relative w-full max-w-md mx-auto"
+      className="relative mx-auto w-full max-w-md"
     >
       <motion.div
-        className="absolute -top-12 -left-8 w-16 h-16 rounded-2xl bg-neon-yellow flex items-center justify-center rotate-[-12deg] z-10"
+        className="absolute -left-4 -top-4 z-10 flex h-12 w-12 rotate-[-12deg] items-center justify-center rounded-2xl bg-[#ffe600] shadow-[0_0_22px_rgba(255,230,0,0.35)]"
         initial={{ scale: 0, rotate: -30 }}
         animate={{ scale: 1, rotate: -12 }}
         transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
       >
-        <svg viewBox="0 0 24 24" className="w-8 h-8 fill-carbon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" className="h-6 w-6 fill-[#0b1129]" aria-hidden="true">
           <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
         </svg>
       </motion.div>
 
-      <div className="bg-carbon-light/90 backdrop-blur-xl border border-carbon-lighter rounded-3xl p-8 pt-10">
+      <div className="rounded-[30px_16px_24px_14px] border border-[#00f0ff]/30 bg-[#111739]/82 p-7 pt-9 shadow-[0_10px_18px_rgba(0,0,0,0.28)] ring-1 ring-[#00f0ff]/15 backdrop-blur-sm">
         <motion.div
-          className="flex justify-center mb-5"
+          className="mb-5 flex justify-center"
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ delay: 0.2, type: "spring", stiffness: 300 }}
         >
-          <span className="bg-neon-magenta text-white font-mono font-bold text-xs tracking-widest uppercase px-5 py-2 rounded-full">
-            Welcome Back!
+          <span className="rounded-full bg-[#ff43f8]/25 px-5 py-2 text-xs font-black uppercase tracking-[0.16em] text-[#ffd8ff] ring-1 ring-[#ff43f8]/45">
+            Acceso
           </span>
         </motion.div>
 
-        <h1 className="text-center font-mono font-black text-4xl md:text-5xl uppercase tracking-tight leading-none text-foreground mb-3">
-          Festival
-          <br />
-          Check-In
+        <h1 className="bg-gradient-to-r from-[#00f0ff] via-[#ff43f8] to-[#ffe600] bg-clip-text text-center text-3xl font-black uppercase leading-none tracking-tight text-transparent md:text-3xl">
+          Iniciar sesion
         </h1>
 
-        <p className="text-center text-neon-cyan font-sans text-sm font-medium mb-8">
-          Grab your backstage pass to the arena.
+        <p className="mb-8 mt-2 text-center text-sm font-semibold text-[#d8e9ff]">
+          Vuelve a votar y accede a tu perfil sonoro.
         </p>
 
         <div className="mb-5">
-          <label className="block font-mono text-xs font-bold tracking-widest uppercase text-neon-yellow mb-2">
-            Your Callsign
+          <label className="mb-2 block text-xs font-black uppercase tracking-[0.12em] text-[#7be3ff]">
+            Alias
           </label>
           <div className="relative">
             <input
               type="text"
-              placeholder="e.g. BassMaster99"
+              placeholder="Ej. BassMaster99"
               value={callsign}
               onChange={(e) => setCallsign(e.target.value)}
-              className="w-full bg-white/95 text-carbon font-sans text-sm rounded-xl px-4 py-3.5 pr-12 placeholder:text-carbon/40 focus:outline-none focus:ring-2 focus:ring-neon-green/50 transition-all"
+              className="w-full rounded-xl border border-[#00f0ff]/24 bg-[#0b102a] px-4 py-3.5 pr-12 text-sm font-semibold text-[#eaf7ff] placeholder:text-[#90a8c3] focus:outline-none focus:ring-2 focus:ring-[#00f0ff]/50"
             />
-            <Smile className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-carbon/30" />
+            <Smile className="absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#8ba0bf]" />
           </div>
         </div>
 
         <div className="mb-8">
-          <label className="block font-mono text-xs font-bold tracking-widest uppercase text-neon-yellow mb-2">
-            Secret Rhythm
+          <label className="mb-2 block text-xs font-black uppercase tracking-[0.12em] text-[#ffb5fb]">
+            Clave
           </label>
           <div className="relative">
             <input
@@ -134,15 +133,15 @@ export function LoginForm() {
               placeholder="********"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-white/95 text-carbon font-sans text-sm rounded-xl px-4 py-3.5 pr-12 placeholder:text-carbon/40 focus:outline-none focus:ring-2 focus:ring-neon-green/50 transition-all"
+              className="w-full rounded-xl border border-[#ff43f8]/24 bg-[#0b102a] px-4 py-3.5 pr-12 text-sm font-semibold text-[#eaf7ff] placeholder:text-[#90a8c3] focus:outline-none focus:ring-2 focus:ring-[#ff43f8]/50"
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
               className="absolute right-4 top-1/2 -translate-y-1/2"
-              aria-label={showPassword ? "Hide password" : "Show password"}
+              aria-label={showPassword ? "Ocultar clave" : "Mostrar clave"}
             >
-              <KeyRound className="w-5 h-5 text-carbon/30" />
+              <KeyRound className="h-5 w-5 text-[#8ba0bf]" />
             </button>
           </div>
         </div>
@@ -152,35 +151,35 @@ export function LoginForm() {
           disabled={isSubmitting}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
-          className="w-full py-4 rounded-2xl font-mono font-black text-lg uppercase tracking-wider text-carbon bg-gradient-to-r from-neon-green to-neon-cyan glow-green transition-all disabled:opacity-70 flex items-center justify-center gap-3"
+          className="flex w-full items-center justify-center gap-3 rounded-lg border bg-gradient-to-r from-[#00ff66] to-[#00f0ff] p-2.5 text-xs font-black uppercase tracking-wide text-black shadow-[0_10px_24px_rgba(0,0,0,0.5)] transition-colors hover:brightness-110 disabled:opacity-70"
         >
           {isSubmitting ? (
             <motion.div
-              className="w-5 h-5 border-2 border-carbon/30 border-t-carbon rounded-full"
+              className="h-5 w-5 rounded-full border-2 border-[#0b1129]/30 border-t-[#0b1129]"
               animate={{ rotate: 360 }}
               transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
             />
           ) : (
             <>
-              Enter the Arena
+              Iniciar sesion
               <Zap className="w-5 h-5" />
             </>
           )}
         </motion.button>
 
         {error && (
-          <p className="mt-4 rounded-lg border border-red-400/30 bg-red-900/20 px-3 py-2 text-center text-xs text-red-100">
+          <p className="mt-4 rounded-lg border border-[#ff6c7b]/45 bg-[#2a0e19]/80 px-3 py-2 text-center text-xs font-bold text-[#ffd6dd]">
             {error}
           </p>
         )}
 
-        <div className="text-center mt-5">
-          <a
+        <div className="mt-5 text-center">
+          <Link
             href="/register"
-            className="font-mono text-xs font-bold tracking-widest uppercase text-neon-magenta hover:text-neon-pink transition-colors text-glow-magenta"
+            className="text-xs font-black uppercase tracking-[0.12em] text-[#ffb5fb] transition-colors hover:text-[#ff43f8]"
           >
-            {"No Wristband? Sign Up Here \u2192"}
-          </a>
+            {"No tienes cuenta? Registrate"}
+          </Link>
         </div>
       </div>
     </motion.form>
