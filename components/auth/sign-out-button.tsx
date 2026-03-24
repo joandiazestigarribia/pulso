@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { signOut } from "next-auth/react"
+import { clearAuthUser, logout } from "@/lib/auth-client"
 
 export function SignOutButton() {
   const router = useRouter()
@@ -17,8 +18,10 @@ export function SignOutButton() {
 
     try {
       await signOut({ redirect: false })
+      await logout()
       await fetch("/api/identity/logout", { method: "POST" })
     } finally {
+      clearAuthUser()
       router.push("/login")
       router.refresh()
       setIsLoading(false)
@@ -36,4 +39,3 @@ export function SignOutButton() {
     </button>
   )
 }
-

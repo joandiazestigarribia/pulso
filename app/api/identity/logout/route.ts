@@ -4,6 +4,14 @@ import { ANON_SESSION_COOKIE, AUTH_USER_COOKIE, shouldUseSecureCookies } from "@
 export async function POST(request: Request) {
   const response = NextResponse.json({ ok: true })
 
+  response.cookies.set("access_token", "", {
+    httpOnly: true,
+    sameSite: "none",
+    secure: true,
+    path: "/",
+    maxAge: 0,
+  })
+
   response.cookies.set(AUTH_USER_COOKIE, "", {
     httpOnly: true,
     sameSite: "lax",
@@ -22,4 +30,3 @@ export async function POST(request: Request) {
 
   return response
 }
-

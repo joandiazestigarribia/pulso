@@ -4,19 +4,23 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
-import { User, KeyRound, Mail, Zap } from "lucide-react"
+import { KeyRound, Mail, Zap } from "lucide-react"
+import { evaluatePasswordRules, registerSchema } from "@/lib/auth-validation"
+import { register } from "@/lib/auth-client"
 import { getSafeNextPath } from "@/lib/safe-redirect"
 import { trackClientEvent } from "@/lib/client-events"
 
 export function RegisterForm() {
   const router = useRouter()
-  const [callsign, setCallsign] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({})
   const [error, setError] = useState<string | null>(null)
+  const passwordRules = evaluatePasswordRules(password)
+  const passwordsMatch = confirmPassword.length > 0 && password === confirmPassword
 
   useEffect(() => {
     void trackClientEvent({
@@ -31,8 +35,17 @@ export function RegisterForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
+    setFieldErrors({})
 
-    if (password !== confirmPassword) {
+    const parsedInput = registerSchema.safeParse({ email, password })
+    if (!parsedInput.success) {
+      setFieldErrors(parsedInput.error.flatten().fieldErrors)
+      setError("Revisa los campos marcados.")
+      return
+    }
+
+    if (parsedInput.data.password !== confirmPassword) {
+      setFieldErrors({ confirmPassword: ["Passwords do not match."] })
       setError("Las claves no coinciden.")
       return
     }
@@ -42,30 +55,20 @@ export function RegisterForm() {
     const nextPath = getSafeNextPath(new URL(window.location.href).searchParams.get("next"))
 
     try {
-      const response = await fetch("/api/identity/session", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          userId: callsign.trim(),
-        }),
+      const response = await register({
+        email: parsedInput.data.email,
+        password: parsedInput.data.password,
       })
 
       if (!response.ok) {
-        setError("No se pudo crear la sesion. Usa un alias valido.")
+        setFieldErrors(response.errors ?? {})
+        setError(response.message ?? "No se pudo registrar la cuenta.")
         setIsSubmitting(false)
         return
       }
 
-      const payload = (await response.json()) as {
-        merge?: {
-          movedBattles?: number
-        }
-      }
-      const movedBattles = payload.merge?.movedBattles ?? 0
       const separator = nextPath.includes("?") ? "&" : "?"
-      const redirectedPath = `${nextPath}${separator}auth=done&mergedBattles=${movedBattles}`
+      const redirectedPath = `${nextPath}${separator}auth=done`
 
       router.push(redirectedPath)
       router.refresh()
@@ -115,22 +118,6 @@ export function RegisterForm() {
 
         <div className="mb-4">
           <label className="mb-2 block text-xs font-black uppercase tracking-[0.12em] text-[#7be3ff]">
-            Alias
-          </label>
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Ej. BassMaster99"
-              value={callsign}
-              onChange={(e) => setCallsign(e.target.value)}
-              className="w-full rounded-xl border border-[#00f0ff]/24 bg-[#0b102a] px-4 py-3.5 pr-12 text-sm font-semibold text-[#eaf7ff] placeholder:text-[#90a8c3] focus:outline-none focus:ring-2 focus:ring-[#00f0ff]/50"
-            />
-            <User className="absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#8ba0bf]" />
-          </div>
-        </div>
-
-        <div className="mb-4">
-          <label className="mb-2 block text-xs font-black uppercase tracking-[0.12em] text-[#7be3ff]">
             Correo
           </label>
           <div className="relative">
@@ -139,10 +126,17 @@ export function RegisterForm() {
               placeholder="tu@email.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-xl border border-[#00f0ff]/24 bg-[#0b102a] px-4 py-3.5 pr-12 text-sm font-semibold text-[#eaf7ff] placeholder:text-[#90a8c3] focus:outline-none focus:ring-2 focus:ring-[#00f0ff]/50"
+              className={`w-full rounded-xl border bg-[#0b102a] px-4 py-3.5 pr-12 text-sm font-semibold text-[#eaf7ff] placeholder:text-[#90a8c3] focus:outline-none focus:ring-2 ${
+                fieldErrors.email
+                  ? "border-[#ff6c7b]/60 focus:ring-[#ff6c7b]/60"
+                  : "border-[#00f0ff]/24 focus:ring-[#00f0ff]/50"
+              }`}
             />
             <Mail className="absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#8ba0bf]" />
           </div>
+          {fieldErrors.email && (
+            <p className="mt-2 text-xs font-semibold text-[#ffb3bd]">{fieldErrors.email[0]}</p>
+          )}
         </div>
 
         <div className="mb-4">
@@ -155,7 +149,11 @@ export function RegisterForm() {
               placeholder="********"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-xl border border-[#ff43f8]/24 bg-[#0b102a] px-4 py-3.5 pr-12 text-sm font-semibold text-[#eaf7ff] placeholder:text-[#90a8c3] focus:outline-none focus:ring-2 focus:ring-[#ff43f8]/50"
+              className={`w-full rounded-xl border bg-[#0b102a] px-4 py-3.5 pr-12 text-sm font-semibold text-[#eaf7ff] placeholder:text-[#90a8c3] focus:outline-none focus:ring-2 ${
+                fieldErrors.password
+                  ? "border-[#ff6c7b]/60 focus:ring-[#ff6c7b]/60"
+                  : "border-[#ff43f8]/24 focus:ring-[#ff43f8]/50"
+              }`}
             />
             <button
               type="button"
@@ -165,6 +163,52 @@ export function RegisterForm() {
             >
               <KeyRound className="h-5 w-5 text-[#8ba0bf]" />
             </button>
+          </div>
+          {fieldErrors.password && (
+            <p className="mt-2 text-xs font-semibold text-[#ffb3bd]">{fieldErrors.password[0]}</p>
+          )}
+          <div className="mt-3 rounded-xl border border-white/10 bg-[#0b102a]/70 p-3">
+            <p className="mb-2 text-[11px] font-medium tracking-[0.08em] text-[#cde3ff]">
+              La contraseña debe cumplir con los siguientes items
+            </p>
+            <div className="grid grid-cols-2 gap-2">
+              <p className="flex items-center gap-2 text-[11px] font-medium text-[#cde3ff]">
+                <span
+                  className={`h-2.5 w-2.5 rounded-full ${passwordRules.minLength ? "bg-[#7dffbe]" : "bg-[#60738d]"}`}
+                />
+                Minimo 8 caracteres
+              </p>
+              <p className="flex items-center gap-2 text-[11px] font-medium text-[#cde3ff]">
+                <span
+                  className={`h-2.5 w-2.5 rounded-full ${passwordRules.uppercase ? "bg-[#7dffbe]" : "bg-[#60738d]"}`}
+                />
+                Al menos una mayuscula
+              </p>
+              <p className="flex items-center gap-2 text-[11px] font-medium text-[#cde3ff]">
+                <span
+                  className={`h-2.5 w-2.5 rounded-full ${passwordRules.lowercase ? "bg-[#7dffbe]" : "bg-[#60738d]"}`}
+                />
+                Al menos una minuscula
+              </p>
+              <p className="flex items-center gap-2 text-[11px] font-medium text-[#cde3ff]">
+                <span
+                  className={`h-2.5 w-2.5 rounded-full ${passwordRules.number ? "bg-[#7dffbe]" : "bg-[#60738d]"}`}
+                />
+                Al menos un numero
+              </p>
+              <p className="flex items-center gap-2 text-[11px] font-medium text-[#cde3ff]">
+                <span
+                  className={`h-2.5 w-2.5 rounded-full ${passwordRules.special ? "bg-[#7dffbe]" : "bg-[#60738d]"}`}
+                />
+                Al menos un especial (@$!%*?&)
+              </p>
+              <p className="flex items-center gap-2 text-[11px] font-medium text-[#cde3ff]">
+                <span
+                  className={`h-2.5 w-2.5 rounded-full ${passwordRules.maxLength ? "bg-[#7dffbe]" : "bg-[#60738d]"}`}
+                />
+                Maximo 100 caracteres
+              </p>
+            </div>
           </div>
         </div>
 
@@ -178,10 +222,20 @@ export function RegisterForm() {
               placeholder="********"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full rounded-xl border border-[#ff43f8]/24 bg-[#0b102a] px-4 py-3.5 pr-12 text-sm font-semibold text-[#eaf7ff] placeholder:text-[#90a8c3] focus:outline-none focus:ring-2 focus:ring-[#ff43f8]/50"
+              className={`w-full rounded-xl border bg-[#0b102a] px-4 py-3.5 pr-12 text-sm font-semibold text-[#eaf7ff] placeholder:text-[#90a8c3] focus:outline-none focus:ring-2 ${
+                fieldErrors.confirmPassword
+                  ? "border-[#ff6c7b]/60 focus:ring-[#ff6c7b]/60"
+                  : "border-[#ff43f8]/24 focus:ring-[#ff43f8]/50"
+              }`}
             />
             <KeyRound className="absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#8ba0bf]" />
           </div>
+          <p className={`mt-2 text-xs font-semibold ${passwordsMatch ? "text-[#7dffbe]" : "text-[#9fb0c6]"}`}>
+            {passwordsMatch ? "Las claves coinciden." : "Las claves deben coincidir."}
+          </p>
+          {fieldErrors.confirmPassword && (
+            <p className="mt-1 text-xs font-semibold text-[#ffb3bd]">{fieldErrors.confirmPassword[0]}</p>
+          )}
         </div>
 
         <motion.button

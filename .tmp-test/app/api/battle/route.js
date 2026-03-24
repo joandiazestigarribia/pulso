@@ -9,6 +9,7 @@ const db_1 = require("@/lib/db");
 const identity_1 = require("@/lib/identity");
 const battle_store_1 = require("@/lib/battle-store");
 const conversion_events_1 = require("@/lib/conversion-events");
+const music_dna_config_1 = require("@/lib/music-dna-config");
 const voteRequestSchema = zod_1.z
     .object({
     battleId: zod_1.z.string().min(1),
@@ -87,7 +88,7 @@ async function POST(request) {
             },
         });
         const stats = await (0, battle_store_1.getUserBattleStats)(actorId);
-        if (stats.completedBattlesCount >= 10) {
+        if (stats.completedBattlesCount >= music_dna_config_1.MUSIC_DNA_UNLOCK_THRESHOLD) {
             await (0, conversion_events_1.trackConversionEventSafe)({
                 eventName: "profile_unlock_reached",
                 request,
@@ -96,7 +97,7 @@ async function POST(request) {
                 battleId: payload.data.battleId,
                 metadata: {
                     completedBattlesCount: stats.completedBattlesCount,
-                    threshold: 10,
+                    threshold: music_dna_config_1.MUSIC_DNA_UNLOCK_THRESHOLD,
                 },
             });
         }
@@ -115,7 +116,7 @@ async function POST(request) {
                 track_not_found: 404,
                 vote_same_track: 400,
             };
-            return server_1.NextResponse.json({ error: error.message }, { status: statusByCode[error.code] });
+            return server_1.NextResponse.json({ error: error.message, code: error.code }, { status: statusByCode[error.code] });
         }
         return server_1.NextResponse.json({ error: "Unexpected vote failure" }, { status: 500 });
     }

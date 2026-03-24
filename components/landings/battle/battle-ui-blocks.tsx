@@ -27,17 +27,17 @@ export function BattleTopNotices({
         <section className="relative z-20 mx-auto mt-3 w-[min(96%,760px)] rounded-2xl border border-[#00f0ff]/30 bg-[#111739]/74 px-4 py-3 text-[#eaf7ff] backdrop-blur">
           <div className="flex items-center justify-between gap-2">
             <p className="text-sm text-[#d8ebff]">
-              Progress linked successfully.{" "}
+              Progreso vinculado correctamente.{" "}
               {authConfirmation.movedBattles > 0
-                ? `${authConfirmation.movedBattles} battle records were preserved after login.`
-                : "Your current progress is now attached to your account."}
+                ? `${authConfirmation.movedBattles} Los registros de batalla se conservaron después de iniciar sesión.`
+                : "Tu progreso actual ya está asociado a tu cuenta."}
             </p>
             <button
               type="button"
               onClick={onDismissAuthConfirmation}
               className="rounded border border-white/35 px-2 py-1 text-xs font-black uppercase tracking-wide text-white hover:bg-white hover:text-black"
             >
-              Dismiss
+              Descartar
             </button>
           </div>
         </section>

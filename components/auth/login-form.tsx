@@ -4,16 +4,19 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
-import { Smile, KeyRound, Zap } from "lucide-react"
+import { KeyRound, Mail, Zap } from "lucide-react"
+import { loginSchema } from "@/lib/auth-validation"
+import { login } from "@/lib/auth-client"
 import { getSafeNextPath } from "@/lib/safe-redirect"
 import { trackClientEvent } from "@/lib/client-events"
 
 export function LoginForm() {
   const router = useRouter()
-  const [callsign, setCallsign] = useState("")
+  const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({})
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -29,35 +32,34 @@ export function LoginForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
+    setFieldErrors({})
     setIsSubmitting(true)
 
     const nextPath = getSafeNextPath(new URL(window.location.href).searchParams.get("next"))
 
     try {
-      const response = await fetch("/api/identity/session", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          userId: callsign.trim(),
-        }),
-      })
-
-      if (!response.ok) {
-        setError("No se pudo iniciar la sesion. Usa un alias valido.")
+      const parsedInput = loginSchema.safeParse({ email, password })
+      if (!parsedInput.success) {
+        setFieldErrors(parsedInput.error.flatten().fieldErrors)
+        setError("Revisa los campos marcados.")
         setIsSubmitting(false)
         return
       }
 
-      const payload = (await response.json()) as {
-        merge?: {
-          movedBattles?: number
-        }
+      const response = await login({
+        email: parsedInput.data.email,
+        password: parsedInput.data.password,
+      })
+
+      if (!response.ok) {
+        setFieldErrors(response.errors ?? {})
+        setError(response.message ?? "No se pudo iniciar la sesion.")
+        setIsSubmitting(false)
+        return
       }
-      const movedBattles = payload.merge?.movedBattles ?? 0
+
       const separator = nextPath.includes("?") ? "&" : "?"
-      const redirectedPath = `${nextPath}${separator}auth=done&mergedBattles=${movedBattles}`
+      const redirectedPath = `${nextPath}${separator}auth=done`
 
       router.push(redirectedPath)
       router.refresh()
@@ -109,18 +111,25 @@ export function LoginForm() {
 
         <div className="mb-5">
           <label className="mb-2 block text-xs font-black uppercase tracking-[0.12em] text-[#7be3ff]">
-            Alias
+            Email
           </label>
           <div className="relative">
             <input
-              type="text"
-              placeholder="Ej. BassMaster99"
-              value={callsign}
-              onChange={(e) => setCallsign(e.target.value)}
-              className="w-full rounded-xl border border-[#00f0ff]/24 bg-[#0b102a] px-4 py-3.5 pr-12 text-sm font-semibold text-[#eaf7ff] placeholder:text-[#90a8c3] focus:outline-none focus:ring-2 focus:ring-[#00f0ff]/50"
+              type="email"
+              placeholder="tu@email.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className={`w-full rounded-xl border bg-[#0b102a] px-4 py-3.5 pr-12 text-sm font-semibold text-[#eaf7ff] placeholder:text-[#90a8c3] focus:outline-none focus:ring-2 ${
+                fieldErrors.email
+                  ? "border-[#ff6c7b]/60 focus:ring-[#ff6c7b]/60"
+                  : "border-[#00f0ff]/24 focus:ring-[#00f0ff]/50"
+              }`}
             />
-            <Smile className="absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#8ba0bf]" />
+            <Mail className="absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#8ba0bf]" />
           </div>
+          {fieldErrors.email && (
+            <p className="mt-2 text-xs font-semibold text-[#ffb3bd]">{fieldErrors.email[0]}</p>
+          )}
         </div>
 
         <div className="mb-8">
@@ -133,7 +142,11 @@ export function LoginForm() {
               placeholder="********"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-xl border border-[#ff43f8]/24 bg-[#0b102a] px-4 py-3.5 pr-12 text-sm font-semibold text-[#eaf7ff] placeholder:text-[#90a8c3] focus:outline-none focus:ring-2 focus:ring-[#ff43f8]/50"
+              className={`w-full rounded-xl border bg-[#0b102a] px-4 py-3.5 pr-12 text-sm font-semibold text-[#eaf7ff] placeholder:text-[#90a8c3] focus:outline-none focus:ring-2 ${
+                fieldErrors.password
+                  ? "border-[#ff6c7b]/60 focus:ring-[#ff6c7b]/60"
+                  : "border-[#ff43f8]/24 focus:ring-[#ff43f8]/50"
+              }`}
             />
             <button
               type="button"
@@ -144,6 +157,9 @@ export function LoginForm() {
               <KeyRound className="h-5 w-5 text-[#8ba0bf]" />
             </button>
           </div>
+          {fieldErrors.password && (
+            <p className="mt-2 text-xs font-semibold text-[#ffb3bd]">{fieldErrors.password[0]}</p>
+          )}
         </div>
 
         <motion.button

@@ -7,16 +7,18 @@ exports.getCatalogDiagnostics = getCatalogDiagnostics;
 exports.completeBattleVote = completeBattleVote;
 exports.getBattleHistory = getBattleHistory;
 exports.getUserBattleStats = getUserBattleStats;
+exports.resetUserBattleProgress = resetUserBattleProgress;
 exports.getLeaderboardTracks = getLeaderboardTracks;
+exports.refreshTrackPreview = refreshTrackPreview;
 const zod_1 = require("zod");
 const db_1 = require("@/lib/db");
 const elo_1 = require("@/lib/elo");
 const mock_data_1 = require("@/lib/mock-data");
-const spotify_1 = require("@/lib/spotify");
+const catalog_providers_1 = require("@/lib/catalog-providers");
 const catalog_curation_1 = require("@/lib/catalog-curation");
 const catalog_policy_1 = require("@/lib/catalog-policy");
 const MATCHMAKING_ELO_THRESHOLD = 200;
-const SPOTIFY_REFRESH_MS = 1000 * 60 * 30;
+const CATALOG_REFRESH_MS = 1000 * 60 * 30;
 const CATALOG_SYNC_LIMIT = 200;
 const EXTERNAL_PREVIEW_TRACK_THRESHOLD = 8;
 const LEGACY_PLACEHOLDER_PREVIEW_URL = "https://interactive-examples.mdn.mozilla.net/media/cc0-audio/t-rex-roar.mp3";
@@ -89,7 +91,7 @@ exports.voteSchema = zod_1.z
     message: "winnerId and loserId must be different",
     path: ["winnerId"],
 });
-let lastSpotifySyncAt = 0;
+let lastCatalogSyncAt = 0;
 let lastPreviewBackfillAt = 0;
 let previewBackfillPromise = null;
 function randomItem(items) {
@@ -124,7 +126,7 @@ async function countExternalPreviewTracks() {
         where: {
             previewUrl: { not: null },
             previewSource: {
-                in: ["deezer", "spotify", "itunes"],
+                in: ["deezer", "itunes"],
             },
         },
         select: {
@@ -480,7 +482,6 @@ function selectCrossBucketPair(previewTracks) {
 function toTrack(track) {
     return {
         id: track.id,
-        spotifyTrackId: track.spotifyTrackId,
         catalogBucket: track.catalogBucket,
         name: track.name,
         artist: track.artist,
@@ -488,9 +489,6 @@ function toTrack(track) {
         previewUrl: track.previewUrl,
         previewSource: track.previewSource,
         previewCheckedAt: track.previewCheckedAt?.toISOString() ?? null,
-        spotifyPopularity: track.spotifyPopularity,
-        spotifyExplicit: track.spotifyExplicit,
-        spotifyPreviewAvailable: track.spotifyPreviewAvailable,
         eloScore: track.eloScore,
         battlesCount: track.battlesCount,
         bpm: track.bpm,
@@ -522,10 +520,6 @@ async function seedCatalogIfEmpty() {
             previewUrl: track.previewUrl,
             previewSource: track.previewSource,
             previewCheckedAt: track.previewCheckedAt,
-            spotifyTrackId: track.spotifyTrackId,
-            spotifyPopularity: track.spotifyPopularity,
-            spotifyExplicit: track.spotifyExplicit,
-            spotifyPreviewAvailable: track.spotifyPreviewAvailable,
             bpm: track.bpm,
             duration: track.duration,
             genre: track.genre,
@@ -555,7 +549,6 @@ async function sanitizeLegacyPlaceholderPreviews() {
             previewUrl: null,
             previewSource: null,
             previewCheckedAt: new Date(),
-            spotifyPreviewAvailable: false,
         },
     });
 }
@@ -586,19 +579,18 @@ async function clearExpiredDeezerPreviewUrls() {
             previewUrl: null,
             previewSource: null,
             previewCheckedAt: new Date(),
-            spotifyPreviewAvailable: false,
         },
     });
 }
 async function normalizeLegacyPreviewSources() {
     await db_1.prisma.track.updateMany({
         where: {
-            previewUrl: { not: null },
-            previewSource: null,
-            spotifyTrackId: { not: null },
+            previewSource: {
+                notIn: ["deezer", "itunes"],
+            },
         },
         data: {
-            previewSource: "spotify",
+            previewSource: "itunes",
             previewCheckedAt: new Date(),
         },
     });
@@ -606,7 +598,18 @@ async function normalizeLegacyPreviewSources() {
         where: {
             previewUrl: { not: null },
             previewSource: null,
-            spotifyTrackId: null,
+            id: { startsWith: "deezer_" },
+        },
+        data: {
+            previewSource: "deezer",
+            previewCheckedAt: new Date(),
+        },
+    });
+    await db_1.prisma.track.updateMany({
+        where: {
+            previewUrl: { not: null },
+            previewSource: null,
+            id: { not: { startsWith: "deezer_" } },
         },
         data: {
             previewSource: "itunes",
@@ -630,7 +633,7 @@ async function backfillMissingPreviewUrls() {
     });
     for (const track of tracksMissingPreview) {
         const checkedAt = new Date();
-        const previewUrl = await (0, spotify_1.fetchItunesPreviewUrl)({
+        const previewUrl = await (0, catalog_providers_1.fetchItunesPreviewUrl)({
             trackName: track.name,
             artistName: track.artist,
         });
@@ -652,7 +655,7 @@ async function suppressStaleExternalTracks(activeTrackIds) {
     await db_1.prisma.track.updateMany({
         where: {
             previewSource: {
-                in: ["deezer", "spotify", "itunes"],
+                in: ["deezer", "itunes"],
             },
             id: {
                 notIn: activeTrackIds,
@@ -662,7 +665,6 @@ async function suppressStaleExternalTracks(activeTrackIds) {
             previewUrl: null,
             previewSource: null,
             previewCheckedAt: new Date(),
-            spotifyPreviewAvailable: false,
         },
     });
 }
@@ -731,13 +733,13 @@ async function ensureBattleCatalog(options) {
     const artistDenylist = await (0, catalog_policy_1.getActiveArtistDenylist)();
     const externalPreviewTrackCount = await countExternalPreviewTracks();
     const hasHealthyExternalCatalog = externalPreviewTrackCount >= EXTERNAL_PREVIEW_TRACK_THRESHOLD;
-    if (!forceRefresh && Date.now() - lastSpotifySyncAt < SPOTIFY_REFRESH_MS && hasHealthyExternalCatalog) {
+    if (!forceRefresh && Date.now() - lastCatalogSyncAt < CATALOG_REFRESH_MS && hasHealthyExternalCatalog) {
         return;
     }
-    const deezerTracks = (await (0, spotify_1.fetchDeezerBattleTracks)(CATALOG_SYNC_LIMIT)).filter((track) => !(0, catalog_policy_1.isArtistBlocked)(track.artist, artistDenylist));
+    const deezerTracks = (await (0, catalog_providers_1.fetchDeezerBattleTracks)(CATALOG_SYNC_LIMIT)).filter((track) => !(0, catalog_policy_1.isArtistBlocked)(track.artist, artistDenylist));
     const deezerPreviewTracks = deezerTracks.filter((track) => hasTrackPreview(track));
     if (deezerPreviewTracks.length < 2) {
-        const itunesTracks = (await (0, spotify_1.fetchItunesBattleTracks)(CATALOG_SYNC_LIMIT)).filter((track) => !(0, catalog_policy_1.isArtistBlocked)(track.artist, artistDenylist));
+        const itunesTracks = (await (0, catalog_providers_1.fetchItunesBattleTracks)(CATALOG_SYNC_LIMIT)).filter((track) => !(0, catalog_policy_1.isArtistBlocked)(track.artist, artistDenylist));
         if (itunesTracks.length >= 2) {
             await db_1.prisma.$transaction(itunesTracks.map((track) => db_1.prisma.track.upsert({
                 where: { id: track.id },
@@ -759,10 +761,6 @@ async function ensureBattleCatalog(options) {
                             previewCheckedAt: new Date(),
                         }
                         : {}),
-                    spotifyTrackId: track.spotifyTrackId,
-                    spotifyPopularity: track.spotifyPopularity,
-                    spotifyExplicit: track.spotifyExplicit,
-                    spotifyPreviewAvailable: track.spotifyPreviewAvailable,
                     bpm: track.bpm,
                     duration: track.duration,
                     genre: track.genre,
@@ -773,7 +771,7 @@ async function ensureBattleCatalog(options) {
                 },
             })));
             await suppressStaleExternalTracks(itunesTracks.filter((track) => hasTrackPreview(track)).map((track) => track.id));
-            lastSpotifySyncAt = Date.now();
+            lastCatalogSyncAt = Date.now();
         }
         triggerPreviewBackfillInBackground();
         return;
@@ -798,10 +796,6 @@ async function ensureBattleCatalog(options) {
                     previewCheckedAt: new Date(),
                 }
                 : {}),
-            spotifyTrackId: track.spotifyTrackId,
-            spotifyPopularity: track.spotifyPopularity,
-            spotifyExplicit: track.spotifyExplicit,
-            spotifyPreviewAvailable: track.spotifyPreviewAvailable,
             bpm: track.bpm,
             duration: track.duration,
             genre: track.genre,
@@ -812,7 +806,7 @@ async function ensureBattleCatalog(options) {
         },
     })));
     await suppressStaleExternalTracks(deezerPreviewTracks.map((track) => track.id));
-    lastSpotifySyncAt = Date.now();
+    lastCatalogSyncAt = Date.now();
     triggerPreviewBackfillInBackground();
 }
 async function createPendingBattle(userId) {
@@ -1108,10 +1102,66 @@ async function getUserBattleStats(userId) {
     });
     return { completedBattlesCount };
 }
+async function resetUserBattleProgress(userId) {
+    (0, db_1.assertDatabaseConfigured)();
+    return db_1.prisma.$transaction(async (tx) => {
+        await tx.musicProfile.deleteMany({
+            where: { userId },
+        });
+        const deletedBattles = await tx.battle.deleteMany({
+            where: { userId },
+        });
+        return {
+            deletedBattles: deletedBattles.count,
+        };
+    });
+}
 async function getLeaderboardTracks() {
     (0, db_1.assertDatabaseConfigured)();
     const tracks = await db_1.prisma.track.findMany({
         orderBy: [{ eloScore: "desc" }, { battlesCount: "asc" }],
     });
     return tracks.map(toTrack);
+}
+async function refreshTrackPreview(trackId) {
+    (0, db_1.assertDatabaseConfigured)();
+    const track = await db_1.prisma.track.findUnique({
+        where: { id: trackId },
+        select: {
+            id: true,
+            name: true,
+            artist: true,
+            previewSource: true,
+        },
+    });
+    if (!track) {
+        throw new Error("Track not found");
+    }
+    let refreshedPreviewUrl = null;
+    let refreshedPreviewSource = null;
+    if (track.id.startsWith("deezer_")) {
+        const deezerId = track.id.slice("deezer_".length);
+        refreshedPreviewUrl = await (0, catalog_providers_1.fetchDeezerPreviewUrlByTrackId)(deezerId);
+        refreshedPreviewSource = refreshedPreviewUrl ? "deezer" : null;
+    }
+    if (!refreshedPreviewUrl) {
+        refreshedPreviewUrl = await (0, catalog_providers_1.fetchItunesPreviewUrl)({
+            trackName: track.name,
+            artistName: track.artist,
+        });
+        refreshedPreviewSource = refreshedPreviewUrl ? "itunes" : null;
+    }
+    await db_1.prisma.track.update({
+        where: { id: track.id },
+        data: {
+            previewUrl: refreshedPreviewUrl,
+            previewSource: refreshedPreviewSource,
+            previewCheckedAt: new Date(),
+        },
+    });
+    return {
+        trackId: track.id,
+        previewUrl: refreshedPreviewUrl,
+        previewSource: refreshedPreviewSource,
+    };
 }

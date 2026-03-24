@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Space_Grotesk, Outfit } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
+import { AuthSessionBootstrap } from "@/components/auth/auth-session-bootstrap"
 import './globals.css'
 
 const _spaceGrotesk = Space_Grotesk({ 
@@ -26,6 +27,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${_spaceGrotesk.variable} ${_outfit.variable}`}>
       <body className="font-sans antialiased bg-carbon text-foreground min-h-screen">
+        <AuthSessionBootstrap />
         {children}
         <Analytics />
       </body>

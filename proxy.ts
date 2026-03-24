@@ -7,14 +7,24 @@ import {
 } from "@/lib/identity"
 
 const PROTECTED_PATHS = ["/profile/full", "/api/export"]
+const AUTH_PAGES = ["/login", "/register"]
 
 function isProtectedPath(pathname: string): boolean {
   return PROTECTED_PATHS.some((path) => pathname.startsWith(path))
 }
 
+function isAuthPage(pathname: string): boolean {
+  return AUTH_PAGES.some((path) => pathname.startsWith(path))
+}
+
 export function proxy(request: NextRequest) {
   const userId = request.cookies.get(AUTH_USER_COOKIE)?.value ?? null
   const anonymousId = request.cookies.get(ANON_SESSION_COOKIE)?.value ?? null
+
+  if (userId && isAuthPage(request.nextUrl.pathname)) {
+    const battleUrl = new URL("/battle", request.url)
+    return NextResponse.redirect(battleUrl)
+  }
 
   if (!userId && isProtectedPath(request.nextUrl.pathname)) {
     const loginUrl = new URL("/login", request.url)
