@@ -22,14 +22,34 @@ const fetcher = async (url: string): Promise<AuthSessionResponse> => {
   }
 }
 
-function resolveNavItemClass(pathname: string, href: string, activeColor: string, hoverColor: string): string {
+type NavTone = "cyan" | "pink" | "yellow"
+
+function resolveNavItemClass(pathname: string, href: string, tone: NavTone): string {
   const isActive = pathname === href || pathname.startsWith(`${href}/`)
 
-  if (isActive) {
-    return `${activeColor} underline underline-offset-4`
+  if (tone === "cyan") {
+    return isActive
+      ? "text-[#7be3ff] underline underline-offset-4"
+      : "text-[#7be3ff]/85 transition-colors hover:text-[#00f0ff]"
   }
 
-  return `${activeColor}/85 transition-colors hover:${hoverColor}`
+  if (tone === "pink") {
+    return isActive
+      ? "text-[#ffb5fb] underline underline-offset-4"
+      : "text-[#ffb5fb]/85 transition-colors hover:text-[#ff43f8]"
+  }
+
+  if (tone === "yellow") {
+    return isActive
+      ? "text-[#f8eeaf] underline underline-offset-4"
+      : "text-[#f8eeaf]/85 transition-colors hover:text-[#ffe600]"
+  }
+
+  if (isActive) {
+    return "text-[#7be3ff] underline underline-offset-4"
+  }
+
+  return "text-[#7be3ff]/85 transition-colors hover:text-[#00f0ff]"
 }
 
 export function CampgroundHeader() {
@@ -60,19 +80,19 @@ export function CampgroundHeader() {
         <nav className="hidden items-center gap-5 text-xs font-black uppercase tracking-[0.12em] md:flex">
           <Link
             href="/battle"
-            className={resolveNavItemClass(pathname, "/battle", "text-[#7be3ff]", "text-[#00f0ff]")}
+            className={resolveNavItemClass(pathname, "/battle", "cyan")}
           >
             1 vs 1
           </Link>
           <Link
             href="/music-dna"
-            className={resolveNavItemClass(pathname, "/music-dna", "text-[#ffb5fb]", "text-[#ff43f8]")}
+            className={resolveNavItemClass(pathname, "/music-dna", "pink")}
           >
             Perfil Sonoro
           </Link>
           <Link
             href="/profile"
-            className={resolveNavItemClass(pathname, "/profile", "text-[#f8eeaf]", "text-[#ffe600]")}
+            className={resolveNavItemClass(pathname, "/profile", "yellow")}
           >
             Perfil
           </Link>

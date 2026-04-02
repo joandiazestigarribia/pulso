@@ -53,7 +53,12 @@ interface BattleProgressBannerProps {
 
 export function BattleProgressBanner({ completedBattles, goalVotes }: BattleProgressBannerProps) {
   return (
-    <div className="w-full">
+    <motion.div
+      className="w-full"
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.35, ease: "easeOut" }}
+    >
       <div className="mx-auto mb-3 flex w-[min(96%,820px)] flex-col gap-1.5 rounded-2xl border border-white/15 bg-black/45 px-4 py-2.5 backdrop-blur">
         <div className="flex items-center justify-between gap-3">
           <p className="font-mono text-xs font-black uppercase tracking-[0.12em] text-[#f8eeaf]">
@@ -72,13 +77,15 @@ export function BattleProgressBanner({ completedBattles, goalVotes }: BattleProg
           )}
         </div>
         <div className="h-1.5 overflow-hidden rounded-full bg-white/15">
-          <div
+          <motion.div
             className="h-full rounded-full bg-gradient-to-r from-[#00f0ff] via-[#ff43f8] to-[#ffe600]"
-            style={{ width: `${Math.min(100, (completedBattles / goalVotes) * 100)}%` }}
+            initial={{ width: 0 }}
+            animate={{ width: `${Math.min(100, (completedBattles / goalVotes) * 100)}%` }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
           />
         </div>
       </div>
-    </div>
+    </motion.div>
   )
 }
 
@@ -100,7 +107,12 @@ export function BattleNowPlayingFooter({
   onSkipStage,
 }: BattleNowPlayingFooterProps) {
   return (
-    <footer className="relative z-20 mx-auto mb-4 flex min-h-16 w-[min(92%,860px)] items-center justify-between gap-3 rounded-[22px] border border-white/20 bg-[#111739]/74 px-3 py-2 shadow-[0_0_28px_rgba(0,0,0,0.5)] backdrop-blur md:mb-6 md:px-4">
+    <motion.footer
+      className="relative z-20 mx-auto mb-4 flex min-h-16 w-[min(92%,860px)] items-center justify-between gap-3 rounded-[22px] border border-white/20 bg-[#111739]/74 px-3 py-2 shadow-[0_0_28px_rgba(0,0,0,0.5)] backdrop-blur md:mb-6 md:px-4"
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.35, ease: "easeOut", delay: 0.05 }}
+    >
       <div className="flex shrink-0 items-center gap-3">
         <div className="flex h-10 w-10 rotate-3 items-center justify-center rounded-xl border border-[#00f0ff]/45 bg-black/60 shadow-[0_0_18px_rgba(0,240,255,0.32)]">
           <Volume2 className="h-5 w-5 text-[#7be3ff]" />
@@ -112,25 +124,29 @@ export function BattleNowPlayingFooter({
       </div>
 
       <div className="flex shrink-0 items-center gap-2">
-        <button
+        <motion.button
           type="button"
           onClick={onSkipStage}
           disabled={isSkipping}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
           className="rounded-xl border border-white/30 bg-black/45 px-3 py-1.5 text-xs font-bold text-white transition-all hover:bg-white hover:text-black disabled:cursor-not-allowed disabled:opacity-60"
         >
           {isSkipping ? "Salteando..." : `Saltear (${skipsRemaining})`}
-        </button>
-        <button
+        </motion.button>
+        <motion.button
           type="button"
           onClick={onRequestReset}
           disabled={isResetting}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
           className="inline-flex items-center gap-2 rounded-xl border border-[#ff806d]/45 bg-[#2f1419]/75 px-3 py-1.5 text-xs font-bold text-[#ffd2c9] transition-all hover:border-[#ff806d]/80 hover:bg-[#3a1820] disabled:cursor-not-allowed disabled:opacity-60"
         >
           <RefreshCcw className={`h-4 w-4 ${isResetting ? "animate-spin" : ""}`} />
           {isResetting ? "Reiniciando..." : "Reiniciar juego"}
-        </button>
+        </motion.button>
       </div>
-    </footer>
+    </motion.footer>
   )
 }
 

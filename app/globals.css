@@ -155,9 +155,42 @@
   font-family: 'Playpen Sans', sans-serif;
 }
 
+.expanded {
+  --sb-track-color: #0a0f26;
+  --sb-thumb-color: #ff43f8;
+  --sb-size: 7px;
+}
+
+
+.expanded::-webkit-scrollbar {
+  width: var(--sb-size)
+}
+
+.expanded::-webkit-scrollbar-track {
+  background: var(--sb-track-color);
+  border-radius: 3px;
+}
+
+.expanded::-webkit-scrollbar-thumb {
+  background: var(--sb-thumb-color);
+  border-radius: 3px;
+
+}
+
+@supports not selector(::-webkit-scrollbar) {
+  .expanded {
+    scrollbar-color: var(--sb-thumb-color) var(--sb-track-color);
+  }
+}
+
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
+  }
+  a,
+  button {
+    cursor: pointer !important;
   }
   body {
     @apply bg-background text-foreground;

@@ -13,7 +13,7 @@ import {
   type IdentitySessionResponse,
 } from "@/lib/music-dna"
 
-export type ShareNetwork = "x" | "whatsapp" | "telegram" | "facebook"
+export type ShareNetwork = "x" | "whatsapp" | "telegram" | "facebook" | "instagram"
 
 export function useMusicDnaViewModel() {
   const [isRegenerating, setIsRegenerating] = useState(false)
@@ -59,7 +59,6 @@ export function useMusicDnaViewModel() {
   const analyzedVotes = profile?.generatedFromVotes ?? totalBattles
   const shareDescription =
     shareCopy.description || "Tu seleccion combina energia, ritmo y estilo con una firma sonora unica."
-  const shareTitle = `${sonicPersona.name} | Music DNA Pulso`
 
   const buildShareUrl = (): string => {
     if (typeof window === "undefined") {
@@ -73,12 +72,26 @@ export function useMusicDnaViewModel() {
   const shareToNetwork = (network: ShareNetwork) => {
     const url = encodeURIComponent(buildShareUrl())
     const text = encodeURIComponent(buildShareText())
+    const rawUrl = buildShareUrl()
+    const rawText = buildShareText()
 
     const shareLinks: Record<ShareNetwork, string> = {
-      x: `https://twitter.com/intent/tweet?text=${text}&url=${url}`,
-      whatsapp: `https://wa.me/?text=${encodeURIComponent(`${buildShareText()} ${buildShareUrl()}`)}`,
+      x: `https://x.com/intent/tweet?text=${text}&url=${url}`,
+      whatsapp: `https://wa.me/?text=${encodeURIComponent(`${rawText} ${rawUrl}`)}`,
       telegram: `https://t.me/share/url?url=${url}&text=${text}`,
       facebook: `https://www.facebook.com/sharer/sharer.php?u=${url}`,
+      instagram: "https://www.instagram.com/",
+    }
+
+    if (network === "instagram") {
+      void navigator.clipboard
+        .writeText(`${rawText}\n${rawUrl}`)
+        .then(() => {
+          setShareFeedback("Texto y link copiados. Se abrio Instagram para que pegues tu publicacion.")
+        })
+        .catch(() => {
+          setShareFeedback("Se abrio Instagram. Copia manualmente el texto/link para publicar.")
+        })
     }
 
     window.open(shareLinks[network], "_blank", "noopener,noreferrer")
@@ -93,23 +106,7 @@ export function useMusicDnaViewModel() {
     }
   }
 
-  const handleNativeShare = async () => {
-    if (!navigator.share) {
-      setShareFeedback("Tu navegador no soporta share nativo. Usa las redes o copia link.")
-      return
-    }
 
-    try {
-      await navigator.share({
-        title: shareTitle,
-        text: buildShareText(),
-        url: buildShareUrl(),
-      })
-      setShareFeedback("Perfil compartido con exito.")
-    } catch {
-      setShareFeedback("Se cancelo el compartido.")
-    }
-  }
 
   const handleRegenerate = async () => {
     if (isRegenerating) {
@@ -161,7 +158,6 @@ export function useMusicDnaViewModel() {
     setIsShareOpen,
     handleRegenerate,
     handleCopyShare,
-    handleNativeShare,
     shareToNetwork,
   }
 }
