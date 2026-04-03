@@ -11,7 +11,6 @@ interface MusicDnaShareModalProps {
   onClose: () => void
   personaName: string
   personaAssetFile: string
-  headline: string
   description: string
   feedback: string | null
   onCopyShare: () => void
@@ -23,7 +22,6 @@ export function MusicDnaShareModal({
   onClose,
   personaName,
   personaAssetFile,
-  headline,
   description,
   feedback,
   onCopyShare,
@@ -83,7 +81,6 @@ export function MusicDnaShareModal({
             <h3 className="mt-1 bg-gradient-to-r from-[#00f0ff] via-[#ff43f8] to-[#ffe600] bg-clip-text text-2xl font-black uppercase leading-none text-transparent">
               Compartir tu perfil sonoro
             </h3>
-            <p className="mt-1 text-xs font-semibold text-[#d8ebff]">{headline}</p>
           </div>
           <motion.button
             type="button"

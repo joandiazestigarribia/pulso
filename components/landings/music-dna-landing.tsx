@@ -9,6 +9,8 @@ import { WoodActionButton } from "@/components/landings/wood-action-button"
 import { MusicDnaShareModal } from "@/components/landings/music-dna/music-dna-share-modal"
 import { useMusicDnaViewModel } from "@/components/landings/music-dna/use-music-dna-view-model"
 
+const PROFILE_ACCESS_MIN_BATTLES = 40
+
 const musicDnaBackgroundStyle = {
   backgroundImage: "url('/images/music-dna/background-music-dna.png')",
   backgroundPosition: "center",
@@ -25,7 +27,6 @@ export function MusicDnaLanding() {
     shareFeedback,
     dominantGenres,
     sonicPersona,
-    shareCopy,
     radarAxes,
     intensityScore,
     rhythmScore,
@@ -59,6 +60,34 @@ export function MusicDnaLanding() {
           />
           Cargando analisis...
         </motion.div>
+      </main>
+    )
+  }
+
+  if (totalBattles < PROFILE_ACCESS_MIN_BATTLES) {
+    const remainingBattles = PROFILE_ACCESS_MIN_BATTLES - totalBattles
+
+    return (
+      <main className="relative mx-auto flex min-h-screen w-full max-w-7xl items-center justify-center overflow-hidden px-4 pb-8 pt-24">
+        <div className="pointer-events-none fixed inset-0 z-0 opacity-90" style={musicDnaBackgroundStyle} />
+        <div className="pointer-events-none fixed inset-0 z-0 bg-[radial-gradient(circle_at_30%_20%,rgba(0,240,255,0.14),transparent_45%),radial-gradient(circle_at_75%_15%,rgba(255,67,248,0.2),transparent_45%),linear-gradient(180deg,rgba(8,11,26,0.74),rgba(8,11,26,0.92))]" />
+        <motion.section
+          className="relative z-10 w-full max-w-128 rounded-3xl border border-[#00f0ff]/35 bg-[#0b1230]/78 px-6 py-7 text-center shadow-[0_24px_60px_rgba(0,0,0,0.42)] backdrop-blur-sm"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, ease: "easeOut" }}
+        >
+          <p className="text-xs font-black uppercase tracking-[0.18em] text-[#7be3ff]">Perfil Sonoro Bloqueado</p>
+          <h1 className="mt-2 bg-gradient-to-r from-[#00f0ff] via-[#ff43f8] to-[#ffe600] bg-clip-text text-3xl font-black uppercase leading-tight tracking-tight text-transparent">
+            Continua votando para acceder
+          </h1>
+          <p className="mt-3 text-sm font-semibold text-[#d8e9ff]">
+            Necesitas {PROFILE_ACCESS_MIN_BATTLES} batallas votadas para desbloquear esta landing.
+          </p>
+          <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-[#82dff2]">
+            Te faltan {remainingBattles} para abrir tu Music DNA completo.
+          </p>
+        </motion.section>
       </main>
     )
   }
@@ -268,7 +297,6 @@ export function MusicDnaLanding() {
         onClose={() => setIsShareOpen(false)}
         personaName={sonicPersona.name}
         personaAssetFile={sonicPersona.assetFile}
-        headline={shareCopy.headline}
         description={shareDescription}
         feedback={shareFeedback}
         onCopyShare={handleCopyShare}
