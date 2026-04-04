@@ -78,14 +78,14 @@ export function MusicDnaLanding() {
           transition={{ duration: 0.3, ease: "easeOut" }}
         >
           <p className="text-xs font-black uppercase tracking-[0.18em] text-[#7be3ff]">Perfil Sonoro Bloqueado</p>
-          <h1 className="mt-2 bg-gradient-to-r from-[#00f0ff] via-[#ff43f8] to-[#ffe600] bg-clip-text text-3xl font-black uppercase leading-tight tracking-tight text-transparent">
+          <h1 className="mt-2 bg-gradient-to-r from-[#00f0ff] via-[#ff43f8] to-[#ffe600] bg-clip-text text-xl font-black uppercase leading-tight tracking-tight text-transparent">
             Continua votando para acceder
           </h1>
           <p className="mt-3 text-sm font-semibold text-[#d8e9ff]">
-            Necesitas {PROFILE_ACCESS_MIN_BATTLES} batallas votadas para desbloquear esta landing.
+            Necesitas {PROFILE_ACCESS_MIN_BATTLES} batallas votadas para desbloquear esta sección.
           </p>
           <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-[#82dff2]">
-            Te faltan {remainingBattles} para abrir tu Music DNA completo.
+            ¡Te faltan {remainingBattles} para obtener tu Perfil Sonoro!
           </p>
         </motion.section>
       </main>

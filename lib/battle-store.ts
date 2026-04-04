@@ -31,6 +31,10 @@ const DEFAULT_BUCKET = "general"
 const ENABLE_STRICT_EXTERNAL_CATALOG_SYNC = true
 const INTRA_BUCKET_RATIO = 0.6
 const THEMATIC_DUEL_PROBABILITY = 0.3
+const STYLE_FOCUS_WINDOW_SIZE = 3
+const STYLE_FOCUS_CYCLE_SIZE = 10
+const STYLE_FOCUS_INTRA_RATIO = 0.82
+const STYLE_FOCUS_THEMATIC_DUEL_PROBABILITY = 0.08
 const USER_COOLDOWN_RECENT_BATTLES = 6
 const GLOBAL_EXPOSURE_RECENT_BATTLES = 250
 const MAX_RECENT_TITLE_EXPOSURE = 8
@@ -207,6 +211,11 @@ interface ThematicDuelDefinition {
   rightLabel: string
   pickLeft: (track: Track) => boolean
   pickRight: (track: Track) => boolean
+}
+
+interface MatchmakingStyleFocus {
+  key: "rock_lane" | "urban_lane" | "electro_lane"
+  buckets: string[]
 }
 
 function randomItem<T>(items: T[]): T {
@@ -606,6 +615,37 @@ function selectThematicPair(previewTracks: Track[]): { trackA: Track; trackB: Tr
   return null
 }
 
+function resolveMatchmakingStyleFocus(createdBattlesCount: number): MatchmakingStyleFocus | null {
+  if (createdBattlesCount < STYLE_FOCUS_CYCLE_SIZE) {
+    return null
+  }
+
+  const cyclePosition = createdBattlesCount % STYLE_FOCUS_CYCLE_SIZE
+  if (cyclePosition >= STYLE_FOCUS_WINDOW_SIZE) {
+    return null
+  }
+
+  const blockIndex = Math.floor(createdBattlesCount / STYLE_FOCUS_CYCLE_SIZE) % 3
+  if (blockIndex === 0) {
+    return {
+      key: "rock_lane",
+      buckets: ["rock", "metal_hardrock", "indie_alt", "classics_70s_80s_90s"],
+    }
+  }
+
+  if (blockIndex === 1) {
+    return {
+      key: "urban_lane",
+      buckets: ["urbano", "hiphop_rap", "rnb_soul", "cumbia_latina", "pop"],
+    }
+  }
+
+  return {
+    key: "electro_lane",
+    buckets: ["electronic", "pop", "indie_alt", "classics_00s_10s"],
+  }
+}
+
 function selectPairWithinPool(pool: Track[]): { trackA: Track; trackB: Track } {
   const firstTrack = weightedRandomTrack(pool)
   const candidatePool = pool.filter((track) => track.id !== firstTrack.id)
@@ -968,9 +1008,11 @@ function selectBattlePair(
   context: MatchmakingContext,
   options?: {
     applyCooldownFilters?: boolean
+    styleFocusBuckets?: string[]
   }
 ): { trackA: Track; trackB: Track } {
   const applyCooldownFilters = options?.applyCooldownFilters ?? true
+  const styleFocusBuckets = options?.styleFocusBuckets ?? []
   const allPreviewTracks = tracks.filter((track) => hasPreview(track))
   const curatedPreviewTracks = allPreviewTracks.filter(
     (track) =>
@@ -982,10 +1024,19 @@ function selectBattlePair(
     ? applyExposureFilter(applyUserCooldownFilter(basePreviewTracks, context), context)
     : basePreviewTracks
   const previewTracks = capArtistPresence(rawPreviewTracks, MAX_TRACKS_PER_ARTIST_IN_POOL)
+  const styleFocusSet = new Set(styleFocusBuckets)
+  const focusedPreviewTracks =
+    styleFocusSet.size > 0
+      ? previewTracks.filter((track) => styleFocusSet.has(trackBucket(track)))
+      : []
+  const activePreviewTracks = focusedPreviewTracks.length >= 2 ? focusedPreviewTracks : previewTracks
+  const intraBucketRatio = focusedPreviewTracks.length >= 2 ? STYLE_FOCUS_INTRA_RATIO : INTRA_BUCKET_RATIO
+  const thematicProbability =
+    focusedPreviewTracks.length >= 2 ? STYLE_FOCUS_THEMATIC_DUEL_PROBABILITY : THEMATIC_DUEL_PROBABILITY
 
-  if (previewTracks.length >= 2) {
-    if (Math.random() < THEMATIC_DUEL_PROBABILITY) {
-      const thematicPair = selectThematicPair(previewTracks)
+  if (activePreviewTracks.length >= 2) {
+    if (Math.random() < thematicProbability) {
+      const thematicPair = selectThematicPair(activePreviewTracks)
       if (thematicPair) {
         return thematicPair
       }
@@ -993,15 +1044,15 @@ function selectBattlePair(
 
     const byBucket = new Map<string, Track[]>()
 
-    for (const track of previewTracks) {
+    for (const track of activePreviewTracks) {
       const bucket = trackBucket(track)
       const current = byBucket.get(bucket) ?? []
       current.push(track)
       byBucket.set(bucket, current)
     }
 
-    const shouldUseIntraBucket = Math.random() < INTRA_BUCKET_RATIO
-    const currentShareByBucket = computeBucketShareByBattles(previewTracks)
+    const shouldUseIntraBucket = Math.random() < intraBucketRatio
+    const currentShareByBucket = computeBucketShareByBattles(activePreviewTracks)
     const selectedBucket = selectWeightedBucket(byBucket, new Set(), currentShareByBucket)
 
     if (shouldUseIntraBucket && selectedBucket) {
@@ -1011,7 +1062,7 @@ function selectBattlePair(
       }
     }
 
-    return selectCrossBucketPair(previewTracks)
+    return selectCrossBucketPair(activePreviewTracks)
   }
 
   throw new BattleCatalogError(
@@ -1139,7 +1190,11 @@ export async function createPendingBattle(userId: string): Promise<Battle> {
     ? await buildMatchmakingContext(userId)
     : buildDefaultMatchmakingContext()
 
-  const trackRows = await prisma.track.findMany()
+  const [trackRows, createdBattlesCount] = await Promise.all([
+    prisma.track.findMany(),
+    prisma.battle.count({ where: { userId } }),
+  ])
+  const styleFocus = resolveMatchmakingStyleFocus(createdBattlesCount)
   if (trackRows.length < 2) {
     throw new Error("At least two tracks are required to create a battle")
   }
@@ -1147,6 +1202,7 @@ export async function createPendingBattle(userId: string): Promise<Battle> {
   const tracks = trackRows.map(toTrack)
   const { trackA, trackB } = selectBattlePair(tracks, artistDenylist, matchmakingContext, {
     applyCooldownFilters: hasHealthyExternalCatalog,
+    styleFocusBuckets: styleFocus?.buckets,
   })
   const battle = await prisma.battle.create({
     data: {

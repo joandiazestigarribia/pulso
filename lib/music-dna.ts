@@ -413,6 +413,28 @@ function getSecondGenreShare(profileState: FullProfileData | undefined): number 
   return Math.max(0, Math.min(1, counts[1] / total))
 }
 
+function getSignalGenreShare(profileState: FullProfileData | undefined, signals: string[]): number {
+  const entries = profileState?.teaser.topGenres ?? []
+  if (entries.length === 0) {
+    return 0
+  }
+
+  const total = entries.reduce((sum, entry) => sum + Math.max(0, entry.count), 0)
+  if (total <= 0) {
+    return 0
+  }
+
+  let matched = 0
+  for (const entry of entries) {
+    const normalized = normalizeGenreText(entry.genre)
+    if (signals.some((signal) => normalized.includes(normalizeGenreText(signal)))) {
+      matched += Math.max(0, entry.count)
+    }
+  }
+
+  return Math.max(0, Math.min(1, matched / total))
+}
+
 export function resolveRadarProfile(profileState: FullProfileData | undefined): FullProfileData["profile"] {
   const inferredFeatures = inferFeaturesFromGenreSignals(profileState)
 
@@ -471,53 +493,218 @@ export function getDominantGenres(profileState: FullProfileData | undefined): st
   return selected
 }
 
-export function resolveSonicPersona(profileState: FullProfileData | undefined, genreValues: string[]): SonicPersona {
-  const profile = resolveRadarProfile(profileState)
-  const energy = toUnit(profile?.averageEnergy ?? null)
-  const danceability = toUnit(profile?.averageDanceability ?? null)
-  const valence = toUnit(profile?.averageValence ?? null)
-  const variety = Math.max(0, Math.min(1, profile?.genreVarietyScore ?? 0.5))
-  const topDecade = Object.entries(profile?.decadeDistribution ?? {})[0]?.[0]?.toLowerCase() ?? ""
+function proximityScore(value: number, target: number, spread: number): number {
+  if (spread <= 0) {
+    return 0
+  }
+
+  return Math.max(0, 1 - Math.abs(value - target) / spread)
+}
+
+function resolvePersonaAffinityScores(
+  profileState: FullProfileData | undefined,
+  genreValues: string[],
+  profile: NonNullable<ReturnType<typeof resolveRadarProfile>>
+): Record<PersonaArchetype, number> {
+  const energy = toUnit(profile.averageEnergy ?? null)
+  const danceability = toUnit(profile.averageDanceability ?? null)
+  const valence = toUnit(profile.averageValence ?? null)
+  const variety = Math.max(0, Math.min(1, profile.genreVarietyScore ?? 0.5))
+  const topDecade = Object.entries(profile.decadeDistribution ?? {})[0]?.[0] ?? ""
+  const nostalgia = getNostalgiaScore(topDecade)
   const topGenreShare = getTopGenreShare(profileState)
   const secondGenreShare = getSecondGenreShare(profileState)
+  const diversitySignal = Math.max(0, Math.min(1, (1 - topGenreShare) * 0.7 + secondGenreShare * 0.3))
+  const hasSynthSignal = hasGenreSignal(genreValues, ["synth", "electro", "electronic", "house", "edm", "techno"])
+  const hasAmbientSignal = hasGenreSignal(genreValues, ["dream", "ambient", "shoegaze", "indie", "lo fi"])
   const hasRockSignal = hasGenreSignal(genreValues, ["rock", "metal", "punk", "grunge", "hard rock"])
   const hasUrbanSignal = hasGenreSignal(genreValues, ["hip hop", "rap", "trap", "reggaeton", "urbano"])
+  const hasPopSignal = hasGenreSignal(genreValues, ["pop"])
+  const hasCumbiaSignal = hasGenreSignal(genreValues, ["cumbia", "latin"])
+  const hasLatinSignal = hasGenreSignal(genreValues, ["latin", "latina", "cumbia", "reggaeton", "urbano"])
+  const hasLatinUrbanBlend = hasGenreSignal(genreValues, ["latin urban", "urbano", "cumbia", "latin"])
+  const hasClassicsSignal = hasGenreSignal(genreValues, ["classic", "classics", "70s", "80s", "90s"])
+  const hasMillennialSignal = hasGenreSignal(genreValues, ["2000s", "2010s", "00s", "10s"])
+  const rockShare = getSignalGenreShare(profileState, ["rock", "metal", "punk", "grunge", "hard rock"])
+  const genreCount = genreValues.length
 
-  if (danceability >= 0.72 && energy >= 0.68) {
-    return sonicPersonas.hyperpop_pilot
+  const scores: Record<PersonaArchetype, number> = {
+    chill_oracle:
+      proximityScore(valence, 0.72, 0.28) * 2.7 +
+      proximityScore(energy, 0.45, 0.34) * 1.6 +
+      proximityScore(variety, 0.5, 0.35) * 0.7,
+    hyperpop_pilot:
+      proximityScore(energy, 0.82, 0.3) * 2.3 +
+      proximityScore(danceability, 0.8, 0.28) * 2.2 +
+      proximityScore(variety, 0.5, 0.42) * 0.8 +
+      (hasUrbanSignal ? 1.2 : 0),
+    lo_fi_alchemist:
+      proximityScore(energy, 0.3, 0.3) * 2.4 +
+      proximityScore(danceability, 0.38, 0.3) * 1.8 +
+      proximityScore(valence, 0.5, 0.3) * 1.1 +
+      (hasAmbientSignal ? 0.9 : 0),
+    neon_nomad:
+      proximityScore(variety, 0.9, 0.24) * 2.1 +
+      proximityScore(diversitySignal, 0.82, 0.28) * 1.9 +
+      proximityScore(energy, 0.58, 0.35) * 0.9 +
+      proximityScore(danceability, 0.58, 0.35) * 0.9 +
+      (genreCount >= 3 ? 0.6 : 0),
+    ranger:
+      proximityScore(topGenreShare, 0.62, 0.3) * 2 +
+      proximityScore(variety, 0.35, 0.35) * 1.4 +
+      proximityScore(energy, 0.6, 0.4) * 1 +
+      (hasRockSignal ? 0.8 : 0),
+    retro_scout:
+      proximityScore(nostalgia, 0.8, 0.28) * 2.8 +
+      proximityScore(valence, 0.58, 0.32) * 1.1 +
+      proximityScore(energy, 0.56, 0.34) * 0.9,
+    synth_captain:
+      proximityScore(energy, 0.72, 0.28) * 1.8 +
+      proximityScore(danceability, 0.73, 0.28) * 1.8 +
+      proximityScore(variety, 0.55, 0.4) * 0.8 +
+      (hasSynthSignal ? 1.3 : 0),
+    vaporwave_druid:
+      proximityScore(energy, 0.42, 0.3) * 1.8 +
+      proximityScore(valence, 0.56, 0.3) * 1.4 +
+      proximityScore(variety, 0.62, 0.35) * 1.3 +
+      (hasAmbientSignal ? 1.2 : 0),
   }
-  if (topDecade.includes("70") || topDecade.includes("80") || topDecade.includes("90")) {
-    return sonicPersonas.retro_scout
+
+  if (hasRockSignal && topGenreShare >= 0.44) {
+    scores.ranger += 1.15
+    scores.neon_nomad -= 0.95
   }
-  if (hasGenreSignal(genreValues, ["synth", "electro", "electronic", "house", "edm", "techno"]) && energy >= 0.52) {
-    return sonicPersonas.synth_captain
+
+  if (hasClassicsSignal && hasRockSignal) {
+    scores.retro_scout += 0.85
+    scores.neon_nomad -= 0.7
   }
-  if (hasGenreSignal(genreValues, ["dream", "ambient", "shoegaze", "indie"]) && energy <= 0.58) {
-    return sonicPersonas.vaporwave_druid
+
+  if (hasClassicsSignal && hasMillennialSignal) {
+    scores.retro_scout += 0.7
+    scores.ranger -= 0.25
   }
-  if (hasRockSignal && danceability <= 0.6) {
+
+  if (variety < 0.86) {
+    scores.neon_nomad -= 0.45
+  }
+
+  if (topGenreShare >= 0.5 && secondGenreShare <= 0.22) {
+    scores.neon_nomad -= 0.65
+  }
+
+  if (hasLatinSignal && danceability >= 0.52 && energy >= 0.58) {
+    scores.hyperpop_pilot += 0.75
+  }
+
+  if (hasPopSignal && hasCumbiaSignal && danceability > 0.52) {
+    scores.hyperpop_pilot += 0.65
+    if (variety >= 0.7) {
+      scores.neon_nomad += 0.55
+    } else {
+      scores.neon_nomad += 0.25
+    }
+    scores.ranger -= 0.45
+  }
+
+  if (hasLatinUrbanBlend && variety >= 0.66 && danceability >= 0.5) {
+    scores.neon_nomad += 0.55
+    scores.ranger -= 0.7
+  }
+
+  if (hasLatinUrbanBlend && danceability <= 0.5 && hasRockSignal) {
+    scores.ranger += 0.35
+  }
+
+  if (hasRockSignal && rockShare < 0.45) {
+    scores.ranger -= 0.95
+    scores.retro_scout += 0.2
+  }
+
+  return scores
+}
+
+function resolveSecondaryPersonaSignalScore(
+  persona: PersonaArchetype,
+  profileState: FullProfileData | undefined,
+  genreValues: string[],
+  profile: NonNullable<ReturnType<typeof resolveRadarProfile>>
+): number {
+  const energy = toUnit(profile.averageEnergy ?? null)
+  const danceability = toUnit(profile.averageDanceability ?? null)
+  const valence = toUnit(profile.averageValence ?? null)
+  const variety = Math.max(0, Math.min(1, profile.genreVarietyScore ?? 0.5))
+  const topGenreShare = getTopGenreShare(profileState)
+  const secondGenreShare = getSecondGenreShare(profileState)
+  const topDecade = Object.entries(profile.decadeDistribution ?? {})[0]?.[0] ?? ""
+  const nostalgia = getNostalgiaScore(topDecade)
+  const hasSynthSignal = hasGenreSignal(genreValues, ["synth", "electro", "electronic", "house", "edm", "techno"])
+  const hasAmbientSignal = hasGenreSignal(genreValues, ["dream", "ambient", "shoegaze", "indie", "lo fi"])
+  const hasRockSignal = hasGenreSignal(genreValues, ["rock", "metal", "punk", "grunge", "hard rock"])
+  const hasUrbanSignal = hasGenreSignal(genreValues, ["hip hop", "rap", "trap", "reggaeton", "urbano"])
+  const hasLatinUrbanBlend = hasGenreSignal(genreValues, ["latin urban", "urbano", "cumbia", "latin"])
+
+  const specialtyScores: Record<PersonaArchetype, number> = {
+    chill_oracle: valence * 0.58 + (1 - energy) * 0.28 + (1 - topGenreShare) * 0.14,
+    hyperpop_pilot: energy * 0.42 + danceability * 0.43 + (hasUrbanSignal ? 0.08 : 0) + (hasLatinUrbanBlend ? 0.07 : 0),
+    lo_fi_alchemist: (1 - energy) * 0.45 + (1 - danceability) * 0.35 + (hasAmbientSignal ? 0.2 : 0),
+    neon_nomad: variety * 0.5 + (1 - topGenreShare) * 0.35 + secondGenreShare * 0.15,
+    ranger: topGenreShare * 0.42 + (1 - variety) * 0.33 + (hasRockSignal ? 0.2 : 0) + (hasLatinUrbanBlend ? -0.08 : 0),
+    retro_scout: nostalgia * 0.6 + (1 - variety) * 0.2 + valence * 0.2,
+    synth_captain: danceability * 0.4 + energy * 0.35 + (hasSynthSignal ? 0.25 : 0),
+    vaporwave_druid: (1 - energy) * 0.35 + variety * 0.3 + (hasAmbientSignal ? 0.35 : 0),
+  }
+
+  return specialtyScores[persona]
+}
+
+export function resolveSonicPersona(profileState: FullProfileData | undefined, genreValues: string[]): SonicPersona {
+  const profile = resolveRadarProfile(profileState)
+  if (!profile) {
     return sonicPersonas.ranger
   }
-  if (hasUrbanSignal && danceability >= 0.65 && energy >= 0.56) {
-    return sonicPersonas.hyperpop_pilot
-  }
-  if (energy <= 0.43 && valence <= 0.58) {
-    return sonicPersonas.lo_fi_alchemist
-  }
-  if (valence >= 0.7 && energy <= 0.62) {
-    return sonicPersonas.chill_oracle
-  }
-  if (
-    variety >= 0.82 &&
-    topGenreShare <= 0.44 &&
-    secondGenreShare >= 0.2 &&
-    genreValues.length >= 3 &&
-    Math.abs(energy - danceability) <= 0.28
-  ) {
-    return sonicPersonas.neon_nomad
+
+  const affinityScores = resolvePersonaAffinityScores(profileState, genreValues, profile)
+  const ranked = Object.entries(affinityScores)
+    .map(([personaId, score]) => ({ personaId: personaId as PersonaArchetype, score }))
+    .sort((left, right) => right.score - left.score)
+
+  if (ranked.length === 0) {
+    return sonicPersonas.ranger
   }
 
-  return sonicPersonas.ranger
+  const top = ranked[0]
+  const second = ranked[1]
+  if (!second || top.score - second.score > 0.14) {
+    return sonicPersonas[top.personaId]
+  }
+
+  const closeCandidates = ranked.filter((entry) => top.score - entry.score <= 0.14)
+  const bySecondary = closeCandidates
+    .map((entry) => ({
+      personaId: entry.personaId,
+      score: resolveSecondaryPersonaSignalScore(entry.personaId, profileState, genreValues, profile),
+    }))
+    .sort((left, right) => right.score - left.score)
+
+  const secondaryTop = bySecondary[0]
+  const secondarySecond = bySecondary[1]
+  if (!secondaryTop) {
+    return sonicPersonas[top.personaId]
+  }
+
+  if (!secondarySecond || secondaryTop.score - secondarySecond.score > 0.06) {
+    return sonicPersonas[secondaryTop.personaId]
+  }
+
+  const dominantGenreSeed = profileState?.profile?.dominantGenre ?? profileState?.teaser.topGenres[0]?.genre ?? "mixed"
+  const deterministicSeed = `${dominantGenreSeed.toLowerCase()}|${profileState?.completedBattlesCount ?? 0}|${
+    profileState?.profile?.generatedFromVotes ?? 0
+  }`
+  const tieBreakIndex = pickDeterministicIndex(deterministicSeed, "persona-tie-break", 2)
+  const tieWinner = tieBreakIndex === 0 ? secondaryTop : secondarySecond
+
+  return sonicPersonas[tieWinner.personaId]
 }
 
 function levelBand(value: number | null): "baja" | "media" | "alta" {
@@ -566,7 +753,37 @@ function resolvePersonaTone(profileState: FullProfileData | undefined): PersonaT
   return "medium"
 }
 
-function getDominantDecadeLabel(profileState: FullProfileData | undefined): string {
+function inferDecadeFromGenreLabels(labels: string[]): string | null {
+  const normalized = labels.map((label) => normalizeGenreText(label))
+
+  const hasClassicSignal = normalized.some(
+    (label) => label.includes("classic") || label.includes("70s") || label.includes("80s") || label.includes("90s")
+  )
+  const hasMillennialSignal = normalized.some(
+    (label) =>
+      label.includes("2000s") ||
+      label.includes("2010s") ||
+      label.includes("00s") ||
+      label.includes("10s") ||
+      label.includes("millennial")
+  )
+
+  if (hasMillennialSignal) {
+    return "2000s"
+  }
+  if (hasClassicSignal) {
+    return "1990s"
+  }
+
+  return null
+}
+
+function getDominantDecadeLabel(profileState: FullProfileData | undefined, dominantGenres: string[]): string {
+  const decadeFromGenres = inferDecadeFromGenreLabels(dominantGenres)
+  if (decadeFromGenres) {
+    return decadeFromGenres
+  }
+
   const distributionEntries = Object.entries(profileState?.profile?.decadeDistribution ?? {})
   if (distributionEntries.length === 0) {
     return "mixed eras"
@@ -691,12 +908,12 @@ function buildPersonaDescription(params: {
   const opening = compactNarrativeClause(params.opening)
   const sentenceOne = `${opening}.`
   const sentenceTwo =
-    `Tu eje principal es ${params.dominantGenre} y se complementa con ${params.secondaryGenre}; ` +
-    `${lowerFirst(cleanNarrativeLine(params.toneSummary))} ` +
-    `y ${lowerFirst(cleanNarrativeLine(params.varietyCopy))}.`
+    `Tu eje principal es ${params.dominantGenre} y se complementa con ${params.secondaryGenre}: ` +
+    `${lowerFirst(cleanNarrativeLine(params.toneSummary))}, ${lowerFirst(cleanNarrativeLine(params.varietyCopy))}.`
   const sentenceThree =
-    `${cleanNarrativeLine(params.archetypeSignature)}, ${lowerFirst(cleanNarrativeLine(params.trailInstinct))} ` +
-    `y ${lowerFirst(cleanNarrativeLine(params.campEra))}.`
+    `${cleanNarrativeLine(params.archetypeSignature)}. ` +
+    `${cleanNarrativeLine(params.trailInstinct)}. ` +
+    `${cleanNarrativeLine(params.campEra)}.`
 
   return [sentenceOne, sentenceTwo, sentenceThree].join(" ")
 }
@@ -745,7 +962,7 @@ export function resolvePersonaShareCopy(params: ResolvePersonaShareCopyParams): 
   const archetype: PersonaArchetype = isPersonaArchetype(persona.id) ? persona.id : "ranger"
   const catalogEntry = personaCopyCatalog[archetype]
   const dominantGenre = resolveDominantGenre(profileState, dominantGenres)
-  const dominantDecadeLabel = getDominantDecadeLabel(profileState)
+  const dominantDecadeLabel = getDominantDecadeLabel(profileState, dominantGenres)
   const decadeGroup = mapDecadeGroup(dominantDecadeLabel)
   const tone = resolvePersonaTone(profileState)
   const radarProfile = resolveRadarProfile(profileState)
@@ -835,6 +1052,16 @@ export function getRadarAxes(profile: FullProfileData["profile"]): RadarAxis[] {
   const topDecade = Object.keys(profile?.decadeDistribution ?? {})[0] ?? ""
   const nostalgia = getNostalgiaScore(topDecade)
   const rhythm = Math.max(0, Math.min(1, dance * 0.62 + energy * 0.38))
+  const dominantGenre = normalizeGenreText(profile?.dominantGenre ?? "")
+  const focusedRockSignal =
+    dominantGenre.includes("rock") ||
+    dominantGenre.includes("metal") ||
+    dominantGenre.includes("classic") ||
+    dominantGenre.includes("retro")
+  const cohesionPenalty = Math.abs(energy - dance) <= 0.18 ? 0.06 : 0
+  const focusPenalty = focusedRockSignal ? 0.12 : 0
+  const nostalgiaPenalty = nostalgia >= 0.55 ? 0.04 : 0
+  const exploration = Math.max(0.2, Math.min(1, variety - focusPenalty - cohesionPenalty - nostalgiaPenalty))
 
   return [
     { key: "energy", label: "Intensidad", value: energy },
@@ -842,7 +1069,7 @@ export function getRadarAxes(profile: FullProfileData["profile"]): RadarAxis[] {
     { key: "dance", label: "Baile", value: dance },
     { key: "nostalgia", label: "Nostalgia", value: nostalgia },
     { key: "valence", label: "Animo", value: valence },
-    { key: "obscurity", label: "Exploracion", value: variety },
+    { key: "obscurity", label: "Exploracion", value: exploration },
   ]
 }
 

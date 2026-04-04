@@ -96,7 +96,7 @@ interface AuthSessionResponse {
 }
 
 export const PROFILE_UI_GOAL_VOTES = 40
-const MAX_CONSECUTIVE_SKIPS = 2
+const MAX_CONSECUTIVE_SKIPS = 5
 
 export function useBattleFlow() {
   const [battleApiUrl, setBattleApiUrl] = useState("/api/battle")
