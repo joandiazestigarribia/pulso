@@ -53,6 +53,31 @@ export interface SonicPersona {
   handleBase: string
   codename: string
   assetFile: string
+  macroId?: "ranger" | "hyperpop" | "neon"
+  subprofileId?: string
+}
+
+const personaDisplayNameByToken: Record<string, string> = {
+  chill: "Oraculo Chill",
+  oracle: "Oraculo Chill",
+  lofi: "Alquimista Lo-Fi",
+  "lo-fi": "Alquimista Lo-Fi",
+  alchemist: "Alquimista Lo-Fi",
+  synth: "Capitan Synth",
+  captain: "Capitan Synth",
+  vapor: "Druida Vaporwave",
+  vaporwave: "Druida Vaporwave",
+  retro: "Scout Retro",
+  ranger: "Explorador Ranger",
+  hyperpop: "Piloto Hyperpop",
+  piloto: "Piloto Hyperpop",
+  nomada: "Nomada Neon",
+  neon: "Nomada Neon",
+  metal: "Berserker Metal",
+  berserker: "Berserker Metal",
+  jester: "Jester Groove",
+  paladin: "Pop Paladin",
+  color: "Pop Color Rebel",
 }
 
 const sonicPersonas: Record<string, SonicPersona> = {
@@ -111,6 +136,34 @@ const sonicPersonas: Record<string, SonicPersona> = {
     handleBase: "druida_vaporwave",
     codename: "SO-08",
     assetFile: "vaporwave_druid_character_asset resize.png",
+  },
+  metal_berserker: {
+    id: "metal_berserker",
+    name: "Berserker Metal",
+    handleBase: "berserker_metal",
+    codename: "SO-09",
+    assetFile: "metal_character.png",
+  },
+  jester_groove: {
+    id: "jester_groove",
+    name: "Jester Groove",
+    handleBase: "jester_groove",
+    codename: "SO-10",
+    assetFile: "jester_character.png",
+  },
+  pop_paladin: {
+    id: "pop_paladin",
+    name: "Pop Paladin",
+    handleBase: "pop_paladin",
+    codename: "SO-11",
+    assetFile: "pop_paladin_character.png",
+  },
+  pop_color_rebel: {
+    id: "pop_color_rebel",
+    name: "Pop Color Rebel",
+    handleBase: "pop_color_rebel",
+    codename: "SO-12",
+    assetFile: "pop_color_character.png",
   },
 }
 
@@ -250,9 +303,66 @@ export const personaCopyCatalog = {
       "Tu DNA orienta {genre} hacia un viaje inmersivo. {toneCopy}.",
     ],
   },
+  metal_berserker: {
+    archetypeLabel: "Martillo de Acero",
+    toneCopy: {
+      low: "mantienes peso y tension con control quirurgico",
+      medium: "sostienes potencia firme sin perder pegada",
+      high: "descargas rafagas intensas con autoridad total",
+    },
+    templates: [
+      "Tu perfil levanta {genre} con potencia frontal. {toneCopy}.",
+      "Tu radar en {genre} prioriza ataque, riff y presencia. {toneCopy}.",
+      "En tus duelos, {genre} entra con filo y decision. {toneCopy}.",
+      "Tu DNA consolida {genre} en modo combate. {toneCopy}.",
+    ],
+  },
+  jester_groove: {
+    archetypeLabel: "Escena Teatral",
+    toneCopy: {
+      low: "dosificas color y ritmo con elegancia juguetona",
+      medium: "mezclas teatralidad y groove con timing preciso",
+      high: "enciendes el show con carisma y dinamica expansiva",
+    },
+    templates: [
+      "Tu lectura de {genre} suena performatica y expresiva. {toneCopy}.",
+      "En tu seleccion, {genre} gana por gesto y dinamica. {toneCopy}.",
+      "Tu perfil convierte {genre} en acto escenico con pulso. {toneCopy}.",
+      "Tu DNA lleva {genre} a una narrativa de escenario. {toneCopy}.",
+    ],
+  },
+  pop_paladin: {
+    archetypeLabel: "Estandarte Pop",
+    toneCopy: {
+      low: "sostienes brillo con estructura clara",
+      medium: "equilibras himno y groove con seguridad",
+      high: "proyectas energia alta con precision coreable",
+    },
+    templates: [
+      "Tu criterio impulsa {genre} en clave de himno. {toneCopy}.",
+      "Tu perfil en {genre} prioriza hooks y elevacion. {toneCopy}.",
+      "En batalla, {genre} aparece con foco luminoso. {toneCopy}.",
+      "Tu DNA ordena {genre} para impactar y quedarse. {toneCopy}.",
+    ],
+  },
+  pop_color_rebel: {
+    archetypeLabel: "Prisma Festivo",
+    toneCopy: {
+      low: "administras contraste pop con pulso relajado",
+      medium: "combinas color, ritmo y sorpresa sin friccion",
+      high: "lanzas explosiones pop con energia de festival",
+    },
+    templates: [
+      "Tu mapa mezcla {genre} con cromatica vibrante. {toneCopy}.",
+      "Tu seleccion vuelve {genre} mas audaz y bailable. {toneCopy}.",
+      "En tus votos, {genre} aparece con brillo expansivo. {toneCopy}.",
+      "Tu DNA traduce {genre} en una paleta de alto impacto. {toneCopy}.",
+    ],
+  },
 } as const satisfies Record<string, PersonaCopyCatalogEntry>
 
 type PersonaArchetype = keyof typeof personaCopyCatalog
+type MacroPersona = "ranger" | "hyperpop" | "neon"
 
 function isPersonaArchetype(value: string): value is PersonaArchetype {
   return value in personaCopyCatalog
@@ -510,6 +620,7 @@ function resolvePersonaAffinityScores(
   const danceability = toUnit(profile.averageDanceability ?? null)
   const valence = toUnit(profile.averageValence ?? null)
   const variety = Math.max(0, Math.min(1, profile.genreVarietyScore ?? 0.5))
+  const rhythm = Math.max(0, Math.min(1, danceability * 0.62 + energy * 0.38))
   const topDecade = Object.entries(profile.decadeDistribution ?? {})[0]?.[0] ?? ""
   const nostalgia = getNostalgiaScore(topDecade)
   const topGenreShare = getTopGenreShare(profileState)
@@ -530,95 +641,126 @@ function resolvePersonaAffinityScores(
 
   const scores: Record<PersonaArchetype, number> = {
     chill_oracle:
-      proximityScore(valence, 0.72, 0.28) * 2.7 +
-      proximityScore(energy, 0.45, 0.34) * 1.6 +
-      proximityScore(variety, 0.5, 0.35) * 0.7,
+      proximityScore(valence, 0.72, 0.28) * 3 +
+      proximityScore(energy, 0.45, 0.34) * 2.2 +
+      proximityScore(danceability, 0.48, 0.34) * 1.1 +
+      proximityScore(variety, 0.5, 0.35) * 0.8,
     hyperpop_pilot:
-      proximityScore(energy, 0.82, 0.3) * 2.3 +
-      proximityScore(danceability, 0.8, 0.28) * 2.2 +
-      proximityScore(variety, 0.5, 0.42) * 0.8 +
-      (hasUrbanSignal ? 1.2 : 0),
+      proximityScore(energy, 0.82, 0.3) * 3.1 +
+      proximityScore(danceability, 0.8, 0.28) * 3 +
+      proximityScore(rhythm, 0.8, 0.25) * 1.7 +
+      proximityScore(variety, 0.5, 0.42) * 0.9 +
+      (hasUrbanSignal ? 0.65 : 0),
     lo_fi_alchemist:
-      proximityScore(energy, 0.3, 0.3) * 2.4 +
-      proximityScore(danceability, 0.38, 0.3) * 1.8 +
-      proximityScore(valence, 0.5, 0.3) * 1.1 +
-      (hasAmbientSignal ? 0.9 : 0),
+      proximityScore(energy, 0.3, 0.3) * 2.8 +
+      proximityScore(danceability, 0.38, 0.3) * 2.3 +
+      proximityScore(valence, 0.5, 0.3) * 1.4 +
+      (hasAmbientSignal ? 0.6 : 0),
     neon_nomad:
-      proximityScore(variety, 0.9, 0.24) * 2.1 +
-      proximityScore(diversitySignal, 0.82, 0.28) * 1.9 +
-      proximityScore(energy, 0.58, 0.35) * 0.9 +
-      proximityScore(danceability, 0.58, 0.35) * 0.9 +
-      (genreCount >= 3 ? 0.6 : 0),
+      proximityScore(variety, 0.88, 0.24) * 3 +
+      proximityScore(diversitySignal, 0.82, 0.28) * 1.1 +
+      proximityScore(energy, 0.58, 0.35) * 1.4 +
+      proximityScore(danceability, 0.58, 0.35) * 1.4 +
+      proximityScore(rhythm, 0.6, 0.34) * 1.2 +
+      (genreCount >= 3 ? 0.35 : 0),
     ranger:
-      proximityScore(topGenreShare, 0.62, 0.3) * 2 +
-      proximityScore(variety, 0.35, 0.35) * 1.4 +
-      proximityScore(energy, 0.6, 0.4) * 1 +
-      (hasRockSignal ? 0.8 : 0),
+      proximityScore(topGenreShare, 0.62, 0.3) * 0.95 +
+      proximityScore(variety, 0.35, 0.35) * 1.2 +
+      proximityScore(energy, 0.6, 0.4) * 1.8 +
+      proximityScore(danceability, 0.46, 0.3) * 1.2 +
+      (hasRockSignal ? 0.5 : 0),
     retro_scout:
-      proximityScore(nostalgia, 0.8, 0.28) * 2.8 +
-      proximityScore(valence, 0.58, 0.32) * 1.1 +
-      proximityScore(energy, 0.56, 0.34) * 0.9,
+      proximityScore(nostalgia, 0.8, 0.28) * 2 +
+      proximityScore(valence, 0.58, 0.32) * 1.2 +
+      proximityScore(energy, 0.56, 0.34) * 1.3 +
+      proximityScore(danceability, 0.5, 0.32) * 0.9,
     synth_captain:
-      proximityScore(energy, 0.72, 0.28) * 1.8 +
-      proximityScore(danceability, 0.73, 0.28) * 1.8 +
-      proximityScore(variety, 0.55, 0.4) * 0.8 +
-      (hasSynthSignal ? 1.3 : 0),
+      proximityScore(energy, 0.72, 0.28) * 2.4 +
+      proximityScore(danceability, 0.73, 0.28) * 2.4 +
+      proximityScore(rhythm, 0.74, 0.24) * 1.5 +
+      proximityScore(variety, 0.55, 0.4) * 0.9 +
+      (hasSynthSignal ? 0.7 : 0),
     vaporwave_druid:
-      proximityScore(energy, 0.42, 0.3) * 1.8 +
-      proximityScore(valence, 0.56, 0.3) * 1.4 +
-      proximityScore(variety, 0.62, 0.35) * 1.3 +
-      (hasAmbientSignal ? 1.2 : 0),
+      proximityScore(energy, 0.42, 0.3) * 2.3 +
+      proximityScore(valence, 0.56, 0.3) * 1.8 +
+      proximityScore(danceability, 0.44, 0.32) * 1.3 +
+      proximityScore(variety, 0.62, 0.35) * 1.4 +
+      (hasAmbientSignal ? 0.7 : 0),
+    metal_berserker:
+      proximityScore(energy, 0.84, 0.26) * 3 +
+      proximityScore(valence, 0.42, 0.28) * 1.8 +
+      proximityScore(danceability, 0.4, 0.28) * 1.6 +
+      proximityScore(topGenreShare, 0.58, 0.34) * 0.7 +
+      (hasRockSignal ? 0.85 : 0),
+    jester_groove:
+      proximityScore(valence, 0.76, 0.27) * 2.2 +
+      proximityScore(danceability, 0.7, 0.27) * 2.3 +
+      proximityScore(energy, 0.66, 0.3) * 1.4 +
+      proximityScore(variety, 0.62, 0.33) * 1.2 +
+      (hasClassicsSignal ? 0.32 : 0),
+    pop_paladin:
+      proximityScore(valence, 0.82, 0.24) * 2.8 +
+      proximityScore(danceability, 0.74, 0.24) * 2.4 +
+      proximityScore(energy, 0.76, 0.24) * 2.1 +
+      proximityScore(rhythm, 0.76, 0.2) * 1.3 +
+      (hasPopSignal ? 0.52 : 0),
+    pop_color_rebel:
+      proximityScore(energy, 0.8, 0.24) * 2.4 +
+      proximityScore(danceability, 0.8, 0.22) * 2.4 +
+      proximityScore(variety, 0.68, 0.28) * 2 +
+      proximityScore(valence, 0.78, 0.24) * 1.6 +
+      (hasPopSignal && hasLatinSignal ? 0.45 : 0),
   }
 
   if (hasRockSignal && topGenreShare >= 0.44) {
-    scores.ranger += 1.15
-    scores.neon_nomad -= 0.95
-  }
-
-  if (hasClassicsSignal && hasRockSignal) {
-    scores.retro_scout += 0.85
-    scores.neon_nomad -= 0.7
-  }
-
-  if (hasClassicsSignal && hasMillennialSignal) {
-    scores.retro_scout += 0.7
-    scores.ranger -= 0.25
-  }
-
-  if (variety < 0.86) {
+    scores.ranger += 0.5
     scores.neon_nomad -= 0.45
   }
 
+  if (hasClassicsSignal && hasRockSignal) {
+    scores.retro_scout += 0.5
+    scores.neon_nomad -= 0.3
+  }
+
+  if (hasClassicsSignal && hasMillennialSignal) {
+    scores.retro_scout += 0.45
+    scores.ranger -= 0.15
+  }
+
+  if (variety < 0.86) {
+    scores.neon_nomad -= 0.2
+  }
+
   if (topGenreShare >= 0.5 && secondGenreShare <= 0.22) {
-    scores.neon_nomad -= 0.65
+    scores.neon_nomad -= 0.35
   }
 
   if (hasLatinSignal && danceability >= 0.52 && energy >= 0.58) {
-    scores.hyperpop_pilot += 0.75
+    scores.hyperpop_pilot += 0.45
   }
 
   if (hasPopSignal && hasCumbiaSignal && danceability > 0.52) {
-    scores.hyperpop_pilot += 0.65
+    scores.hyperpop_pilot += 0.4
     if (variety >= 0.7) {
-      scores.neon_nomad += 0.55
+      scores.neon_nomad += 0.4
     } else {
-      scores.neon_nomad += 0.25
+      scores.neon_nomad += 0.2
     }
-    scores.ranger -= 0.45
+    scores.ranger -= 0.25
   }
 
   if (hasLatinUrbanBlend && variety >= 0.66 && danceability >= 0.5) {
-    scores.neon_nomad += 0.55
-    scores.ranger -= 0.7
+    scores.neon_nomad += 0.35
+    scores.ranger -= 0.35
   }
 
   if (hasLatinUrbanBlend && danceability <= 0.5 && hasRockSignal) {
-    scores.ranger += 0.35
+    scores.ranger += 0.25
   }
 
   if (hasRockSignal && rockShare < 0.45) {
-    scores.ranger -= 0.95
-    scores.retro_scout += 0.2
+    scores.ranger -= 0.4
+    scores.retro_scout += 0.15
   }
 
   return scores
@@ -634,6 +776,7 @@ function resolveSecondaryPersonaSignalScore(
   const danceability = toUnit(profile.averageDanceability ?? null)
   const valence = toUnit(profile.averageValence ?? null)
   const variety = Math.max(0, Math.min(1, profile.genreVarietyScore ?? 0.5))
+  const rhythm = Math.max(0, Math.min(1, danceability * 0.62 + energy * 0.38))
   const topGenreShare = getTopGenreShare(profileState)
   const secondGenreShare = getSecondGenreShare(profileState)
   const topDecade = Object.entries(profile.decadeDistribution ?? {})[0]?.[0] ?? ""
@@ -645,14 +788,18 @@ function resolveSecondaryPersonaSignalScore(
   const hasLatinUrbanBlend = hasGenreSignal(genreValues, ["latin urban", "urbano", "cumbia", "latin"])
 
   const specialtyScores: Record<PersonaArchetype, number> = {
-    chill_oracle: valence * 0.58 + (1 - energy) * 0.28 + (1 - topGenreShare) * 0.14,
-    hyperpop_pilot: energy * 0.42 + danceability * 0.43 + (hasUrbanSignal ? 0.08 : 0) + (hasLatinUrbanBlend ? 0.07 : 0),
-    lo_fi_alchemist: (1 - energy) * 0.45 + (1 - danceability) * 0.35 + (hasAmbientSignal ? 0.2 : 0),
-    neon_nomad: variety * 0.5 + (1 - topGenreShare) * 0.35 + secondGenreShare * 0.15,
-    ranger: topGenreShare * 0.42 + (1 - variety) * 0.33 + (hasRockSignal ? 0.2 : 0) + (hasLatinUrbanBlend ? -0.08 : 0),
-    retro_scout: nostalgia * 0.6 + (1 - variety) * 0.2 + valence * 0.2,
-    synth_captain: danceability * 0.4 + energy * 0.35 + (hasSynthSignal ? 0.25 : 0),
-    vaporwave_druid: (1 - energy) * 0.35 + variety * 0.3 + (hasAmbientSignal ? 0.35 : 0),
+    chill_oracle: valence * 0.56 + (1 - energy) * 0.31 + (1 - danceability) * 0.13,
+    hyperpop_pilot: energy * 0.33 + danceability * 0.39 + rhythm * 0.22 + (hasUrbanSignal ? 0.04 : 0) + (hasLatinUrbanBlend ? 0.02 : 0),
+    lo_fi_alchemist: (1 - energy) * 0.48 + (1 - danceability) * 0.39 + (hasAmbientSignal ? 0.13 : 0),
+    neon_nomad: variety * 0.62 + (1 - topGenreShare) * 0.24 + secondGenreShare * 0.14,
+    ranger: (1 - variety) * 0.33 + energy * 0.24 + (1 - danceability) * 0.25 + topGenreShare * 0.12 + (hasRockSignal ? 0.06 : 0) + (hasLatinUrbanBlend ? -0.03 : 0),
+    retro_scout: nostalgia * 0.48 + (1 - variety) * 0.2 + valence * 0.18 + (1 - danceability) * 0.14,
+    synth_captain: danceability * 0.36 + energy * 0.29 + rhythm * 0.23 + (hasSynthSignal ? 0.12 : 0),
+    vaporwave_druid: (1 - energy) * 0.36 + variety * 0.34 + (1 - danceability) * 0.18 + (hasAmbientSignal ? 0.12 : 0),
+    metal_berserker: energy * 0.38 + (1 - valence) * 0.21 + (1 - danceability) * 0.24 + topGenreShare * 0.08 + (hasRockSignal ? 0.09 : 0),
+    jester_groove: valence * 0.35 + danceability * 0.34 + variety * 0.19 + energy * 0.12,
+    pop_paladin: valence * 0.41 + danceability * 0.3 + energy * 0.24 + (hasUrbanSignal ? 0.03 : 0) + (hasSynthSignal ? 0.02 : 0),
+    pop_color_rebel: danceability * 0.35 + energy * 0.3 + variety * 0.27 + valence * 0.08 + (hasLatinUrbanBlend ? 0.03 : 0),
   }
 
   return specialtyScores[persona]
@@ -661,7 +808,11 @@ function resolveSecondaryPersonaSignalScore(
 export function resolveSonicPersona(profileState: FullProfileData | undefined, genreValues: string[]): SonicPersona {
   const profile = resolveRadarProfile(profileState)
   if (!profile) {
-    return sonicPersonas.ranger
+    return {
+      ...sonicPersonas.ranger,
+      macroId: "ranger",
+      subprofileId: "ranger_core",
+    }
   }
 
   const affinityScores = resolvePersonaAffinityScores(profileState, genreValues, profile)
@@ -670,41 +821,229 @@ export function resolveSonicPersona(profileState: FullProfileData | undefined, g
     .sort((left, right) => right.score - left.score)
 
   if (ranked.length === 0) {
-    return sonicPersonas.ranger
+    return {
+      ...sonicPersonas.ranger,
+      macroId: "ranger",
+      subprofileId: "ranger_core",
+    }
   }
 
   const top = ranked[0]
   const second = ranked[1]
+  let selectedPersonaId: PersonaArchetype = top.personaId
   if (!second || top.score - second.score > 0.14) {
-    return sonicPersonas[top.personaId]
+    selectedPersonaId = top.personaId
+  } else {
+    const closeCandidates = ranked.filter((entry) => top.score - entry.score <= 0.14)
+    const bySecondary = closeCandidates
+      .map((entry) => ({
+        personaId: entry.personaId,
+        score: resolveSecondaryPersonaSignalScore(entry.personaId, profileState, genreValues, profile),
+      }))
+      .sort((left, right) => right.score - left.score)
+
+    const secondaryTop = bySecondary[0]
+    const secondarySecond = bySecondary[1]
+    if (!secondaryTop) {
+      selectedPersonaId = top.personaId
+    } else if (!secondarySecond || secondaryTop.score - secondarySecond.score > 0.06) {
+      selectedPersonaId = secondaryTop.personaId
+    } else {
+      const dominantGenreSeed = profileState?.profile?.dominantGenre ?? profileState?.teaser.topGenres[0]?.genre ?? "mixed"
+      const deterministicSeed = `${dominantGenreSeed.toLowerCase()}|${profileState?.completedBattlesCount ?? 0}|${
+        profileState?.profile?.generatedFromVotes ?? 0
+      }`
+      const tieBreakIndex = pickDeterministicIndex(deterministicSeed, "persona-tie-break", 2)
+      selectedPersonaId = tieBreakIndex === 0 ? secondaryTop.personaId : secondarySecond.personaId
+    }
   }
 
-  const closeCandidates = ranked.filter((entry) => top.score - entry.score <= 0.14)
-  const bySecondary = closeCandidates
-    .map((entry) => ({
-      personaId: entry.personaId,
-      score: resolveSecondaryPersonaSignalScore(entry.personaId, profileState, genreValues, profile),
-    }))
-    .sort((left, right) => right.score - left.score)
+  const macroPersona = resolveMacroPersona(selectedPersonaId)
+  const subprofileId = resolveMacroSubprofile({
+    macroPersona,
+    profileState,
+    profile,
+    genreValues,
+  })
+  const resolvedPersona = mapSubprofileToPersona(subprofileId)
 
-  const secondaryTop = bySecondary[0]
-  const secondarySecond = bySecondary[1]
-  if (!secondaryTop) {
-    return sonicPersonas[top.personaId]
+  return {
+    ...resolvedPersona,
+    macroId: macroPersona,
+    subprofileId,
+  }
+}
+
+function resolveMacroPersona(personaId: PersonaArchetype): MacroPersona {
+  if (personaId === "hyperpop_pilot" || personaId === "synth_captain" || personaId === "pop_paladin" || personaId === "pop_color_rebel") {
+    return "hyperpop"
+  }
+  if (personaId === "neon_nomad" || personaId === "retro_scout" || personaId === "vaporwave_druid" || personaId === "jester_groove") {
+    return "neon"
   }
 
-  if (!secondarySecond || secondaryTop.score - secondarySecond.score > 0.06) {
-    return sonicPersonas[secondaryTop.personaId]
+  return "ranger"
+}
+
+function resolveMacroSubprofile(params: {
+  macroPersona: MacroPersona
+  profileState: FullProfileData | undefined
+  profile: NonNullable<ReturnType<typeof resolveRadarProfile>>
+  genreValues: string[]
+}): string {
+  const { macroPersona, profileState, profile, genreValues } = params
+  const energy = toUnit(profile.averageEnergy ?? null)
+  const danceability = toUnit(profile.averageDanceability ?? null)
+  const valence = toUnit(profile.averageValence ?? null)
+  const variety = Math.max(0, Math.min(1, profile.genreVarietyScore ?? 0.5))
+  const nostalgia = getNostalgiaScore(Object.entries(profile.decadeDistribution ?? {})[0]?.[0] ?? "")
+  const hasAmbientSignal = hasGenreSignal(genreValues, ["dream", "ambient", "shoegaze", "indie", "lo fi"])
+  const hasSynthSignal = hasGenreSignal(genreValues, ["synth", "electro", "electronic", "house", "edm", "techno"])
+  const hasClassicsSignal = hasGenreSignal(genreValues, ["classic", "classics", "70s", "80s", "90s"])
+  const hasMillennialSignal = hasGenreSignal(genreValues, ["2000s", "2010s", "00s", "10s"])
+  const hasUrbanSignal = hasGenreSignal(genreValues, ["hip hop", "rap", "trap", "reggaeton", "urbano", "latin"])
+  const hasPopSignal = hasGenreSignal(genreValues, ["pop"])
+  const hasRockSignal = hasGenreSignal(genreValues, ["rock", "metal", "punk", "grunge", "hard rock"])
+  const hasLatinSignal = hasGenreSignal(genreValues, ["latin", "cumbia", "reggaeton", "urbano"])
+  const hasFolkSignal = hasGenreSignal(genreValues, ["folk", "folklore", "regional", "acoustic"])
+  const urbanShare = getSignalGenreShare(profileState, ["hip hop", "rap", "trap", "reggaeton", "urbano", "latin", "cumbia", "pop"])
+  const rockShare = getSignalGenreShare(profileState, ["rock", "metal", "punk", "grunge", "hard rock"])
+
+  if (macroPersona === "ranger") {
+    const shouldBeMetal =
+      (hasRockSignal && energy >= 0.72 && valence <= 0.55) || (rockShare >= 0.48 && energy >= 0.7 && danceability <= 0.54)
+    const shouldBeChill =
+      (valence >= 0.62 && energy <= 0.62) || (hasFolkSignal && danceability <= 0.5 && energy <= 0.64 && valence >= 0.5)
+    const shouldBeLofi =
+      (energy <= 0.54 && danceability <= 0.52) || (hasAmbientSignal && energy <= 0.56 && danceability <= 0.56)
+
+    if (shouldBeMetal) {
+      return "ranger_metal"
+    }
+    if (shouldBeChill) {
+      return "ranger_chill"
+    }
+    if (shouldBeLofi) {
+      return "ranger_lofi"
+    }
+    return "ranger_core"
   }
 
-  const dominantGenreSeed = profileState?.profile?.dominantGenre ?? profileState?.teaser.topGenres[0]?.genre ?? "mixed"
-  const deterministicSeed = `${dominantGenreSeed.toLowerCase()}|${profileState?.completedBattlesCount ?? 0}|${
-    profileState?.profile?.generatedFromVotes ?? 0
-  }`
-  const tieBreakIndex = pickDeterministicIndex(deterministicSeed, "persona-tie-break", 2)
-  const tieWinner = tieBreakIndex === 0 ? secondaryTop : secondarySecond
+  if (macroPersona === "hyperpop") {
+    const shouldBePopColor =
+      (hasPopSignal && energy >= 0.74 && danceability >= 0.72 && variety >= 0.6) ||
+      (hasPopSignal && hasLatinSignal && energy >= 0.72 && danceability >= 0.7 && variety >= 0.58)
+    const shouldBePopPaladin =
+      (hasPopSignal && valence >= 0.68 && energy >= 0.7 && danceability >= 0.68) ||
+      (valence >= 0.72 && danceability >= 0.68 && energy >= 0.68 && urbanShare <= 0.7)
+    const shouldBeSynth =
+      (hasSynthSignal && energy >= 0.64 && danceability >= 0.6 && urbanShare <= 0.68) ||
+      (hasSynthSignal && variety >= 0.62 && danceability >= 0.58)
+    if (shouldBePopColor) {
+      return "hyperpop_pop_color"
+    }
+    if (shouldBePopPaladin) {
+      return "hyperpop_pop_paladin"
+    }
+    if (shouldBeSynth) {
+      return "hyperpop_synth"
+    }
+    return "hyperpop_urbano"
+  }
 
-  return sonicPersonas[tieWinner.personaId]
+  const shouldBeRetro =
+    (hasClassicsSignal && hasMillennialSignal) ||
+    nostalgia >= 0.62 ||
+    (rockShare >= 0.38 && hasClassicsSignal) ||
+    (hasClassicsSignal && danceability <= 0.58 && energy <= 0.7)
+  if (shouldBeRetro) {
+    return "neon_retro"
+  }
+  const shouldBeVapor =
+    (hasAmbientSignal && energy <= 0.58 && variety >= 0.56) ||
+    (hasFolkSignal && energy <= 0.6 && danceability <= 0.55 && variety >= 0.55)
+  if (shouldBeVapor) {
+    return "neon_vapor"
+  }
+  const shouldBeJester =
+    (valence >= 0.66 && danceability >= 0.62 && hasClassicsSignal && !shouldBeRetro) ||
+    (valence >= 0.7 && danceability >= 0.64 && variety >= 0.56 && energy >= 0.56)
+  if (shouldBeJester) {
+    return "neon_jester"
+  }
+  const shouldBeHybrid =
+    (hasUrbanSignal && danceability >= 0.56 && variety >= 0.62) ||
+    (hasPopSignal && hasLatinSignal && danceability >= 0.56 && variety >= 0.6)
+  if (shouldBeHybrid) {
+    return "neon_hibrido"
+  }
+
+  return "neon_hibrido"
+}
+
+function mapSubprofileToPersona(subprofileId: string): SonicPersona {
+  if (subprofileId === "ranger_metal") {
+    return sonicPersonas.metal_berserker
+  }
+  if (subprofileId === "ranger_chill") {
+    return sonicPersonas.chill_oracle
+  }
+  if (subprofileId === "ranger_lofi") {
+    return sonicPersonas.lo_fi_alchemist
+  }
+  if (subprofileId === "hyperpop_synth") {
+    return sonicPersonas.synth_captain
+  }
+  if (subprofileId === "hyperpop_pop_paladin") {
+    return sonicPersonas.pop_paladin
+  }
+  if (subprofileId === "hyperpop_pop_color") {
+    return sonicPersonas.pop_color_rebel
+  }
+  if (subprofileId === "neon_retro") {
+    return sonicPersonas.retro_scout
+  }
+  if (subprofileId === "neon_vapor") {
+    return sonicPersonas.vaporwave_druid
+  }
+  if (subprofileId === "neon_jester") {
+    return sonicPersonas.jester_groove
+  }
+  if (subprofileId === "hyperpop_urbano") {
+    return sonicPersonas.hyperpop_pilot
+  }
+  if (subprofileId === "ranger_core") {
+    return sonicPersonas.ranger
+  }
+
+  return sonicPersonas.neon_nomad
+}
+
+export function resolvePersonaDisplayName(persona: SonicPersona): string {
+  const normalizedName = normalizeGenreText(persona.name).replace(/\s+/g, " ").trim()
+  const candidates = normalizedName
+    .split(" ")
+    .concat(normalizeGenreText(persona.id).split("_"))
+    .concat(normalizeGenreText(persona.assetFile).split(" "))
+
+  for (const token of candidates) {
+    const mappedName = personaDisplayNameByToken[token]
+    if (mappedName) {
+      return mappedName
+    }
+  }
+
+  if (persona.name.includes("·")) {
+    const variant = normalizeGenreText(persona.name.split("·").pop() ?? "")
+    for (const token of variant.split(" ")) {
+      const mappedName = personaDisplayNameByToken[token]
+      if (mappedName) {
+        return mappedName
+      }
+    }
+  }
+
+  return persona.name
 }
 
 function levelBand(value: number | null): "baja" | "media" | "alta" {
@@ -852,6 +1191,10 @@ function getArchetypeSignature(archetype: PersonaArchetype): string {
     retro_scout: "Tu firma rescata joyas de otras epocas y las trae con actitud fresca.",
     synth_captain: "Tu firma manda pulsos electricos con precision de consola central.",
     vaporwave_druid: "Tu firma pinta paisajes sonoros envolventes, casi como un sueño lucido.",
+    metal_berserker: "Tu firma empuja riffs pesados con ataque frontal y pulso de batalla.",
+    jester_groove: "Tu firma convierte cada giro en escena viva, con ritmo y expresion.",
+    pop_paladin: "Tu firma eleva hooks gigantes con energia limpia y vocacion de himno.",
+    pop_color_rebel: "Tu firma explota color pop, contraste y rebote bailable de alto impacto.",
   }
 
   return signatures[archetype]
@@ -1170,3 +1513,4 @@ function getNostalgiaScore(decadeLabel: string): number {
   const age = Math.max(0, nowYear - decade)
   return Math.max(0, Math.min(1, age / 70))
 }
+

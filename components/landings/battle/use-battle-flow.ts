@@ -95,7 +95,7 @@ interface AuthSessionResponse {
   anonymousId: string | null
 }
 
-export const PROFILE_UI_GOAL_VOTES = 40
+export const PROFILE_UI_GOAL_VOTES = 20
 const MAX_CONSECUTIVE_SKIPS = 5
 
 export function useBattleFlow() {

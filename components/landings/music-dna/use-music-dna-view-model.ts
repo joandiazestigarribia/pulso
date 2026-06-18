@@ -6,6 +6,7 @@ import {
   fetcher,
   getDominantGenres,
   getRadarAxes,
+  resolvePersonaDisplayName,
   resolvePersonaShareCopy,
   resolveRadarProfile,
   resolveSonicPersona,
@@ -36,6 +37,7 @@ export function useMusicDnaViewModel() {
 
   const dominantGenres = useMemo(() => getDominantGenres(profileState), [profileState])
   const sonicPersona = useMemo(() => resolveSonicPersona(profileState, dominantGenres), [dominantGenres, profileState])
+  const sonicPersonaDisplayName = useMemo(() => resolvePersonaDisplayName(sonicPersona), [sonicPersona])
   const shareCopy = useMemo(
     () =>
       resolvePersonaShareCopy({
@@ -145,6 +147,7 @@ export function useMusicDnaViewModel() {
     shareFeedback,
     dominantGenres,
     sonicPersona,
+    sonicPersonaDisplayName,
     shareCopy,
     radarAxes,
     intensityScore,

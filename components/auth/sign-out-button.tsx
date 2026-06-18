@@ -35,7 +35,7 @@ export function SignOutButton() {
       disabled={isLoading}
       className="rounded-lg border border-white/20 bg-black/35 px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-wider text-white/90 transition-colors hover:bg-black/60 disabled:cursor-not-allowed disabled:opacity-60"
     >
-      {isLoading ? "Signing out..." : "Sign out"}
+      {isLoading ? "Saliendo..." : "Salir"}
     </button>
   )
 }

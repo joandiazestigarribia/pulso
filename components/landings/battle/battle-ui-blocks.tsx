@@ -37,7 +37,7 @@ export function BattleTopNotices({
               onClick={onDismissAuthConfirmation}
               className="rounded border border-white/35 px-2 py-1 text-xs font-black uppercase tracking-wide text-white hover:bg-white hover:text-black"
             >
-              Descartar
+              X
             </button>
           </div>
         </section>
@@ -173,7 +173,7 @@ export function BattleSkipLimitModal({ isOpen, onClose }: BattleSkipLimitModalPr
           >
             <p className="text-xs font-black uppercase tracking-[0.12em] text-[#ffb5fb]">Limite de saltos</p>
             <h3 className="mt-1 bg-gradient-to-r from-[#00f0ff] via-[#ff43f8] to-[#ffe600] bg-clip-text text-l font-black uppercase leading-none text-transparent">
-              Solo puedes saltear 2 canciones seguidas
+              Solo puedes saltear 5 canciones seguidas
             </h3>
             <p className="mt-3 text-sm font-semibold text-[#d8ebff]">
               Para seguir avanzando, necesitas votar una cancion en este duelo.

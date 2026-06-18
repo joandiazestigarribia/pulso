@@ -1,2 +1,1 @@
-export const MUSIC_DNA_UNLOCK_THRESHOLD = 40
-
+export const MUSIC_DNA_UNLOCK_THRESHOLD = 20

@@ -8,8 +8,9 @@ import { ProfileMetricsPanel } from "@/components/landings/music-dna/profile-met
 import { WoodActionButton } from "@/components/landings/wood-action-button"
 import { MusicDnaShareModal } from "@/components/landings/music-dna/music-dna-share-modal"
 import { useMusicDnaViewModel } from "@/components/landings/music-dna/use-music-dna-view-model"
+import { MUSIC_DNA_UNLOCK_THRESHOLD } from "@/lib/music-dna-config"
 
-const PROFILE_ACCESS_MIN_BATTLES = 40
+const PROFILE_ACCESS_MIN_BATTLES = MUSIC_DNA_UNLOCK_THRESHOLD
 
 const musicDnaBackgroundStyle = {
   backgroundImage: "url('/images/music-dna/background-music-dna.png')",
@@ -27,6 +28,7 @@ export function MusicDnaLanding() {
     shareFeedback,
     dominantGenres,
     sonicPersona,
+    sonicPersonaDisplayName,
     radarAxes,
     intensityScore,
     rhythmScore,
@@ -72,13 +74,13 @@ export function MusicDnaLanding() {
         <div className="pointer-events-none fixed inset-0 z-0 opacity-90" style={musicDnaBackgroundStyle} />
         <div className="pointer-events-none fixed inset-0 z-0 bg-[radial-gradient(circle_at_30%_20%,rgba(0,240,255,0.14),transparent_45%),radial-gradient(circle_at_75%_15%,rgba(255,67,248,0.2),transparent_45%),linear-gradient(180deg,rgba(8,11,26,0.74),rgba(8,11,26,0.92))]" />
         <motion.section
-          className="relative z-10 w-full max-w-128 rounded-3xl border border-[#00f0ff]/35 bg-[#0b1230]/78 px-6 py-7 text-center shadow-[0_24px_60px_rgba(0,0,0,0.42)] backdrop-blur-sm"
+          className="relative z-10 w-full max-w-lg rounded-3xl border border-[#00f0ff]/35 bg-[#0b1230]/78 px-6 py-7 text-center shadow-[0_24px_60px_rgba(0,0,0,0.42)] backdrop-blur-sm"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, ease: "easeOut" }}
         >
           <p className="text-xs font-black uppercase tracking-[0.18em] text-[#7be3ff]">Perfil Sonoro Bloqueado</p>
-          <h1 className="mt-2 bg-gradient-to-r from-[#00f0ff] via-[#ff43f8] to-[#ffe600] bg-clip-text text-xl font-black uppercase leading-tight tracking-tight text-transparent">
+          <h1 className="mt-2 bg-linear-to-r from-[#00f0ff] via-[#ff43f8] to-[#ffe600] bg-clip-text text-xl font-black uppercase leading-tight tracking-tight text-transparent">
             Continua votando para acceder
           </h1>
           <p className="mt-3 text-sm font-semibold text-[#d8e9ff]">
@@ -110,7 +112,7 @@ export function MusicDnaLanding() {
               transition={{ duration: 0.2, ease: "easeOut" }}
             >
               <p className="text-xs font-black uppercase tracking-[0.18em] text-[#7be3ff]">Pulso Experience</p>
-              <p className="mt-2 bg-gradient-to-r from-[#00f0ff] via-[#ff43f8] to-[#ffe600] bg-clip-text font-sonic-persona text-4xl font-black uppercase leading-[0.95] tracking-tight text-transparent">
+              <p className="mt-2 bg-linear-to-r from-[#00f0ff] via-[#ff43f8] to-[#ffe600] bg-clip-text font-sonic-persona text-4xl font-black uppercase leading-[0.95] tracking-tight text-transparent">
                 Campground
               </p>
             </motion.div>
@@ -127,7 +129,7 @@ export function MusicDnaLanding() {
             >
               <Image
                 src={`/images/characters/${sonicPersona.assetFile}`}
-                alt={`${sonicPersona.name} avatar`}
+                alt={`${sonicPersonaDisplayName} avatar`}
                 width={190}
                 height={220}
                 className="h-auto w-full rounded-[12px] object-cover drop-shadow-[0_2px_0_rgba(0,0,0,0.25)]"
@@ -143,8 +145,8 @@ export function MusicDnaLanding() {
                 transition={{ delay: 0.05, duration: 0.25, ease: "easeOut" }}
               >
                 <p className="text-[11px] font-black uppercase tracking-[0.18em] text-[#7be3ff]">Perfil Sonoro</p>
-                <p className="mt-1 bg-gradient-to-r from-[#ff43f8] via-[#ffe600] to-[#00f0ff] bg-clip-text font-sonic-persona text-[28px] font-black uppercase leading-none text-transparent">
-                  {sonicPersona.name}
+                <p className="mt-1 bg-linear-to-r from-[#ff43f8] via-[#ffe600] to-[#00f0ff] bg-clip-text font-sonic-persona text-[28px] font-black uppercase leading-none text-transparent">
+                  {sonicPersonaDisplayName}
                 </p>
               </motion.div>
             </div>
@@ -182,7 +184,7 @@ export function MusicDnaLanding() {
             >
               <div className="flex flex-wrap items-start justify-between gap-3 border-b-2 border-[#00f0ff]/25 pb-3">
                 <div>
-                  <h1 className="bg-gradient-to-r from-[#00f0ff] via-[#ff43f8] to-[#ffe600] bg-clip-text text-4xl font-black uppercase leading-none tracking-tight text-transparent md:text-5xl">
+                  <h1 className="bg-linear-to-r from-[#00f0ff] via-[#ff43f8] to-[#ffe600] bg-clip-text text-4xl font-black uppercase leading-none tracking-tight text-transparent md:text-5xl">
                     Tu huella auditiva
                   </h1>
                   <p className="mt-2 text-sm font-semibold text-[#d8e9ff] md:text-base">
@@ -229,7 +231,7 @@ export function MusicDnaLanding() {
                 transition={{ duration: 0.2, ease: "easeOut" }}
               >
                 <div className="flex items-center justify-between">
-                  <h2 className="bg-gradient-to-r from-[#00f0ff] to-[#ff43f8] bg-clip-text text-2xl font-black uppercase tracking-tight text-transparent">
+                  <h2 className="bg-linear-to-r from-[#00f0ff] to-[#ff43f8] bg-clip-text text-2xl font-black uppercase tracking-tight text-transparent">
                     Generos Dominantes
                   </h2>
                 </div>
@@ -295,7 +297,7 @@ export function MusicDnaLanding() {
       <MusicDnaShareModal
         isOpen={isShareOpen}
         onClose={() => setIsShareOpen(false)}
-        personaName={sonicPersona.name}
+        personaName={sonicPersonaDisplayName}
         personaAssetFile={sonicPersona.assetFile}
         description={shareDescription}
         feedback={shareFeedback}
