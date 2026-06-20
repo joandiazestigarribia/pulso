@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { RefreshCcw, Volume2 } from "lucide-react"
+import { RefreshCcw, Sparkles, Volume2, X } from "lucide-react"
 import { AnimatePresence, motion } from "framer-motion"
 
 interface BattleTopNoticesProps {
@@ -186,6 +186,80 @@ export function BattleSkipLimitModal({ isOpen, onClose }: BattleSkipLimitModalPr
               >
                 Entendido
               </button>
+            </div>
+          </motion.div>
+        </motion.section>
+      ) : null}
+    </AnimatePresence>
+  )
+}
+
+interface BattleProfileUnlockModalProps {
+  isOpen: boolean
+  completedBattlesCount: number
+  threshold: number
+  onClose: () => void
+}
+
+export function BattleProfileUnlockModal({
+  isOpen,
+  completedBattlesCount,
+  threshold,
+  onClose,
+}: BattleProfileUnlockModalProps) {
+  return (
+    <AnimatePresence>
+      {isOpen ? (
+        <motion.section
+          className="fixed inset-0 z-70 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+        >
+          <motion.div
+            className="relative w-full max-w-120 rounded-3xl border-[3px] border-[#ff43f8]/40 bg-[#0f1638]/95 p-5 text-[#eaf7ff] shadow-[0_10px_34px_rgba(0,0,0,0.5),0_0_30px_rgba(0,240,255,0.18)]"
+            initial={{ y: 12, scale: 0.98, opacity: 0 }}
+            animate={{ y: 0, scale: 1, opacity: 1 }}
+            exit={{ y: 12, scale: 0.98, opacity: 0 }}
+            transition={{ duration: 0.22, ease: "easeOut" }}
+          >
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Cerrar aviso de perfil sonoro desbloqueado"
+              className="absolute right-3 top-3 rounded-lg border border-white/20 bg-white/5 p-1.5 text-white/75 transition-colors hover:bg-white hover:text-black"
+            >
+              <X className="h-4 w-4" />
+            </button>
+
+            <div className="absolute right-[140px] top-10 flex h-12 w-12 rotate-3 items-center justify-center rounded-2xl border-0 bg-transparent shadow-none">
+              <Sparkles className="h-6 w-6 text-[#ffe600]" />
+            </div>
+
+            <p className="mt-3 text-xs font-black uppercase tracking-[0.12em] text-[#7be3ff]">
+              Perfil sonoro desbloqueado
+            </p>
+            <h3 className="mt-1 bg-gradient-to-r from-[#00f0ff] via-[#ff43f8] to-[#ffe600] bg-clip-text text-3xl font-black uppercase leading-none text-transparent md:text-4xl">
+              ¡Felicidades!
+            </h3>
+            <p className="mt-3 text-sm font-semibold text-[#d8ebff]">
+              Llegaste a {completedBattlesCount}/{threshold} batallas, ya podes abrir tu perfil y descubrirlo.
+            </p>
+
+            <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:justify-end">
+              <button
+                type="button"
+                onClick={onClose}
+                className="rounded-lg border border-[#7be3ff]/35 bg-[#0d1636]/72 px-3 py-2 text-xs font-black uppercase tracking-wide text-[#d8ebff] transition-colors hover:border-[#00f0ff]/55 hover:text-[#eaf7ff]"
+              >
+                Seguir votando
+              </button>
+              <Link
+                href="/music-dna"
+                className="rounded-lg border border-[#ff43f8]/45 bg-[#ff43f8]/15 px-3 py-2 text-center text-xs font-black uppercase tracking-wide text-[#ffd6fb] transition-colors hover:border-[#ffe600]/70 hover:bg-[#ff43f8]/25 hover:text-[#fff3a6]"
+              >
+                Ver perfil sonoro
+              </Link>
             </div>
           </motion.div>
         </motion.section>

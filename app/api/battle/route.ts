@@ -44,7 +44,7 @@ export async function GET(request: Request) {
     const response = NextResponse.json(battle)
     const source = searchParams.get("source") ?? "direct"
 
-    await trackConversionEventSafe({
+    void trackConversionEventSafe({
       eventName: "battle_started",
       request,
       userId: identity.userId,
@@ -103,7 +103,7 @@ export async function POST(request: Request) {
       userId: actorId,
     })
 
-    await trackConversionEventSafe({
+    void trackConversionEventSafe({
       eventName: "vote_submitted",
       request,
       userId: identity.userId,
@@ -116,21 +116,27 @@ export async function POST(request: Request) {
     })
 
     const stats = await getUserBattleStats(actorId)
-    if (stats.completedBattlesCount >= MUSIC_DNA_UNLOCK_THRESHOLD) {
-      await trackConversionEventSafe({
+    const profileUnlock = {
+      justUnlocked: stats.completedBattlesCount === MUSIC_DNA_UNLOCK_THRESHOLD,
+      completedBattlesCount: stats.completedBattlesCount,
+      threshold: MUSIC_DNA_UNLOCK_THRESHOLD,
+    }
+
+    if (profileUnlock.justUnlocked) {
+      void trackConversionEventSafe({
         eventName: "profile_unlock_reached",
         request,
         userId: identity.userId,
         anonymousId: identity.userId ? null : actorId,
         battleId: payload.data.battleId,
         metadata: {
-          completedBattlesCount: stats.completedBattlesCount,
-          threshold: MUSIC_DNA_UNLOCK_THRESHOLD,
+          completedBattlesCount: profileUnlock.completedBattlesCount,
+          threshold: profileUnlock.threshold,
         },
       })
     }
 
-    return NextResponse.json(result)
+    return NextResponse.json({ ...result, profileUnlock })
   } catch (error) {
     if (error instanceof MissingDatabaseUrlError) {
       return NextResponse.json(

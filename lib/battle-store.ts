@@ -197,6 +197,7 @@ export const voteSchema = z
 let lastCatalogSyncAt = 0
 let lastPreviewBackfillAt = 0
 let previewBackfillPromise: Promise<void> | null = null
+let catalogRefreshPromise: Promise<void> | null = null
 
 interface MatchmakingContext {
   userRecentArtistTokens: Set<string>
@@ -1002,6 +1003,112 @@ function triggerPreviewBackfillInBackground(): void {
     })
 }
 
+function triggerCatalogRefreshInBackground(artistDenylist: Set<string>): void {
+  if (catalogRefreshPromise) {
+    return
+  }
+
+  catalogRefreshPromise = refreshExternalBattleCatalog(artistDenylist)
+    .catch((error) => {
+      console.error("[battle-catalog] background refresh failed", error)
+    })
+    .finally(() => {
+      catalogRefreshPromise = null
+    })
+}
+
+async function refreshExternalBattleCatalog(artistDenylist: Set<string>): Promise<void> {
+  const deezerTracks = (await fetchDeezerBattleTracks(CATALOG_SYNC_LIMIT)).filter(
+    (track) => !isArtistBlocked(track.artist, artistDenylist)
+  )
+  const deezerPreviewTracks = deezerTracks.filter((track) => hasTrackPreview(track))
+
+  if (deezerPreviewTracks.length < 2) {
+    const itunesTracks = (await fetchItunesBattleTracks(CATALOG_SYNC_LIMIT)).filter(
+      (track) => !isArtistBlocked(track.artist, artistDenylist)
+    )
+
+    if (itunesTracks.length >= 2) {
+      await prisma.$transaction(
+        itunesTracks.map((track) =>
+          prisma.track.upsert({
+            where: { id: track.id },
+            create: {
+              ...track,
+              catalogBucket: track.catalogBucket ?? DEFAULT_BUCKET,
+              previewSource: track.previewSource ?? (track.previewUrl ? "itunes" : null),
+              previewCheckedAt: new Date(),
+            },
+            update: {
+              catalogBucket: track.catalogBucket ?? DEFAULT_BUCKET,
+              name: track.name,
+              artist: track.artist,
+              albumImage: track.albumImage,
+              ...(hasTrackPreview(track)
+                ? {
+                    previewUrl: track.previewUrl,
+                    previewSource: track.previewSource ?? "itunes",
+                    previewCheckedAt: new Date(),
+                  }
+                : {}),
+              bpm: track.bpm,
+              duration: track.duration,
+              genre: track.genre,
+              year: track.year,
+              energy: track.energy,
+              valence: track.valence,
+              danceability: track.danceability,
+            },
+          })
+        )
+      )
+
+      await suppressStaleExternalTracks(itunesTracks.filter((track) => hasTrackPreview(track)).map((track) => track.id))
+      lastCatalogSyncAt = Date.now()
+    }
+
+    triggerPreviewBackfillInBackground()
+    return
+  }
+
+  await prisma.$transaction(
+    deezerTracks.map((track) =>
+      prisma.track.upsert({
+        where: { id: track.id },
+        create: {
+          ...track,
+          catalogBucket: track.catalogBucket ?? DEFAULT_BUCKET,
+          previewSource: track.previewUrl ? "deezer" : null,
+          previewCheckedAt: new Date(),
+        },
+        update: {
+          catalogBucket: track.catalogBucket ?? DEFAULT_BUCKET,
+          name: track.name,
+          artist: track.artist,
+          albumImage: track.albumImage,
+          ...(hasTrackPreview(track)
+            ? {
+                previewUrl: track.previewUrl,
+                previewSource: "deezer",
+                previewCheckedAt: new Date(),
+              }
+            : {}),
+          bpm: track.bpm,
+          duration: track.duration,
+          genre: track.genre,
+          year: track.year,
+          energy: track.energy,
+          valence: track.valence,
+          danceability: track.danceability,
+        },
+      })
+    )
+  )
+  await suppressStaleExternalTracks(deezerPreviewTracks.map((track) => track.id))
+  lastCatalogSyncAt = Date.now()
+  triggerPreviewBackfillInBackground()
+}
+
 function selectBattlePair(
   tracks: Track[],
   artistDenylist: Set<string>,
@@ -1083,100 +1190,17 @@ export async function ensureBattleCatalog(options?: { forceRefresh?: boolean }):
   const externalPreviewTrackCount = await countExternalPreviewTracks()
   const hasHealthyExternalCatalog = externalPreviewTrackCount >= EXTERNAL_PREVIEW_TRACK_THRESHOLD
 
-  if (!forceRefresh && Date.now() - lastCatalogSyncAt < CATALOG_REFRESH_MS && hasHealthyExternalCatalog) {
+  const isCatalogFresh = Date.now() - lastCatalogSyncAt < CATALOG_REFRESH_MS
+  if (!forceRefresh && isCatalogFresh && hasHealthyExternalCatalog) {
     return
   }
 
-  const deezerTracks = (await fetchDeezerBattleTracks(CATALOG_SYNC_LIMIT)).filter(
-    (track) => !isArtistBlocked(track.artist, artistDenylist)
-  )
-  const deezerPreviewTracks = deezerTracks.filter((track) => hasTrackPreview(track))
-
-  if (deezerPreviewTracks.length < 2) {
-    const itunesTracks = (await fetchItunesBattleTracks(CATALOG_SYNC_LIMIT)).filter(
-      (track) => !isArtistBlocked(track.artist, artistDenylist)
-    )
-
-    if (itunesTracks.length >= 2) {
-      await prisma.$transaction(
-        itunesTracks.map((track) =>
-          prisma.track.upsert({
-            where: { id: track.id },
-            create: {
-              ...track,
-              catalogBucket: track.catalogBucket ?? DEFAULT_BUCKET,
-              previewSource: track.previewSource ?? (track.previewUrl ? "itunes" : null),
-              previewCheckedAt: new Date(),
-            },
-            update: {
-              catalogBucket: track.catalogBucket ?? DEFAULT_BUCKET,
-              name: track.name,
-              artist: track.artist,
-              albumImage: track.albumImage,
-              ...(hasTrackPreview(track)
-                ? {
-                    previewUrl: track.previewUrl,
-                    previewSource: track.previewSource ?? "itunes",
-                    previewCheckedAt: new Date(),
-                  }
-                : {}),
-              bpm: track.bpm,
-              duration: track.duration,
-              genre: track.genre,
-              year: track.year,
-              energy: track.energy,
-              valence: track.valence,
-              danceability: track.danceability,
-            },
-          })
-        )
-      )
-
-      await suppressStaleExternalTracks(itunesTracks.filter((track) => hasTrackPreview(track)).map((track) => track.id))
-
-      lastCatalogSyncAt = Date.now()
-    }
-
-    triggerPreviewBackfillInBackground()
+  if (!forceRefresh && hasHealthyExternalCatalog) {
+    triggerCatalogRefreshInBackground(artistDenylist)
     return
   }
 
-  await prisma.$transaction(
-    deezerTracks.map((track) =>
-      prisma.track.upsert({
-        where: { id: track.id },
-        create: {
-          ...track,
-          catalogBucket: track.catalogBucket ?? DEFAULT_BUCKET,
-          previewSource: track.previewUrl ? "deezer" : null,
-          previewCheckedAt: new Date(),
-        },
-        update: {
-          catalogBucket: track.catalogBucket ?? DEFAULT_BUCKET,
-          name: track.name,
-          artist: track.artist,
-          albumImage: track.albumImage,
-          ...(hasTrackPreview(track)
-            ? {
-                previewUrl: track.previewUrl,
-                previewSource: "deezer",
-                previewCheckedAt: new Date(),
-              }
-            : {}),
-          bpm: track.bpm,
-          duration: track.duration,
-          genre: track.genre,
-          year: track.year,
-          energy: track.energy,
-          valence: track.valence,
-          danceability: track.danceability,
-        },
-      })
-    )
-  )
-  await suppressStaleExternalTracks(deezerPreviewTracks.map((track) => track.id))
-  lastCatalogSyncAt = Date.now()
-  triggerPreviewBackfillInBackground()
+  await refreshExternalBattleCatalog(artistDenylist)
 }
 
 export async function createPendingBattle(userId: string): Promise<Battle> {

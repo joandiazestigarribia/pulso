@@ -3,6 +3,7 @@ const test = require("node:test")
 const assert = require("node:assert/strict")
 const { prisma } = require("../.tmp-test/lib/db")
 const { MOCK_TRACKS } = require("../.tmp-test/lib/mock-data")
+const { MUSIC_DNA_UNLOCK_THRESHOLD } = require("../.tmp-test/lib/music-dna-config")
 const battleStore = require("../.tmp-test/lib/battle-store")
 const battleRoute = require("../.tmp-test/app/api/battle/route")
 
@@ -102,6 +103,43 @@ test("POST /api/battle accepts first vote and rejects concurrent second vote", a
 
   const statuses = [firstResponse.status, secondResponse.status].sort((a, b) => a - b)
   assert.deepEqual(statuses, [200, 409])
+})
+
+test("POST /api/battle marks profile unlock on the threshold vote", async () => {
+  await seedBaselineTracks()
+  const userId = "api-profile-unlock-user"
+
+  for (let index = 0; index < MUSIC_DNA_UNLOCK_THRESHOLD - 1; index += 1) {
+    const battle = await battleStore.createPendingBattle(userId)
+    await battleStore.completeBattleVote({
+      battleId: battle.id,
+      winnerId: battle.trackA.id,
+      loserId: battle.trackB.id,
+      userId,
+    })
+  }
+
+  const battle = await battleStore.createPendingBattle(userId)
+  const request = new Request("http://localhost:3000/api/battle", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      battleId: battle.id,
+      winnerId: battle.trackA.id,
+      loserId: battle.trackB.id,
+      userId,
+    }),
+  })
+
+  const response = await battleRoute.POST(request)
+  const payload = await response.json()
+
+  assert.equal(response.status, 200)
+  assert.deepEqual(payload.profileUnlock, {
+    justUnlocked: true,
+    completedBattlesCount: MUSIC_DNA_UNLOCK_THRESHOLD,
+    threshold: MUSIC_DNA_UNLOCK_THRESHOLD,
+  })
 })
 
 test.after(async () => {

@@ -62,6 +62,11 @@ export interface VoteTrackResult {
 interface VoteResponse {
   winner: VoteTrackResult
   loser: VoteTrackResult
+  profileUnlock?: {
+    justUnlocked: boolean
+    completedBattlesCount: number
+    threshold: number
+  }
 }
 
 interface VoteErrorResponse {
@@ -126,6 +131,10 @@ export function useBattleFlow() {
   const [refreshingPreviewTrackId, setRefreshingPreviewTrackId] = useState<string | null>(null)
   const [hasTrackedPromptShown, setHasTrackedPromptShown] = useState(false)
   const [authConfirmation, setAuthConfirmation] = useState<{ movedBattles: number } | null>(null)
+  const [profileUnlockNotice, setProfileUnlockNotice] = useState<{
+    completedBattlesCount: number
+    threshold: number
+  } | null>(null)
   const voteRequestInFlightRef = useRef(false)
   const previewRefreshAttemptsRef = useRef<Map<string, number>>(new Map())
 
@@ -299,6 +308,12 @@ export function useBattleFlow() {
         }
 
         setVoteFeedback({ winner: result.winner, loser: result.loser })
+        if (result.profileUnlock?.justUnlocked) {
+          setProfileUnlockNotice({
+            completedBattlesCount: result.profileUnlock.completedBattlesCount,
+            threshold: result.profileUnlock.threshold,
+          })
+        }
       } catch {
         setVoteError("Network error while saving your vote.")
         setVoteResult(null)
@@ -402,12 +417,14 @@ export function useBattleFlow() {
     activePreviewTrackId,
     refreshingPreviewTrackId,
     authConfirmation,
+    profileUnlockNotice,
     shouldShowAuthPrompt,
     hasReachedUnlockThreshold,
     completedBattles,
     experimentCopyVariant: experiment.copyVariant,
     activePreviewTrackName,
     setAuthConfirmation,
+    dismissProfileUnlockNotice: () => setProfileUnlockNotice(null),
     handleTogglePreview,
     handlePreviewEnded,
     handlePreviewError,

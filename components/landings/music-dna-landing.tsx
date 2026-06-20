@@ -188,10 +188,7 @@ export function MusicDnaLanding() {
                     Tu huella auditiva
                   </h1>
                   <p className="mt-2 text-sm font-semibold text-[#d8e9ff] md:text-base">
-                    En base a tus ultimas {analyzedVotes} batallas.
-                  </p>
-                  <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-[#82dff2]">
-                    Cuantas mas canciones votes, mayor precision tendra tu Perfil Sonoro.
+                    En base a tus {analyzedVotes} canciones votadas.
                   </p>
                 </div>
               </div>

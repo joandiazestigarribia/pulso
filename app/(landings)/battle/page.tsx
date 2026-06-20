@@ -7,6 +7,7 @@ import { BattleAuthPrompt } from "@/components/landings/battle/battle-auth-promp
 import { BattleSide } from "@/components/landings/battle/battle-side"
 import {
   BattleNowPlayingFooter,
+  BattleProfileUnlockModal,
   BattleProgressBanner,
   BattleResetConfirmModal,
   BattleSkipLimitModal,
@@ -38,12 +39,14 @@ export default function BattlePage() {
     activePreviewTrackId,
     refreshingPreviewTrackId,
     authConfirmation,
+    profileUnlockNotice,
     shouldShowAuthPrompt,
     hasReachedUnlockThreshold,
     completedBattles,
     experimentCopyVariant,
     activePreviewTrackName,
     setAuthConfirmation,
+    dismissProfileUnlockNotice,
     handleTogglePreview,
     handlePreviewEnded,
     handlePreviewError,
@@ -182,6 +185,12 @@ export default function BattlePage() {
       </section>
 
       <BattleSkipLimitModal isOpen={isSkipLimitModalOpen} onClose={closeSkipLimitModal} />
+      <BattleProfileUnlockModal
+        isOpen={profileUnlockNotice !== null}
+        completedBattlesCount={profileUnlockNotice?.completedBattlesCount ?? 0}
+        threshold={profileUnlockNotice?.threshold ?? PROFILE_UI_GOAL_VOTES}
+        onClose={dismissProfileUnlockNotice}
+      />
       <BattleResetConfirmModal
         isOpen={isResetConfirmOpen}
         isResetting={isResetting}

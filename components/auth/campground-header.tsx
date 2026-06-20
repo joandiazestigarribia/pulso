@@ -90,12 +90,6 @@ export function CampgroundHeader() {
           >
             Perfil Sonoro
           </Link>
-          <Link
-            href="/profile"
-            className={resolveNavItemClass(pathname, "/profile", "yellow")}
-          >
-            Perfil
-          </Link>
         </nav>
 
         <div className="ml-auto flex items-center gap-2">
