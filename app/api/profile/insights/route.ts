@@ -23,7 +23,7 @@ export async function GET(request: Request) {
       {
         ok: false,
         code: "INVALID_INPUT",
-        message: "Invalid profile insights request.",
+        message: "Solicitud de insights de perfil inválida.",
         errors: parsed.error.flatten().fieldErrors,
       },
       { status: 400 }
@@ -49,7 +49,7 @@ export async function GET(request: Request) {
         {
           ok: false,
           code: "DB_NOT_CONFIGURED",
-          message: "Server database is not configured (missing DATABASE_URL).",
+          message: "La base de datos del servidor no está configurada.",
         },
         { status: 503 }
       )
@@ -59,10 +59,9 @@ export async function GET(request: Request) {
       {
         ok: false,
         code: "UNEXPECTED_ERROR",
-        message: "Unexpected profile insights failure.",
+        message: "Error inesperado al cargar los insights del perfil.",
       },
       { status: 500 }
     )
   }
 }
-

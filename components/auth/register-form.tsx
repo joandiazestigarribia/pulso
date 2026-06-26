@@ -40,12 +40,12 @@ export function RegisterForm() {
     const parsedInput = registerSchema.safeParse({ email, password })
     if (!parsedInput.success) {
       setFieldErrors(parsedInput.error.flatten().fieldErrors)
-      setError("Revisa los campos marcados.")
+      setError("Revisá los campos marcados.")
       return
     }
 
     if (parsedInput.data.password !== confirmPassword) {
-      setFieldErrors({ confirmPassword: ["Passwords do not match."] })
+      setFieldErrors({ confirmPassword: ["Las claves no coinciden."] })
       setError("Las claves no coinciden.")
       return
     }
@@ -73,7 +73,7 @@ export function RegisterForm() {
       router.push(redirectedPath)
       router.refresh()
     } catch {
-      setError("Error de red al crear la sesion.")
+      setError("Error de red al crear la sesión.")
       setIsSubmitting(false)
       return
     }
@@ -113,7 +113,7 @@ export function RegisterForm() {
         </h1>
 
         <p className="mb-8 mt-2 text-center text-sm font-semibold text-[#d8e9ff]">
-          Crea tu cuenta y guarda tu progreso.
+          Creá tu cuenta y guardá tu progreso.
         </p>
 
         <div className="mb-4">
@@ -169,32 +169,32 @@ export function RegisterForm() {
           )}
           <div className="mt-3 rounded-xl border border-white/10 bg-[#0b102a]/70 p-3">
             <p className="mb-2 text-[11px] font-medium tracking-[0.08em] text-[#cde3ff]">
-              La contraseña debe cumplir con los siguientes items
+              La contraseña debe cumplir con estos requisitos
             </p>
             <div className="grid grid-cols-2 gap-2">
               <p className="flex items-center gap-2 text-[11px] font-medium text-[#cde3ff]">
                 <span
                   className={`h-2.5 w-2.5 rounded-full ${passwordRules.minLength ? "bg-[#7dffbe]" : "bg-[#60738d]"}`}
                 />
-                Minimo 8 caracteres
+                Mínimo 8 caracteres
               </p>
               <p className="flex items-center gap-2 text-[11px] font-medium text-[#cde3ff]">
                 <span
                   className={`h-2.5 w-2.5 rounded-full ${passwordRules.uppercase ? "bg-[#7dffbe]" : "bg-[#60738d]"}`}
                 />
-                Al menos una mayuscula
+                Al menos una mayúscula
               </p>
               <p className="flex items-center gap-2 text-[11px] font-medium text-[#cde3ff]">
                 <span
                   className={`h-2.5 w-2.5 rounded-full ${passwordRules.lowercase ? "bg-[#7dffbe]" : "bg-[#60738d]"}`}
                 />
-                Al menos una minuscula
+                Al menos una minúscula
               </p>
               <p className="flex items-center gap-2 text-[11px] font-medium text-[#cde3ff]">
                 <span
                   className={`h-2.5 w-2.5 rounded-full ${passwordRules.number ? "bg-[#7dffbe]" : "bg-[#60738d]"}`}
                 />
-                Al menos un numero
+                Al menos un número
               </p>
               <p className="flex items-center gap-2 text-[11px] font-medium text-[#cde3ff]">
                 <span
@@ -206,7 +206,7 @@ export function RegisterForm() {
                 <span
                   className={`h-2.5 w-2.5 rounded-full ${passwordRules.maxLength ? "bg-[#7dffbe]" : "bg-[#60738d]"}`}
                 />
-                Maximo 100 caracteres
+                Máximo 100 caracteres
               </p>
             </div>
           </div>
@@ -270,7 +270,7 @@ export function RegisterForm() {
             href="/login"
             className="text-xs font-black uppercase tracking-[0.12em] text-[#ffb5fb] transition-colors hover:text-[#ff43f8]"
           >
-            {"Ya tienes cuenta? Inicia sesion"}
+            {"¿Ya tenés cuenta? Iniciá sesión"}
           </Link>
         </div>
       </div>

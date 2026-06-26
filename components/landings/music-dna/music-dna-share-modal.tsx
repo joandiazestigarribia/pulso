@@ -130,7 +130,7 @@ export function MusicDnaShareModal({
                   onClick={() => setIsDescriptionExpanded((current) => !current)}
                   className="mt-2 text-xs font-medium uppercase tracking-[0.12em] text-[#7be3ff] transition-colors hover:text-[#00f0ff]"
                 >
-                  {isDescriptionExpanded ? "Ver menos" : "Ver mas"}
+                  {isDescriptionExpanded ? "Ver menos" : "Ver más"}
                 </button>
               ) : null}
             </div>
@@ -164,7 +164,7 @@ export function MusicDnaShareModal({
             whileTap={{ scale: 0.98 }}
             className="rounded-xl border-2 border-white/35 bg-white/10 px-3 py-2 text-[#eaf7ff] transition hover:brightness-105"
           >
-            Compartir en Whatsapp
+            Compartir en WhatsApp
           </motion.button>
           <motion.button
             type="button"

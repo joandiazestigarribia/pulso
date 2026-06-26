@@ -29,7 +29,7 @@ export function BattleTopNotices({
             <p className="text-sm text-[#d8ebff]">
               Progreso vinculado correctamente.{" "}
               {authConfirmation.movedBattles > 0
-                ? `${authConfirmation.movedBattles} Los registros de batalla se conservaron después de iniciar sesión.`
+                ? `${authConfirmation.movedBattles} registros de batalla se conservaron después de iniciar sesión.`
                 : "Tu progreso actual ya está asociado a tu cuenta."}
             </p>
             <button
@@ -66,14 +66,14 @@ export function BattleProgressBanner({ completedBattles, goalVotes }: BattleProg
           </p>
           {completedBattles >= goalVotes ? (
             <p className="text-xs font-semibold text-white/85">
-              Llegaste a la cantidad necesaria. Revisa tu perfil sonoro{" "}
+              Llegaste a la cantidad necesaria. Revisá tu perfil sonoro{" "}
               <Link href="/music-dna" className="font-black text-[#00ff9f] underline underline-offset-2 hover:text-[#7affc9]">
-                aqui
+                acá
               </Link>
               .
             </p>
           ) : (
-            <p className="text-xs font-semibold text-white/80">Vota para desbloquear tu perfil sonoro.</p>
+            <p className="text-xs font-semibold text-white/80">Votá para desbloquear tu perfil sonoro.</p>
           )}
         </div>
         <div className="h-1.5 overflow-hidden rounded-full bg-white/15">
@@ -171,12 +171,12 @@ export function BattleSkipLimitModal({ isOpen, onClose }: BattleSkipLimitModalPr
             animate={{ y: 0, scale: 1, opacity: 1 }}
             exit={{ y: 10, scale: 0.98, opacity: 0 }}
           >
-            <p className="text-xs font-black uppercase tracking-[0.12em] text-[#ffb5fb]">Limite de saltos</p>
+            <p className="text-xs font-black uppercase tracking-[0.12em] text-[#ffb5fb]">Límite de saltos</p>
             <h3 className="mt-1 bg-gradient-to-r from-[#00f0ff] via-[#ff43f8] to-[#ffe600] bg-clip-text text-l font-black uppercase leading-none text-transparent">
-              Solo puedes saltear 5 canciones seguidas
+              Solo podés saltear 5 canciones seguidas
             </h3>
             <p className="mt-3 text-sm font-semibold text-[#d8ebff]">
-              Para seguir avanzando, necesitas votar una cancion en este duelo.
+              Para seguir avanzando, necesitás votar una canción en este duelo.
             </p>
             <div className="mt-4 flex justify-end">
               <button
@@ -240,10 +240,10 @@ export function BattleProfileUnlockModal({
               Perfil sonoro desbloqueado
             </p>
             <h3 className="mt-1 bg-gradient-to-r from-[#00f0ff] via-[#ff43f8] to-[#ffe600] bg-clip-text text-3xl font-black uppercase leading-none text-transparent md:text-4xl">
-              ¡Felicidades!
+              ¡Felicitaciones!
             </h3>
             <p className="mt-3 text-sm font-semibold text-[#d8ebff]">
-              Llegaste a {completedBattlesCount}/{threshold} batallas, ya podes abrir tu perfil y descubrirlo.
+              Llegaste a {completedBattlesCount}/{threshold} batallas, ya podés abrir tu perfil y descubrirlo.
             </p>
 
             <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:justify-end">
@@ -298,10 +298,10 @@ export function BattleResetConfirmModal({
           >
             <p className="text-xs font-black uppercase tracking-[0.12em] text-[#ffd2c9]">Reinicio de juego</p>
             <h3 className="mt-1 bg-gradient-to-r from-[#ff806d] via-[#ff43f8] to-[#ffe600] bg-clip-text text-l font-black uppercase leading-none text-transparent">
-              Esto borrara tu progreso actual
+              Esto va a borrar tu progreso actual
             </h3>
             <p className="mt-3 text-sm font-semibold text-[#d8ebff]">
-              Se reiniciaran tus canciones votadas y el progreso de perfil sonoro para tu sesion actual.
+              Se van a reiniciar tus canciones votadas y el progreso de perfil sonoro para tu sesión actual.
             </p>
             <div className="mt-4 flex justify-end gap-2">
               <button

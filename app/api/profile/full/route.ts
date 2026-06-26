@@ -13,7 +13,7 @@ function unauthorizedResponse() {
     {
       ok: false,
       code: "UNAUTHORIZED",
-      message: "Authentication is required to access the full profile.",
+      message: "Necesitás iniciar sesión para acceder al perfil completo.",
     },
     { status: 401 }
   )
@@ -37,7 +37,7 @@ export async function GET(request: Request) {
         {
           ok: false,
           code: "DB_NOT_CONFIGURED",
-          message: "Server database is not configured (missing DATABASE_URL).",
+          message: "La base de datos del servidor no está configurada.",
         },
         { status: 503 }
       )
@@ -47,7 +47,7 @@ export async function GET(request: Request) {
       {
         ok: false,
         code: "UNEXPECTED_ERROR",
-        message: "Unexpected full profile failure.",
+        message: "Error inesperado al cargar el perfil completo.",
       },
       { status: 500 }
     )
@@ -66,7 +66,7 @@ export async function POST(request: Request) {
       {
         ok: false,
         code: "INVALID_INPUT",
-        message: "Invalid regenerate request.",
+        message: "Solicitud de regeneración inválida.",
         errors: payload.error.flatten().fieldErrors,
       },
       { status: 400 }
@@ -88,7 +88,7 @@ export async function POST(request: Request) {
         {
           ok: false,
           code: "DB_NOT_CONFIGURED",
-          message: "Server database is not configured (missing DATABASE_URL).",
+          message: "La base de datos del servidor no está configurada.",
         },
         { status: 503 }
       )
@@ -98,10 +98,9 @@ export async function POST(request: Request) {
       {
         ok: false,
         code: "UNEXPECTED_ERROR",
-        message: "Unexpected profile regeneration failure.",
+        message: "Error inesperado al regenerar el perfil.",
       },
       { status: 500 }
     )
   }
 }
-

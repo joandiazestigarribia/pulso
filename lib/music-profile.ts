@@ -228,56 +228,56 @@ function aggregateWinnerPreferences(completedBattles: CompletedBattleWithTracks[
   }
 }
 
-function levelFromValue(value: number | null): "low" | "balanced" | "high" {
+function levelFromValue(value: number | null): "baja" | "equilibrada" | "alta" {
   if (value === null) {
-    return "balanced"
+    return "equilibrada"
   }
 
   if (value < 0.4) {
-    return "low"
+    return "baja"
   }
 
   if (value > 0.65) {
-    return "high"
+    return "alta"
   }
 
-  return "balanced"
+  return "equilibrada"
 }
 
 function buildFallbackSummary(aggregated: AggregatedWinners): string {
-  const dominantGenre = aggregated.dominantGenre ?? "eclectic blend"
-  const varietyBand = aggregated.genreVarietyScore >= 0.7 ? "high variety" : aggregated.genreVarietyScore >= 0.4 ? "balanced variety" : "focused taste"
+  const dominantGenre = aggregated.dominantGenre ?? "mezcla ecléctica"
+  const varietyBand = aggregated.genreVarietyScore >= 0.7 ? "variedad alta" : aggregated.genreVarietyScore >= 0.4 ? "variedad equilibrada" : "gusto enfocado"
   const energyBand = levelFromValue(aggregated.averageEnergy)
   const valenceBand = levelFromValue(aggregated.averageValence)
   const danceBand = levelFromValue(aggregated.averageDanceability)
-  const topDecade = Object.entries(aggregated.decadeDistribution)[0]?.[0] ?? "mixed decades"
+  const topDecade = Object.entries(aggregated.decadeDistribution)[0]?.[0] ?? "décadas mixtas"
   const topSubgenre = aggregated.topSubgenres.find(
     (entry) => normalizeGenreLabel(entry.genre) !== normalizeGenreLabel(dominantGenre)
   )?.genre
 
   if (topSubgenre) {
-    return `You are the kind of listener who turns ${dominantGenre} and ${topSubgenre} into a signature move. Your winners lean ${energyBand} energy, ${valenceBand} mood, and ${danceBand} danceability, with a soft spot for ${topDecade} gems.`
+    return `Sos el tipo de oyente que convierte ${dominantGenre} y ${topSubgenre} en una marca propia. Tus ganadoras muestran energía ${energyBand}, ánimo ${valenceBand} y bailabilidad ${danceBand}, con debilidad por joyas de ${topDecade}.`
   }
 
-  return `Your Music DNA locks into ${dominantGenre} with ${varietyBand}. Your winners lean ${energyBand} energy, ${valenceBand} mood, and ${danceBand} danceability, with a clear crush on ${topDecade} tracks.`
+  return `Tu Perfil Sonoro se afirma en ${dominantGenre} con ${varietyBand}. Tus ganadoras muestran energía ${energyBand}, ánimo ${valenceBand} y bailabilidad ${danceBand}, con preferencia clara por canciones de ${topDecade}.`
 }
 
 function buildTeaserHint(aggregated: AggregatedWinners, completedBattlesCount: number): string {
   if (completedBattlesCount === 0) {
-    return "Play your first battle to start shaping your Music DNA."
+    return "Jugá tu primera batalla para empezar a armar tu Perfil Sonoro."
   }
 
   if (completedBattlesCount < 4) {
-    return "Early trend detected. Keep voting to stabilize your genre signal."
+    return "Ya aparece una primera tendencia. Seguí votando para estabilizar tu señal de géneros."
   }
 
-  const dominantGenre = aggregated.dominantGenre ?? "mixed genres"
+  const dominantGenre = aggregated.dominantGenre ?? "géneros mixtos"
   const energyBand = levelFromValue(aggregated.averageEnergy)
   if (completedBattlesCount < PROFILE_UNLOCK_THRESHOLD) {
-    return `Your early winners lean toward ${dominantGenre} with ${energyBand} energy. ${PROFILE_UNLOCK_THRESHOLD - completedBattlesCount} more battles to unlock full Music DNA.`
+    return `Tus primeras ganadoras se inclinan hacia ${dominantGenre} con energía ${energyBand}. Te faltan ${PROFILE_UNLOCK_THRESHOLD - completedBattlesCount} batallas para desbloquear tu Perfil Sonoro completo.`
   }
 
-  return "Music DNA is unlocked. Open the dedicated landing to reveal your generated personality."
+  return "Tu Perfil Sonoro está desbloqueado. Abrilo para revelar tu personalidad generada."
 }
 
 async function generateSummaryWithOpenAI(aggregated: AggregatedWinners): Promise<string | null> {
@@ -287,9 +287,9 @@ async function generateSummaryWithOpenAI(aggregated: AggregatedWinners): Promise
   }
 
   const prompt = [
-    "Sos un analista de gustos musicales para la feature Music DNA.",
-    "Escribi exactamente 2 oraciones cortas (maximo 45 palabras en total), en espanol, con tono divertido y claro.",
-    "No uses bullets, no uses porcentajes, no uses ingles.",
+    "Sos un analista de gustos musicales para la feature Perfil Sonoro.",
+    "Escribí exactamente 2 oraciones cortas (máximo 45 palabras en total), en español argentino, con tono divertido y claro.",
+    "Usá voseo natural. No uses bullets, no uses porcentajes, no uses inglés.",
     `Top genres: ${aggregated.topGenres.map((entry) => `${entry.genre} (${entry.count})`).join(", ") || "none"}.`,
     `Top subgenres: ${aggregated.topSubgenres.map((entry) => `${entry.genre} (${entry.count})`).join(", ") || "none"}.`,
     `Dominant genre: ${aggregated.dominantGenre ?? "none"}.`,
@@ -500,7 +500,7 @@ export async function getMusicProfileState(
       teaser,
       error: {
         code: "PROFILE_GENERATION_FAILED",
-        message: "Music DNA generation is temporarily unavailable. Please retry in a moment.",
+        message: "La generación de tu Perfil Sonoro no está disponible por ahora. Probá de nuevo en un momento.",
       },
     }
   }

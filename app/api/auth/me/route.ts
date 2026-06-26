@@ -16,7 +16,7 @@ export async function GET(request: Request) {
   const token = getAuthTokenFromRequest(request)
 
   if (!token) {
-    return createErrorResponse(request, 401, "UNAUTHORIZED", "Missing authentication token.")
+    return createErrorResponse(request, 401, "UNAUTHORIZED", "Falta el token de autenticación.")
   }
 
   try {
@@ -24,7 +24,7 @@ export async function GET(request: Request) {
     const user = await getLocalUserById(payload.sub)
 
     if (!user) {
-      return createErrorResponse(request, 401, "UNAUTHORIZED", "Invalid authentication token.")
+      return createErrorResponse(request, 401, "UNAUTHORIZED", "Token de autenticación inválido.")
     }
 
     return withCorsHeaders(
@@ -35,6 +35,6 @@ export async function GET(request: Request) {
       })
     )
   } catch {
-    return createErrorResponse(request, 401, "UNAUTHORIZED", "Invalid or expired token.")
+    return createErrorResponse(request, 401, "UNAUTHORIZED", "Token inválido o vencido.")
   }
 }

@@ -164,7 +164,7 @@ export function BattleSide({
               onClick={() => onTogglePreview(track)}
               disabled={!hasPreview || isRefreshingPreview}
               className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/25 bg-black/45 text-white transition-all hover:border-white/45 hover:bg-black/70 disabled:cursor-not-allowed disabled:opacity-40"
-              aria-label={hasPreview ? (isPreviewPlaying ? "Stop preview" : "Play preview") : "Preview unavailable"}
+              aria-label={hasPreview ? (isPreviewPlaying ? "Detener vista previa" : "Reproducir vista previa") : "Vista previa no disponible"}
             >
               {isPreviewPlaying ? <Square className="h-4 w-4" /> : <Play className="h-4 w-4" />}
             </button>
@@ -173,9 +173,9 @@ export function BattleSide({
               <div className="mb-1 flex items-center justify-between text-[9px] font-mono uppercase tracking-[0.12em] text-white/75">
                 <span>
                   {isRefreshingPreview
-                    ? "Actualizando preview"
+                    ? "Actualizando vista previa"
                     : hasPreview
-                      ? (isPreviewPlaying ? "Reproduciendo" : "Reproduce vista previa")
+                      ? (isPreviewPlaying ? "Reproduciendo" : "Reproducí vista previa")
                       : "Sin vista previa"}
                 </span>
                 <span>

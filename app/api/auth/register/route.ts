@@ -32,7 +32,7 @@ export async function POST(request: Request) {
       request,
       429,
       "TOO_MANY_REQUESTS",
-      "Demasiadas solicitudes. Intenta nuevamente mas tarde."
+      "Demasiadas solicitudes. Probá nuevamente más tarde."
     )
     response.headers.set("Retry-After", String(rateLimit.retryAfterSeconds))
     return response
@@ -49,7 +49,7 @@ export async function POST(request: Request) {
         request,
         400,
         "INVALID_INPUT",
-        "Datos de registro invalidos.",
+        "Datos de registro inválidos.",
         parsedPayload.error.flatten().fieldErrors
       )
     }
@@ -102,11 +102,11 @@ export async function POST(request: Request) {
         request,
         500,
         "AUTH_CONFIG_ERROR",
-        "El servicio de autenticacion no esta configurado."
+        "El servicio de autenticación no está configurado."
       )
     }
 
     console.error("[auth/register] unexpected error", sanitizeLogData(error))
-    return createErrorResponse(request, 500, "INTERNAL_ERROR", "Error inesperado de autenticacion.")
+    return createErrorResponse(request, 500, "INTERNAL_ERROR", "Error inesperado de autenticación.")
   }
 }

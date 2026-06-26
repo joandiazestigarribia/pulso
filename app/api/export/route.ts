@@ -7,7 +7,7 @@ export async function GET() {
     {
       ok: false,
       code: "METHOD_NOT_ALLOWED",
-      message: "Use POST /api/export to validate auth/export gate.",
+      message: "Usá POST /api/export para validar el acceso de exportación.",
     },
     { status: 405 }
   )
@@ -27,7 +27,7 @@ export async function POST(request: Request) {
 
   if (!userId) {
     return NextResponse.json(
-      { ok: false, code: "AUTH_REQUIRED", message: "Authentication required for export." },
+      { ok: false, code: "AUTH_REQUIRED", message: "Necesitás iniciar sesión para exportar." },
       { status: 401 }
     )
   }
@@ -43,7 +43,7 @@ export async function POST(request: Request) {
 
   return NextResponse.json({
     ok: true,
-    message: "Export is gated and authenticated. Playlist creation is handled in F7 Deezer export.",
+    message: "La exportación está protegida y autenticada. La creación de playlists se maneja en F7 Deezer export.",
     userId,
   })
 }

@@ -60,7 +60,7 @@ export function MusicDnaLanding() {
             animate={{ rotate: 360 }}
             transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
           />
-          Cargando analisis...
+          Cargando análisis...
         </motion.div>
       </main>
     )
@@ -81,10 +81,10 @@ export function MusicDnaLanding() {
         >
           <p className="text-xs font-black uppercase tracking-[0.18em] text-[#7be3ff]">Perfil Sonoro Bloqueado</p>
           <h1 className="mt-2 bg-linear-to-r from-[#00f0ff] via-[#ff43f8] to-[#ffe600] bg-clip-text text-xl font-black uppercase leading-tight tracking-tight text-transparent">
-            Continua votando para acceder
+            Seguí votando para acceder
           </h1>
           <p className="mt-3 text-sm font-semibold text-[#d8e9ff]">
-            Necesitas {PROFILE_ACCESS_MIN_BATTLES} batallas votadas para desbloquear esta sección.
+            Necesitás {PROFILE_ACCESS_MIN_BATTLES} batallas votadas para desbloquear esta sección.
           </p>
           <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-[#82dff2]">
             ¡Te faltan {remainingBattles} para obtener tu Perfil Sonoro!
@@ -158,7 +158,7 @@ export function MusicDnaLanding() {
                 transition={{ duration: 0.2, ease: "easeOut" }}
               >
                 <p className="mx-auto w-[70%] text-[11px] font-black uppercase leading-normal tracking-wide text-[#7be3ff]">
-                  Batallas Totales
+                  Batallas totales
                 </p>
                 <p className="mt-1 text-[44px] font-black leading-[0.8] text-[#eaf7ff]">{totalBattles}</p>
               </motion.article>
@@ -168,7 +168,7 @@ export function MusicDnaLanding() {
                 transition={{ duration: 0.2, ease: "easeOut" }}
               >
                 <p className="mx-auto w-[70%] text-[11px] font-black uppercase leading-normal tracking-wide text-[#ffb5fb]">
-                  Votos Analizados
+                  Votos analizados
                 </p>
                 <p className="mt-1 text-[44px] font-black leading-[0.8] text-[#eaf7ff]">{analyzedVotes}</p>
               </motion.article>
@@ -229,7 +229,7 @@ export function MusicDnaLanding() {
               >
                 <div className="flex items-center justify-between">
                   <h2 className="bg-linear-to-r from-[#00f0ff] to-[#ff43f8] bg-clip-text text-2xl font-black uppercase tracking-tight text-transparent">
-                    Generos Dominantes
+                    Géneros dominantes
                   </h2>
                 </div>
                 <div className="mt-3 flex flex-wrap gap-2">
@@ -259,7 +259,7 @@ export function MusicDnaLanding() {
 
               <motion.article className="mb-4" whileHover={{ y: -2 }} transition={{ duration: 0.2, ease: "easeOut" }}>
                 <p className="mb-2 mt-4 px-1 text-xs font-black uppercase tracking-[0.08em] text-[#d8ebff]">
-                  ¡Comparte con tus amigos tu perfil sonoro!
+                  ¡Compartí tu perfil sonoro con tus amigos!
                 </p>
                 <WoodActionButton
                   onClick={() => {
@@ -275,7 +275,7 @@ export function MusicDnaLanding() {
 
               <motion.article whileHover={{ y: -2 }} transition={{ duration: 0.2, ease: "easeOut" }}>
                 <p className="mb-2 px-1 text-xs font-black uppercase tracking-[0.08em] text-[#d8ebff]">
-                  Reinicia tu perfil sonoro e inicia de nuevo
+                  Reiniciá tu perfil sonoro y empezá de nuevo
                 </p>
                 <WoodActionButton
                   onClick={handleRegenerate}

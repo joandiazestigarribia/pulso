@@ -72,7 +72,7 @@ export default function BattlePage() {
         <div className="relative z-10 rounded-2xl border-2 border-[#ff4ef5]/45 bg-[#2a0e19]/80 px-5 py-3 text-sm font-bold text-[#ffd6dd]">
           {battleError instanceof Error
             ? battleError.message
-            : "Battle service unavailable. Configure server database (`DATABASE_URL`) and retry."}
+            : "El servicio de batalla no está disponible. Configurá la base de datos del servidor (`DATABASE_URL`) y probá de nuevo."}
         </div>
       </main>
     )
@@ -89,7 +89,7 @@ export default function BattlePage() {
             animate={{ rotate: 360 }}
             transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
           />
-          <span className="font-mono text-xs uppercase tracking-[0.2em] text-white/80">Loading Battle...</span>
+          <span className="font-mono text-xs uppercase tracking-[0.2em] text-white/80">Cargando duelo...</span>
         </motion.div>
       </main>
     )
@@ -135,7 +135,7 @@ export default function BattlePage() {
                 label="Canción A"
                 color="#7be3ff"
                 track={battle.trackA}
-                voteLabel="Votar Izquierda"
+                voteLabel="Votar izquierda"
                 keyLabel="A"
                 isVoting={isVoting}
                 result={voteResult ? (voteResult.winner === battle.trackA.id ? "winner" : "loser") : null}
@@ -158,7 +158,7 @@ export default function BattlePage() {
                 label="Canción B"
                 color="#ffb5fb"
                 track={battle.trackB}
-                voteLabel="Votar Derecha"
+                voteLabel="Votar derecha"
                 keyLabel="B"
                 isVoting={isVoting}
                 result={voteResult ? (voteResult.winner === battle.trackB.id ? "winner" : "loser") : null}

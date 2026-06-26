@@ -28,7 +28,7 @@ export const homeFeatures: Feature[] = [
   },
   {
     title: "Identidad sonora",
-    description: "Perfil Music DNA para convertir el historial de votos en una huella musical unica.",
+    description: "Perfil Sonoro para convertir el historial de votos en una huella musical única.",
     tag: "Personalization",
     accent: "#FF2A6D",
   },
@@ -37,6 +37,6 @@ export const homeFeatures: Feature[] = [
 export const homeModules: Module[] = [
   { name: "Login Tactical", status: "Live", href: "/login" },
   { name: "Battle Arena", status: "Live", href: "/battle" },
-  { name: "Music DNA", status: "In Progress", href: "/music-dna" },
+  { name: "Perfil Sonoro", status: "In Progress", href: "/music-dna" },
   { name: "Leaderboard Global", status: "Planned" },
 ]

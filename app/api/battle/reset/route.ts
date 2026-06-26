@@ -12,7 +12,7 @@ export async function POST(request: Request) {
       {
         ok: false,
         code: "UNAUTHORIZED",
-        message: "Session identity is required to reset battle progress.",
+        message: "Necesitás una sesión para reiniciar el progreso de batalla.",
       },
       { status: 401 }
     )
@@ -30,7 +30,7 @@ export async function POST(request: Request) {
         {
           ok: false,
           code: "DB_NOT_CONFIGURED",
-          message: "Server database is not configured (missing DATABASE_URL).",
+          message: "La base de datos del servidor no está configurada.",
         },
         { status: 503 }
       )
@@ -40,10 +40,9 @@ export async function POST(request: Request) {
       {
         ok: false,
         code: "UNEXPECTED_ERROR",
-        message: "Unexpected reset failure.",
+        message: "Error inesperado al reiniciar el progreso.",
       },
       { status: 500 }
     )
   }
 }
-

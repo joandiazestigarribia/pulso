@@ -138,7 +138,7 @@ async function requestAuth(path: string, init: RequestInit = {}): Promise<z.infe
     return {
       ok: false,
       code: "INVALID_RESPONSE",
-      message: "Respuesta invalida del servidor de autenticacion.",
+      message: "Respuesta inválida del servidor de autenticación.",
     }
   }
 
@@ -146,7 +146,7 @@ async function requestAuth(path: string, init: RequestInit = {}): Promise<z.infe
     return {
       ok: false,
       code: payload.data.code ?? "REQUEST_FAILED",
-      message: payload.data.message ?? "La solicitud de autenticacion fallo.",
+      message: payload.data.message ?? "La solicitud de autenticación falló.",
     }
   }
 

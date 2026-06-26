@@ -14,13 +14,13 @@ export async function GET(request: Request) {
   } catch (error) {
     if (error instanceof MissingDatabaseUrlError) {
       return NextResponse.json(
-        { error: "Server database is not configured (missing DATABASE_URL)." },
+        { error: "La base de datos del servidor no está configurada." },
         { status: 503 }
       )
     }
 
     return NextResponse.json(
-      { error: "Unexpected catalog diagnostics failure." },
+      { error: "Error inesperado al cargar el diagnóstico del catálogo." },
       { status: 500 }
     )
   }

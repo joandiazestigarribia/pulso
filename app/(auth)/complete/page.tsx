@@ -18,7 +18,7 @@ export default function CompleteAuthPage() {
       router.replace(`${nextPath}${separator}auth=done&mergedBattles=0`)
       router.refresh()
     } catch {
-      setError("Could not complete login redirect.")
+      setError("No pudimos completar la redirección de inicio de sesión.")
     }
 
     return undefined
@@ -28,10 +28,10 @@ export default function CompleteAuthPage() {
     <main className="relative z-10 flex min-h-screen items-center justify-center px-4">
       <div className="w-full max-w-md rounded-3xl border border-carbon-lighter bg-carbon-light/90 p-8 text-center">
         <h1 className="mb-3 font-mono text-2xl font-black uppercase tracking-wide text-foreground">
-          Redirecting
+          Redirigiendo
         </h1>
         <p className="mb-6 text-sm text-foreground/70">
-          We are sending you back to your selected flow.
+          Te estamos llevando de vuelta a tu flujo.
         </p>
 
         <motion.div

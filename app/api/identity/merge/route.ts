@@ -24,7 +24,7 @@ export async function POST(request: Request) {
 
   if (!payload.success) {
     return NextResponse.json(
-      { ok: false, code: "INVALID_INPUT", message: "Invalid merge payload." },
+      { ok: false, code: "INVALID_INPUT", message: "Datos de vinculación inválidos." },
       { status: 400 }
     )
   }
@@ -34,7 +34,7 @@ export async function POST(request: Request) {
 
   if (!targetUserId) {
     return NextResponse.json(
-      { ok: false, code: "AUTH_REQUIRED", message: "Authentication required." },
+      { ok: false, code: "AUTH_REQUIRED", message: "Necesitás iniciar sesión." },
       { status: 401 }
     )
   }

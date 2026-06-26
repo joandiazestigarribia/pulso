@@ -98,7 +98,7 @@ export function CampgroundHeader() {
               href="/login"
               className="rounded-lg border bg-gradient-to-r from-[#00ff66] to-[#00f0ff] text-black shadow-[0_10px_24px_rgba(0,0,0,0.5)] py-1.25 px-2.5 text-xs font-black uppercase tracking-wide transition-colors hover:brightness-110"
             >
-              Iniciar Sesión
+              Iniciar sesión
             </Link>
           ) : null}
           {showRegister ? (

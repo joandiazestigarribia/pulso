@@ -10,7 +10,7 @@ const previewRefreshSchema = z.object({
 export async function POST(request: Request) {
   const payload = previewRefreshSchema.safeParse(await request.json())
   if (!payload.success) {
-    return NextResponse.json({ error: "Invalid track id" }, { status: 400 })
+    return NextResponse.json({ error: "ID de canción inválido." }, { status: 400 })
   }
 
   try {
@@ -23,9 +23,9 @@ export async function POST(request: Request) {
     })
   } catch (error) {
     if (error instanceof MissingDatabaseUrlError) {
-      return NextResponse.json({ error: "Server database is not configured." }, { status: 503 })
+      return NextResponse.json({ error: "La base de datos del servidor no está configurada." }, { status: 503 })
     }
 
-    return NextResponse.json({ error: "Could not refresh preview." }, { status: 500 })
+    return NextResponse.json({ error: "No pudimos refrescar la vista previa." }, { status: 500 })
   }
 }

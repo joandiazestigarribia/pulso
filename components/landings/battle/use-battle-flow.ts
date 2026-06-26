@@ -32,12 +32,12 @@ const fetchBattle = async (url: string): Promise<Battle> => {
       "error" in payload &&
       typeof (payload as { error?: unknown }).error === "string"
         ? (payload as { error: string }).error
-        : "Unable to fetch battle"
+        : "No pudimos cargar el duelo"
     throw new Error(message)
   }
 
   if (!isBattle(payload)) {
-    throw new Error("Unable to fetch battle")
+    throw new Error("No pudimos cargar el duelo")
   }
 
   return payload
@@ -46,7 +46,7 @@ const fetchBattle = async (url: string): Promise<Battle> => {
 const fetchJson = async <T,>(url: string): Promise<T> => {
   const response = await fetch(url)
   if (!response.ok) {
-    throw new Error("Unable to fetch resource")
+    throw new Error("No pudimos cargar el recurso")
   }
 
   return (await response.json()) as T
@@ -204,7 +204,7 @@ export function useBattleFlow() {
 
       const refreshAttempts = previewRefreshAttemptsRef.current.get(track.id) ?? 0
       if (refreshAttempts >= 1) {
-        setVoteError("No se pudo actualizar la vista previa de esta cancion.")
+        setVoteError("No pudimos actualizar la vista previa de esta canción.")
         return
       }
       previewRefreshAttemptsRef.current.set(track.id, refreshAttempts + 1)
@@ -221,12 +221,12 @@ export function useBattleFlow() {
 
         const payload = (await response.json().catch(() => null)) as PreviewRefreshResponse | null
         if (!response.ok || !payload || payload.trackId !== track.id) {
-          setVoteError("No se pudo refrescar la vista previa. Intenta con otra cancion.")
+          setVoteError("No pudimos refrescar la vista previa. Probá con otra canción.")
           return
         }
 
         if (!payload.previewUrl) {
-          setVoteError("Vista previa no disponible para esta cancion.")
+          setVoteError("Vista previa no disponible para esta canción.")
         }
 
         const updatedBattle: Battle = {
@@ -301,7 +301,7 @@ export function useBattleFlow() {
           }
 
           const serverError = "error" in result && typeof result.error === "string" ? result.error : null
-          setVoteError(serverError ?? "Could not save your vote. Please try again.")
+          setVoteError(serverError ?? "No pudimos guardar tu voto. Probá de nuevo.")
           setVoteResult(null)
           setIsVoting(false)
           return
@@ -315,7 +315,7 @@ export function useBattleFlow() {
           })
         }
       } catch {
-        setVoteError("Network error while saving your vote.")
+        setVoteError("Error de red al guardar tu voto.")
         setVoteResult(null)
         setIsVoting(false)
         return
@@ -390,7 +390,7 @@ export function useBattleFlow() {
       setConsecutiveSkips((prev) => prev + 1)
       await mutate()
     } catch {
-      setVoteError("No se pudo avanzar al siguiente duelo. Intenta de nuevo.")
+      setVoteError("No pudimos avanzar al siguiente duelo. Probá de nuevo.")
     } finally {
       setIsSkipping(false)
     }
@@ -398,7 +398,7 @@ export function useBattleFlow() {
 
   const activePreviewTrackName = activePreviewTrackId
     ? [battle?.trackA, battle?.trackB].find((track) => track?.id === activePreviewTrackId)?.name ?? "Reproduciendo..."
-    : "Reproduccion detenida"
+    : "Reproducción detenida"
 
   return {
     battle,

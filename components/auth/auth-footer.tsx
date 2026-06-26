@@ -11,7 +11,7 @@ export function AuthFooter() {
       transition={{ delay: 0.8 }}
     >
       <p className="text-xs font-semibold text-white/70">
-        Tu progreso está seguro. Inicia sesión o registrate para continuar donde lo dejaste.
+        Tu progreso está seguro. Iniciá sesión o registrate para seguir donde lo dejaste.
       </p>
     </motion.footer>
   )

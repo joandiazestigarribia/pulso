@@ -58,21 +58,21 @@ export interface SonicPersona {
 }
 
 const personaDisplayNameByToken: Record<string, string> = {
-  chill: "Oraculo Chill",
-  oracle: "Oraculo Chill",
+  chill: "Oráculo Chill",
+  oracle: "Oráculo Chill",
   lofi: "Alquimista Lo-Fi",
   "lo-fi": "Alquimista Lo-Fi",
   alchemist: "Alquimista Lo-Fi",
-  synth: "Capitan Synth",
-  captain: "Capitan Synth",
+  synth: "Capitán Synth",
+  captain: "Capitán Synth",
   vapor: "Druida Vaporwave",
   vaporwave: "Druida Vaporwave",
   retro: "Scout Retro",
   ranger: "Explorador Ranger",
   hyperpop: "Piloto Hyperpop",
   piloto: "Piloto Hyperpop",
-  nomada: "Nomada Neon",
-  neon: "Nomada Neon",
+  nomada: "Nómada Neón",
+  neon: "Nómada Neón",
   metal: "Berserker Metal",
   berserker: "Berserker Metal",
   jester: "Jester Groove",
@@ -83,7 +83,7 @@ const personaDisplayNameByToken: Record<string, string> = {
 const sonicPersonas: Record<string, SonicPersona> = {
   chill_oracle: {
     id: "chill_oracle",
-    name: "Oraculo Chill",
+    name: "Oráculo Chill",
     handleBase: "oraculo_chill",
     codename: "SO-01",
     assetFile: "chill_oracle_character_asset resize.png",
@@ -104,7 +104,7 @@ const sonicPersonas: Record<string, SonicPersona> = {
   },
   neon_nomad: {
     id: "neon_nomad",
-    name: "Nomada Neon",
+    name: "Nómada Neón",
     handleBase: "nomada_neon",
     codename: "SO-04",
     assetFile: "neon_nomad_character_asset resize.png",
@@ -125,7 +125,7 @@ const sonicPersonas: Record<string, SonicPersona> = {
   },
   synth_captain: {
     id: "synth_captain",
-    name: "Capitan Synth",
+    name: "Capitán Synth",
     handleBase: "capitan_synth",
     codename: "SO-07",
     assetFile: "synth_captain_character_asset resize.png",
@@ -192,42 +192,42 @@ export interface PersonaShareCopyResult {
 
 export const personaCopyCatalog = {
   chill_oracle: {
-    archetypeLabel: "Calma Magnetica",
+    archetypeLabel: "Calma Magnética",
     toneCopy: {
-      low: "fluyes en modo brisa, sin ruido extra",
-      medium: "equilibras calma y empuje con precision",
-      high: "levantas la energia sin perder elegancia",
+      low: "fluís en modo brisa, sin ruido extra",
+      medium: "equilibrás calma y empuje con precisión",
+      high: "levantás la energía sin perder elegancia",
     },
     templates: [
       "Tu mapa mezcla {genre} con una lectura fina del ritmo. {toneCopy}.",
       "Tu criterio en {genre} suena limpio y directo. {toneCopy}.",
-      "Cuando eliges, {genre} gana por textura y detalle. {toneCopy}.",
-      "Tu DNA ordena {genre} con pulso estable y curaduria clara. {toneCopy}.",
+      "Cuando elegís, {genre} gana por textura y detalle. {toneCopy}.",
+      "Tu Perfil Sonoro ordena {genre} con pulso estable y curaduría clara. {toneCopy}.",
     ],
   },
   hyperpop_pilot: {
-    archetypeLabel: "Impulso Neon",
+    archetypeLabel: "Impulso Neón",
     toneCopy: {
       low: "administras la tension para que cada golpe importe",
-      medium: "sostienes aceleracion constante con control",
+      medium: "sostenés aceleración constante con control",
       high: "vas al frente con picos brillantes y precisos",
     },
     templates: [
-      "Tu radar prioriza {genre} con decision quirurgica. {toneCopy}.",
+      "Tu radar prioriza {genre} con decisión quirúrgica. {toneCopy}.",
       "Lees {genre} como una pista de lanzamiento. {toneCopy}.",
       "En tus votos, {genre} entra con timing agresivo. {toneCopy}.",
-      "Tu seleccion convierte {genre} en una carrera bien medida. {toneCopy}.",
+      "Tu selección convierte {genre} en una carrera bien medida. {toneCopy}.",
     ],
   },
   lo_fi_alchemist: {
     archetypeLabel: "Laboratorio Nocturno",
     toneCopy: {
-      low: "prefieres capas suaves que dejan espacio al detalle",
+      low: "preferís capas suaves que dejan espacio al detalle",
       medium: "combinas intimidad y groove en dosis exacta",
-      high: "subes intensidad sin perder atmosfera",
+      high: "subís intensidad sin perder atmósfera",
     },
     templates: [
-      "Tu formula cruza {genre} con enfoque artesanal. {toneCopy}.",
+      "Tu fórmula cruza {genre} con enfoque artesanal. {toneCopy}.",
       "Tu perfil en {genre} favorece texturas sobre exceso. {toneCopy}.",
       "Cada voto refina {genre} con mirada de estudio. {toneCopy}.",
       "Tu escucha empuja {genre} hacia un balance fino. {toneCopy}.",
@@ -236,12 +236,12 @@ export const personaCopyCatalog = {
   neon_nomad: {
     archetypeLabel: "Ruta Hibrida",
     toneCopy: {
-      low: "exploras con pausa y criterio abierto",
-      medium: "saltas entre climas sin romper continuidad",
+      low: "explorás con pausa y criterio abierto",
+      medium: "saltás entre climas sin romper continuidad",
       high: "encadenas contrastes con hambre de descubrimiento",
     },
     templates: [
-      "Tu DNA conecta {genre} con rutas poco obvias. {toneCopy}.",
+      "Tu Perfil Sonoro conecta {genre} con rutas poco obvias. {toneCopy}.",
       "Tu perfil convierte {genre} en territorio de cruce. {toneCopy}.",
       "Tus elecciones leen {genre} como mapa expandible. {toneCopy}.",
       "Hay firma viajera en como ordenas {genre}. {toneCopy}.",
@@ -250,71 +250,71 @@ export const personaCopyCatalog = {
   ranger: {
     archetypeLabel: "Brigada Central",
     toneCopy: {
-      low: "mantienes el foco en decisiones consistentes",
-      medium: "equilibras impacto y claridad en cada duelo",
+      low: "mantenés el foco en decisiones consistentes",
+      medium: "equilibrás impacto y claridad en cada duelo",
       high: "aceleras el pulso sin salirte del plan",
     },
     templates: [
       "Tu perfil sostiene {genre} con criterio competitivo. {toneCopy}.",
-      "Tu curaduria de {genre} muestra disciplina y buena lectura. {toneCopy}.",
-      "En batalla, eliges {genre} con enfoque estrategico. {toneCopy}.",
-      "Tu DNA deja una firma estable en torno a {genre}. {toneCopy}.",
+      "Tu curaduría de {genre} muestra disciplina y buena lectura. {toneCopy}.",
+      "En batalla, elegís {genre} con enfoque estratégico. {toneCopy}.",
+      "Tu Perfil Sonoro deja una firma estable en torno a {genre}. {toneCopy}.",
     ],
   },
   retro_scout: {
-    archetypeLabel: "Archivo Analogico",
+    archetypeLabel: "Archivo Analógico",
     toneCopy: {
       low: "priorizas cadencia y memoria antes que volumen",
       medium: "mezclas tradicion y actualidad con soltura",
-      high: "reactivas clasicos con energia renovada",
+      high: "reactivás clásicos con energía renovada",
     },
     templates: [
-      "Tu estilo lleva {genre} con mirada historica. {toneCopy}.",
-      "Tu seleccion rescata {genre} con sensibilidad de archivo. {toneCopy}.",
+      "Tu estilo lleva {genre} con mirada histórica. {toneCopy}.",
+      "Tu selección rescata {genre} con sensibilidad de archivo. {toneCopy}.",
       "En tus votos, {genre} conserva raiz y direccion. {toneCopy}.",
-      "Tu DNA convierte {genre} en puente entre epocas. {toneCopy}.",
+      "Tu Perfil Sonoro convierte {genre} en puente entre épocas. {toneCopy}.",
     ],
   },
   synth_captain: {
-    archetypeLabel: "Comando Electrico",
+    archetypeLabel: "Comando Eléctrico",
     toneCopy: {
-      low: "prefieres pulsos controlados y lineas limpias",
-      medium: "mantienes groove firme con enfoque tecnico",
+      low: "preferís pulsos controlados y líneas limpias",
+      medium: "mantenés groove firme con enfoque técnico",
       high: "enciendes la pista con traccion sostenida",
     },
     templates: [
-      "Tu firma empuja {genre} con precision mecanica. {toneCopy}.",
+      "Tu firma empuja {genre} con precisión mecánica. {toneCopy}.",
       "Tu lectura de {genre} prioriza arquitectura sonora. {toneCopy}.",
-      "Cada decision en {genre} suena calibrada para movimiento. {toneCopy}.",
-      "Tu DNA electrifica {genre} sin perder estructura. {toneCopy}.",
+      "Cada decisión en {genre} suena calibrada para movimiento. {toneCopy}.",
+      "Tu Perfil Sonoro electrifica {genre} sin perder estructura. {toneCopy}.",
     ],
   },
   vaporwave_druid: {
-    archetypeLabel: "Mirador Onirico",
+    archetypeLabel: "Mirador Onírico",
     toneCopy: {
-      low: "sostienes un clima introspectivo y envolvente",
+      low: "sostenés un clima introspectivo y envolvente",
       medium: "combinas color emocional con paso firme",
       high: "amplificas la vibra sin romper el hechizo",
     },
     templates: [
-      "Tu perfil modela {genre} desde la atmosfera. {toneCopy}.",
-      "Tu seleccion en {genre} prioriza paisaje y sensacion. {toneCopy}.",
+      "Tu perfil modela {genre} desde la atmósfera. {toneCopy}.",
+      "Tu selección en {genre} prioriza paisaje y sensación. {toneCopy}.",
       "En cada duelo, {genre} aparece con narrativa visual. {toneCopy}.",
-      "Tu DNA orienta {genre} hacia un viaje inmersivo. {toneCopy}.",
+      "Tu Perfil Sonoro orienta {genre} hacia un viaje inmersivo. {toneCopy}.",
     ],
   },
   metal_berserker: {
     archetypeLabel: "Martillo de Acero",
     toneCopy: {
-      low: "mantienes peso y tension con control quirurgico",
-      medium: "sostienes potencia firme sin perder pegada",
+      low: "mantenés peso y tensión con control quirúrgico",
+      medium: "sostenés potencia firme sin perder pegada",
       high: "descargas rafagas intensas con autoridad total",
     },
     templates: [
       "Tu perfil levanta {genre} con potencia frontal. {toneCopy}.",
       "Tu radar en {genre} prioriza ataque, riff y presencia. {toneCopy}.",
-      "En tus duelos, {genre} entra con filo y decision. {toneCopy}.",
-      "Tu DNA consolida {genre} en modo combate. {toneCopy}.",
+      "En tus duelos, {genre} entra con filo y decisión. {toneCopy}.",
+      "Tu Perfil Sonoro consolida {genre} en modo combate. {toneCopy}.",
     ],
   },
   jester_groove: {
@@ -326,23 +326,23 @@ export const personaCopyCatalog = {
     },
     templates: [
       "Tu lectura de {genre} suena performatica y expresiva. {toneCopy}.",
-      "En tu seleccion, {genre} gana por gesto y dinamica. {toneCopy}.",
+      "En tu selección, {genre} gana por gesto y dinámica. {toneCopy}.",
       "Tu perfil convierte {genre} en acto escenico con pulso. {toneCopy}.",
-      "Tu DNA lleva {genre} a una narrativa de escenario. {toneCopy}.",
+      "Tu Perfil Sonoro lleva {genre} a una narrativa de escenario. {toneCopy}.",
     ],
   },
   pop_paladin: {
     archetypeLabel: "Estandarte Pop",
     toneCopy: {
-      low: "sostienes brillo con estructura clara",
-      medium: "equilibras himno y groove con seguridad",
-      high: "proyectas energia alta con precision coreable",
+      low: "sostenés brillo con estructura clara",
+      medium: "equilibrás himno y groove con seguridad",
+      high: "proyectás energía alta con precisión coreable",
     },
     templates: [
       "Tu criterio impulsa {genre} en clave de himno. {toneCopy}.",
       "Tu perfil en {genre} prioriza hooks y elevacion. {toneCopy}.",
       "En batalla, {genre} aparece con foco luminoso. {toneCopy}.",
-      "Tu DNA ordena {genre} para impactar y quedarse. {toneCopy}.",
+      "Tu Perfil Sonoro ordena {genre} para impactar y quedarse. {toneCopy}.",
     ],
   },
   pop_color_rebel: {
@@ -350,13 +350,13 @@ export const personaCopyCatalog = {
     toneCopy: {
       low: "administras contraste pop con pulso relajado",
       medium: "combinas color, ritmo y sorpresa sin friccion",
-      high: "lanzas explosiones pop con energia de festival",
+      high: "lanzás explosiones pop con energía de festival",
     },
     templates: [
       "Tu mapa mezcla {genre} con cromatica vibrante. {toneCopy}.",
-      "Tu seleccion vuelve {genre} mas audaz y bailable. {toneCopy}.",
+      "Tu selección vuelve {genre} más audaz y bailable. {toneCopy}.",
       "En tus votos, {genre} aparece con brillo expansivo. {toneCopy}.",
-      "Tu DNA traduce {genre} en una paleta de alto impacto. {toneCopy}.",
+      "Tu Perfil Sonoro traduce {genre} en una paleta de alto impacto. {toneCopy}.",
     ],
   },
 } as const satisfies Record<string, PersonaCopyCatalogEntry>
@@ -1163,17 +1163,17 @@ function mapDecadeGroup(decadeLabel: string): DecadeGroup {
 
 function getVarietyCopy(varietyScore: number): string {
   if (varietyScore >= 0.75) {
-    return "Mostras una inclinacion clara por descubrir contrastes entre estilos."
+    return "Mostrás una inclinación clara por descubrir contrastes entre estilos."
   }
   if (varietyScore >= 0.45) {
-    return "Mantenes un equilibrio consistente entre territorio conocido y descubrimiento."
+    return "Mantenés un equilibrio consistente entre territorio conocido y descubrimiento."
   }
-  return "Tu seleccion mantiene foco firme y una identidad sonora bien definida."
+  return "Tu selección mantiene foco firme y una identidad sonora bien definida."
 }
 
 function getToneSummaryCopy(tone: PersonaTone): string {
   if (tone === "high") {
-    return "La energia general se mantiene alta y sostenida."
+    return "La energía general se mantiene alta y sostenida."
   }
   if (tone === "low") {
     return "El pulso general es sereno, con foco en detalle y matiz."
@@ -1183,17 +1183,17 @@ function getToneSummaryCopy(tone: PersonaTone): string {
 
 function getArchetypeSignature(archetype: PersonaArchetype): string {
   const signatures: Record<PersonaArchetype, string> = {
-    chill_oracle: "Tu firma suena a refugio comodo, con detalle fino y cero ruido de mas.",
-    hyperpop_pilot: "Tu firma entra con cohetes, brillo y una punteria que no falla.",
-    lo_fi_alchemist: "Tu firma mezcla humo suave, texturas calidas y mucha intencion.",
+    chill_oracle: "Tu firma suena a refugio cómodo, con detalle fino y cero ruido de más.",
+    hyperpop_pilot: "Tu firma entra con cohetes, brillo y una puntería que no falla.",
+    lo_fi_alchemist: "Tu firma mezcla humo suave, texturas cálidas y mucha intención.",
     neon_nomad: "Tu firma arma rutas nuevas, cruza climas y nunca pierde el hilo.",
     ranger: "Tu firma va de frente, ordenada y estrategica como lider de campamento.",
-    retro_scout: "Tu firma rescata joyas de otras epocas y las trae con actitud fresca.",
-    synth_captain: "Tu firma manda pulsos electricos con precision de consola central.",
-    vaporwave_druid: "Tu firma pinta paisajes sonoros envolventes, casi como un sueño lucido.",
+    retro_scout: "Tu firma rescata joyas de otras épocas y las trae con actitud fresca.",
+    synth_captain: "Tu firma manda pulsos eléctricos con precisión de consola central.",
+    vaporwave_druid: "Tu firma pinta paisajes sonoros envolventes, casi como un sueño lúcido.",
     metal_berserker: "Tu firma empuja riffs pesados con ataque frontal y pulso de batalla.",
-    jester_groove: "Tu firma convierte cada giro en escena viva, con ritmo y expresion.",
-    pop_paladin: "Tu firma eleva hooks gigantes con energia limpia y vocacion de himno.",
+    jester_groove: "Tu firma convierte cada giro en escena viva, con ritmo y expresión.",
+    pop_paladin: "Tu firma eleva hooks gigantes con energía limpia y vocación de himno.",
     pop_color_rebel: "Tu firma explota color pop, contraste y rebote bailable de alto impacto.",
   }
 
@@ -1202,20 +1202,20 @@ function getArchetypeSignature(archetype: PersonaArchetype): string {
 
 function getTrailInstinctCopy(tone: PersonaTone): string {
   if (tone === "high") {
-    return "Frente a comparaciones exigentes, respondes con decisiones rapidas y firmes."
+    return "Frente a comparaciones exigentes, respondés con decisiones rápidas y firmes."
   }
   if (tone === "low") {
-    return "Frente a comparaciones exigentes, respondes con calma y criterio fino."
+    return "Frente a comparaciones exigentes, respondés con calma y criterio fino."
   }
 
-  return "Frente a comparaciones exigentes, respondes con equilibrio y buena lectura del contexto."
+  return "Frente a comparaciones exigentes, respondés con equilibrio y buena lectura del contexto."
 }
 
 function getCampEraCopy(group: DecadeGroup): string {
   const eraMap: Record<DecadeGroup, string> = {
-    classic: "Tu referencia temporal se apoya en catalogo fundacional.",
-    retro: "Tu referencia temporal prioriza catalogo retro con mirada actual.",
-    millennial: "Tu referencia temporal cruza nostalgia digital y produccion moderna.",
+    classic: "Tu referencia temporal se apoya en catálogo fundacional.",
+    retro: "Tu referencia temporal prioriza catálogo retro con mirada actual.",
+    millennial: "Tu referencia temporal cruza nostalgia digital y producción moderna.",
     current: "Tu referencia temporal se alinea con lanzamientos recientes.",
   }
 
@@ -1358,14 +1358,14 @@ export function resolveDynamicPersonaDescription(
   dominantGenres: string[]
 ): string {
   const profile = profileState?.profile
-  const mainGenre = dominantGenres[0] ?? profile?.dominantGenre ?? "generos mixtos"
-  const secondGenre = dominantGenres[1] ?? "senales variadas"
-  const topDecade = Object.entries(profile?.decadeDistribution ?? {})[0]?.[0] ?? "decadas mixtas"
+  const mainGenre = dominantGenres[0] ?? profile?.dominantGenre ?? "géneros mixtos"
+  const secondGenre = dominantGenres[1] ?? "señales variadas"
+  const topDecade = Object.entries(profile?.decadeDistribution ?? {})[0]?.[0] ?? "décadas mixtas"
   const energy = levelBand(profile?.averageEnergy ?? null)
   const dance = levelBand(profile?.averageDanceability ?? null)
   const mood = levelBand(profile?.averageValence ?? null)
 
-  return `${persona.name}: tu seleccion prioriza ${mainGenre} y ${secondGenre}, con energia ${energy}, animo ${mood} y bailabilidad ${dance}. El patron general muestra una preferencia consistente por ${topDecade}, con un criterio curatorial estable y enfocado.`
+  return `${persona.name}: tu selección prioriza ${mainGenre} y ${secondGenre}, con energía ${energy}, ánimo ${mood} y bailabilidad ${dance}. El patrón general muestra una preferencia consistente por ${topDecade}, con un criterio curatorial estable y enfocado.`
 }
 
 export function buildDynamicHandle(base: string, userId: string | null, anonymousId: string | null): string {
@@ -1411,8 +1411,8 @@ export function getRadarAxes(profile: FullProfileData["profile"]): RadarAxis[] {
     { key: "bpm", label: "Ritmo", value: rhythm },
     { key: "dance", label: "Baile", value: dance },
     { key: "nostalgia", label: "Nostalgia", value: nostalgia },
-    { key: "valence", label: "Animo", value: valence },
-    { key: "obscurity", label: "Exploracion", value: exploration },
+    { key: "valence", label: "Ánimo", value: valence },
+    { key: "obscurity", label: "Exploración", value: exploration },
   ]
 }
 

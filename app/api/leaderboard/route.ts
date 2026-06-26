@@ -9,11 +9,11 @@ export async function GET() {
   } catch (error) {
     if (error instanceof MissingDatabaseUrlError) {
       return NextResponse.json(
-        { error: "Server database is not configured (missing DATABASE_URL)." },
+        { error: "La base de datos del servidor no está configurada." },
         { status: 503 }
       )
     }
 
-    return NextResponse.json({ error: "Unexpected leaderboard fetch failure" }, { status: 500 })
+    return NextResponse.json({ error: "Error inesperado al cargar el ranking." }, { status: 500 })
   }
 }

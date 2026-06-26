@@ -41,7 +41,7 @@ export function LoginForm() {
       const parsedInput = loginSchema.safeParse({ email, password })
       if (!parsedInput.success) {
         setFieldErrors(parsedInput.error.flatten().fieldErrors)
-        setError("Revisa los campos marcados.")
+        setError("Revisá los campos marcados.")
         setIsSubmitting(false)
         return
       }
@@ -53,7 +53,7 @@ export function LoginForm() {
 
       if (!response.ok) {
         setFieldErrors(response.errors ?? {})
-        setError(response.message ?? "No se pudo iniciar la sesion.")
+        setError(response.message ?? "No se pudo iniciar sesión.")
         setIsSubmitting(false)
         return
       }
@@ -64,7 +64,7 @@ export function LoginForm() {
       router.push(redirectedPath)
       router.refresh()
     } catch {
-      setError("Error de red al iniciar la sesion.")
+      setError("Error de red al iniciar sesión.")
       setIsSubmitting(false)
       return
     }
@@ -102,11 +102,11 @@ export function LoginForm() {
         </motion.div>
 
         <h1 className="bg-gradient-to-r from-[#00f0ff] via-[#ff43f8] to-[#ffe600] bg-clip-text text-center text-3xl font-black uppercase leading-none tracking-tight text-transparent md:text-3xl">
-          Iniciar sesion
+          Iniciar sesión
         </h1>
 
         <p className="mb-8 mt-2 text-center text-sm font-semibold text-[#d8e9ff]">
-          Vuelve a votar y accede a tu perfil sonoro.
+          Volvé a votar y accedé a tu perfil sonoro.
         </p>
 
         <div className="mb-5">
@@ -177,7 +177,7 @@ export function LoginForm() {
             />
           ) : (
             <>
-              Iniciar sesion
+              Iniciar sesión
               <Zap className="w-5 h-5" />
             </>
           )}
@@ -194,7 +194,7 @@ export function LoginForm() {
             href="/register"
             className="text-xs font-black uppercase tracking-[0.12em] text-[#ffb5fb] transition-colors hover:text-[#ff43f8]"
           >
-            {"No tienes cuenta? Registrate"}
+            {"¿No tenés cuenta? Registrate"}
           </Link>
         </div>
       </div>

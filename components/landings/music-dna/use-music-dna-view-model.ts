@@ -60,7 +60,7 @@ export function useMusicDnaViewModel() {
   const totalBattles = profileState?.completedBattlesCount ?? 0
   const analyzedVotes = profile?.generatedFromVotes ?? totalBattles
   const shareDescription =
-    shareCopy.description || "Tu seleccion combina energia, ritmo y estilo con una firma sonora unica."
+    shareCopy.description || "Tu selección combina energía, ritmo y estilo con una firma sonora única."
 
   const buildShareUrl = (): string => {
     if (typeof window === "undefined") {
@@ -89,10 +89,10 @@ export function useMusicDnaViewModel() {
       void navigator.clipboard
         .writeText(`${rawText}\n${rawUrl}`)
         .then(() => {
-          setShareFeedback("Texto y link copiados. Se abrio Instagram para que pegues tu publicacion.")
+          setShareFeedback("Texto y link copiados. Se abrió Instagram para que pegues tu publicación.")
         })
         .catch(() => {
-          setShareFeedback("Se abrio Instagram. Copia manualmente el texto/link para publicar.")
+          setShareFeedback("Se abrió Instagram. Copiá manualmente el texto/link para publicar.")
         })
     }
 
@@ -102,9 +102,9 @@ export function useMusicDnaViewModel() {
   const handleCopyShare = async () => {
     try {
       await navigator.clipboard.writeText(`${buildShareText()}\n${buildShareUrl()}`)
-      setShareFeedback("Link copiado. Ya podes compartir tu perfil sonoro.")
+      setShareFeedback("Link copiado. Ya podés compartir tu perfil sonoro.")
     } catch {
-      setShareFeedback("No se pudo copiar el link automaticamente.")
+      setShareFeedback("No se pudo copiar el link automáticamente.")
     }
   }
 
@@ -127,12 +127,12 @@ export function useMusicDnaViewModel() {
 
       const payload = (await response.json().catch(() => ({}))) as FullProfileResponse
       if (!response.ok || payload.ok === false) {
-        setRegenerateError(payload.message ?? "No se pudo regenerar Music DNA en este momento.")
+        setRegenerateError(payload.message ?? "No se pudo regenerar tu Perfil Sonoro en este momento.")
       }
 
       await refreshProfile()
     } catch {
-      setRegenerateError("Error de red al regenerar Music DNA.")
+      setRegenerateError("Error de red al regenerar tu Perfil Sonoro.")
     } finally {
       setIsRegenerating(false)
     }

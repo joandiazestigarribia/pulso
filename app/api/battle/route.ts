@@ -69,7 +69,7 @@ export async function GET(request: Request) {
   } catch (error) {
     if (error instanceof MissingDatabaseUrlError) {
       return NextResponse.json(
-        { error: "Server database is not configured (missing DATABASE_URL)." },
+        { error: "La base de datos del servidor no está configurada." },
         { status: 503 }
       )
     }
@@ -78,7 +78,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 503 })
     }
 
-    return NextResponse.json({ error: "Unexpected battle fetch failure" }, { status: 500 })
+    return NextResponse.json({ error: "Error inesperado al cargar el duelo." }, { status: 500 })
   }
 }
 
@@ -140,7 +140,7 @@ export async function POST(request: Request) {
   } catch (error) {
     if (error instanceof MissingDatabaseUrlError) {
       return NextResponse.json(
-        { error: "Server database is not configured (missing DATABASE_URL)." },
+        { error: "La base de datos del servidor no está configurada." },
         { status: 503 }
       )
     }
@@ -161,6 +161,6 @@ export async function POST(request: Request) {
       )
     }
 
-    return NextResponse.json({ error: "Unexpected vote failure" }, { status: 500 })
+    return NextResponse.json({ error: "Error inesperado al guardar el voto." }, { status: 500 })
   }
 }

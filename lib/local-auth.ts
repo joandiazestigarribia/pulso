@@ -24,7 +24,7 @@ export interface AuthenticatedUser {
 
 function toAuthenticatedUser(user: User): AuthenticatedUser {
   if (!user.email) {
-    throw new AuthError(500, "AUTH_DATA_ERROR", "El correo del usuario no esta configurado.")
+    throw new AuthError(500, "AUTH_DATA_ERROR", "El correo del usuario no está configurado.")
   }
 
   return {
@@ -41,7 +41,7 @@ export async function registerLocalUser(input: z.infer<typeof registerSchema>): 
   })
 
   if (existing) {
-    throw new AuthError(409, "EMAIL_ALREADY_EXISTS", "El correo ya esta registrado.")
+    throw new AuthError(409, "EMAIL_ALREADY_EXISTS", "El correo ya está registrado.")
   }
 
   const passwordHash = await hashPassword(input.password)
@@ -65,13 +65,13 @@ export async function loginLocalUser(input: z.infer<typeof loginSchema>): Promis
   })
 
   if (!user?.passwordHash) {
-    throw new AuthError(401, "INVALID_CREDENTIALS", "Correo o clave invalidos.")
+    throw new AuthError(401, "INVALID_CREDENTIALS", "Correo o clave inválidos.")
   }
 
   const isValidPassword = await verifyPassword(input.password, user.passwordHash)
 
   if (!isValidPassword) {
-    throw new AuthError(401, "INVALID_CREDENTIALS", "Correo o clave invalidos.")
+    throw new AuthError(401, "INVALID_CREDENTIALS", "Correo o clave inválidos.")
   }
 
   return toAuthenticatedUser(user)
