@@ -24,7 +24,7 @@ export function BattleAuthPrompt({ hasReachedUnlockThreshold, copyVariant }: Bat
             href="/music-dna"
             className="h-fit min-w-25 rounded-lg border border-[#7be3ff]/35 bg-[#0d1636]/72 p-2 text-center text-[8px] font-black uppercase tracking-wide text-[#d8ebff] transition-colors hover:border-[#00f0ff]/55 hover:text-[#eaf7ff]"
           >
-            Ver Music DNA
+            Ver Perfil
           </Link>
           <Link
             href="/login?next=%2Fbattle"

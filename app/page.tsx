@@ -13,24 +13,24 @@ const homeBackgroundStyle = {
 const productLoop = [
   {
     label: "01",
-    title: "Juga versus",
-    description: "Entras como invitado, escuchas dos previews y votas la cancion que mas te mueve.",
+    title: "Elegí sin vueltas",
+    description: "Escuchás dos previews y elegís la canción que más te mueve.",
   },
   {
     label: "02",
-    title: "Completa el umbral",
-    description: `Cada versus suma progreso hasta llegar a ${MUSIC_DNA_UNLOCK_THRESHOLD} batallas votadas.`,
+    title: "Sumá señales",
+    description: `Cada versus suma progreso hasta llegar a ${MUSIC_DNA_UNLOCK_THRESHOLD} votos.`,
   },
   {
     label: "03",
-    title: "Abre tu Perfil Sonoro",
-    description: "Pulso transforma tus decisiones en una lectura visual de energia, mood, ritmo y generos dominantes.",
+    title: "Abrí tu Perfil Sonoro",
+    description: "Desbloqueás una descripción de tu estilo musical y un avatar que representa tu forma de escuchar.",
   },
 ]
 
 const profileSignals = [
   {
-    label: "Energia",
+    label: "Energía",
     width: "w-3/5",
   },
   {
@@ -45,14 +45,14 @@ const profileSignals = [
 
 const battleDemoTracks = [
   {
-    label: "Cancion A",
+    label: "Canción A",
     title: "Midnight City",
     artist: "M83",
     image: "/images/album-midnight-city.jpg",
     tone: "cyan",
   },
   {
-    label: "Cancion B",
+    label: "Canción B",
     title: "Blinding Lights",
     artist: "The Weeknd",
     image: "/images/album-blinding-lights.jpg",
@@ -62,17 +62,17 @@ const battleDemoTracks = [
 
 const avatarPreview = [
   {
-    name: "Nomada Neon",
+    name: "Nómada Neón",
     image: "/images/characters/neon_nomad_character_asset resize.png",
     imageClassName: "scale-100",
   },
   {
-    name: "Capitan Synth",
+    name: "Capitán Synth",
     image: "/images/characters/synth_captain_character_asset resize.png",
     imageClassName: "scale-100",
   },
   {
-    name: "Explorador Ranger",
+    name: "Ranger Metal",
     image: "/images/characters/ranger_character_asset resize.png",
     imageClassName: "scale-100",
   },
@@ -80,15 +80,15 @@ const avatarPreview = [
 
 const avatarOverflow = [
   {
-    name: "Lo-Fi Alchemist",
+    name: "Alquimista Lo-Fi",
     image: "/images/characters/lo_fi_alchemist_character_asset resize.png",
   },
   {
-    name: "Vaporwave Druid",
+    name: "Druida Vaporwave",
     image: "/images/characters/vaporwave_druid_character_asset resize.png",
   },
   {
-    name: "Retro Scout",
+    name: "Scout Retro",
     image: "/images/characters/retro_scout_character_asset resize.png",
   },
   {
@@ -133,7 +133,7 @@ function BattleDemoCard({ track }: { track: (typeof battleDemoTracks)[number] })
         <div
           className={`mt-1.5 rounded-lg py-1.5 text-center text-[10px] font-black uppercase tracking-[0.14em] text-black ${track.tone === "cyan" ? "bg-[#7be3ff]" : "bg-[#ffb5fb]"}`}
         >
-          Votar
+          Elegir
         </div>
       </div>
     </div>
@@ -151,14 +151,14 @@ export default function HomePage() {
         <div className="max-w-3xl">
           <div className="inline-flex items-center gap-2 rounded-full border border-[#00f0ff]/35 bg-[#090d25]/55 px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.16em] text-[#7be3ff] backdrop-blur-sm">
             <Sparkles className="h-3.5 w-3.5 text-[#ffe600]" />
-            Versus primero, Perfil Sonoro despues
+            Primero elegís, después descubrís tu Perfil Sonoro
           </div>
 
           <h1 className="mt-5 max-w-3xl bg-gradient-to-r from-[#00f0ff] via-[#ff43f8] to-[#ffe600] bg-clip-text text-5xl font-black uppercase leading-[0.92] tracking-tight text-transparent md:text-6xl xl:text-7xl">
-            Descubri tu pulso musical
+            Descubrí tu pulso musical
           </h1>
           <p className="mt-5 max-w-2xl text-base font-semibold leading-relaxed text-[#d8e9ff] md:text-lg">
-            Enfrenta canciones en versus 1v1, vota sin friccion y deja que tus elecciones construyan tu Perfil Sonoro.
+            Escuchá dos previews, elegí la canción que más te mueve y dejá que cada versus arme tu Perfil Sonoro.
           </p>
 
           <div className="mt-7 flex flex-col gap-3 sm:flex-row">
@@ -166,7 +166,7 @@ export default function HomePage() {
               href="/battle"
               className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#00f0ff]/45 bg-[#00f0ff]/15 px-5 py-3 text-sm font-black uppercase tracking-wide text-[#dffbff] shadow-[0_0_24px_rgba(0,240,255,0.2)] transition-all hover:border-[#00f0ff]/80 hover:bg-[#00f0ff]/25"
             >
-              Jugar versus
+              Arrancar versus
               <Swords className="h-4 w-4" />
             </Link>
             <Link
@@ -208,7 +208,7 @@ export default function HomePage() {
             <div className="mt-3 rounded-2xl bg-black/30 p-3 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]">
               <div className="flex items-center justify-between gap-3">
                 <span className="text-[10px] font-black uppercase tracking-[0.14em] text-[#c7dbf2]">
-                  Progreso de desbloqueo
+                  Progreso para desbloquear
                 </span>
                 <span className="text-[10px] font-black uppercase tracking-[0.14em] text-[#ffe600]">
                   0/{MUSIC_DNA_UNLOCK_THRESHOLD}
@@ -248,7 +248,7 @@ export default function HomePage() {
             </div>
 
             <p className="pt-4 text-sm font-bold leading-relaxed text-[#d8e9ff]">
-              Tus votos activan la lectura y revelan tu identidad sonora completa.
+              Cuando juntás suficientes señales, se revela tu identidad sonora completa.
             </p>
           </div>
 
@@ -295,7 +295,7 @@ export default function HomePage() {
               ))}
             </div>
             <p className="text-right text-[10px] font-black uppercase tracking-[0.13em] text-[#7be3ff]">
-              + de 15 perfiles sonoros
+              + de 15 perfiles posibles
             </p>
           </div>
         </div>
@@ -303,7 +303,7 @@ export default function HomePage() {
 
       <section className="relative z-10 mx-auto w-full max-w-300 px-4 pb-10 md:px-6">
         <div className="mb-3 flex items-center justify-between gap-3">
-          <p className="text-xs font-black uppercase tracking-[0.18em] text-[#f8eeaf]">Como funciona</p>
+          <p className="text-xs font-black uppercase tracking-[0.18em] text-[#f8eeaf]">Cómo funciona</p>
           <div className="h-px flex-1 bg-gradient-to-r from-white/15 to-transparent" />
         </div>
         <div className="grid gap-3 md:grid-cols-3">
