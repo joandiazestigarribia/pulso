@@ -5,8 +5,12 @@ declare global {
 }
 
 const DEV_DATABASE_URL = "postgresql://postgres:postgres@localhost:5432/pulso?schema=public"
+const MISSING_TEST_DATABASE_URL = "postgresql://postgres:postgres@127.0.0.1:1/pulso_test_missing?schema=public"
+const isTestRuntime = process.env.NODE_ENV === "test" || process.env.PULSO_TEST_MODE === "1"
 const resolvedDatabaseUrl =
-  process.env.DATABASE_URL ?? (process.env.NODE_ENV !== "production" ? DEV_DATABASE_URL : undefined)
+  isTestRuntime
+    ? process.env.TEST_DATABASE_URL ?? MISSING_TEST_DATABASE_URL
+    : process.env.DATABASE_URL ?? (process.env.NODE_ENV !== "production" ? DEV_DATABASE_URL : undefined)
 
 export class MissingDatabaseUrlError extends Error {
   constructor() {
@@ -16,7 +20,7 @@ export class MissingDatabaseUrlError extends Error {
 }
 
 export function assertDatabaseConfigured(): void {
-  if (!resolvedDatabaseUrl) {
+  if (!resolvedDatabaseUrl || (isTestRuntime && !process.env.TEST_DATABASE_URL)) {
     throw new MissingDatabaseUrlError()
   }
 }

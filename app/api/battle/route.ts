@@ -1,13 +1,14 @@
 import { z } from "zod"
 import { NextResponse } from "next/server"
-import { DEFAULT_USER_ID } from "@/lib/constants"
+import { requireAdminAccess } from "@/lib/admin-auth"
+import { applyRateLimitHeaders, consumeRateLimit } from "@/lib/auth-rate-limit"
 import { MissingDatabaseUrlError } from "@/lib/db"
 import {
   ANON_SESSION_COOKIE,
   buildAnonSessionId,
-  resolveRequestIdentity,
   shouldUseSecureCookies,
 } from "@/lib/identity"
+import { resolveRequestIdentity } from "@/lib/request-identity"
 import {
   BattleCatalogError,
   createPendingBattle,
@@ -24,7 +25,6 @@ const voteRequestSchema = z
     battleId: z.string().min(1),
     winnerId: z.string().min(1),
     loserId: z.string().min(1),
-    userId: z.string().min(1).optional(),
   })
   .refine((payload) => payload.winnerId !== payload.loserId, {
     message: "winnerId and loserId must be different",
@@ -35,11 +35,17 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
     const shouldRefreshCatalog = searchParams.get("refreshCatalog") === "1"
+    if (shouldRefreshCatalog) {
+      const adminAccess = requireAdminAccess(request)
+      if (!adminAccess.allowed) {
+        return NextResponse.json(adminAccess.body, { status: adminAccess.status })
+      }
+    }
+
     await ensureBattleCatalog({ forceRefresh: shouldRefreshCatalog })
 
     const identity = resolveRequestIdentity(request)
-    const userId =
-      searchParams.get("userId") ?? identity.userId ?? identity.anonymousId ?? buildAnonSessionId()
+    const userId = identity.userId ?? identity.anonymousId ?? buildAnonSessionId()
     const battle = await createPendingBattle(userId)
     const response = NextResponse.json(battle)
     const source = searchParams.get("source") ?? "direct"
@@ -83,6 +89,17 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const rateLimit = consumeRateLimit(request, "battle:vote", { limit: 60, windowMs: 60_000 })
+  if (!rateLimit.allowed) {
+    return applyRateLimitHeaders(
+      NextResponse.json(
+        { error: "Demasiados votos en poco tiempo. Probá nuevamente más tarde.", code: "too_many_requests" },
+        { status: 429 }
+      ),
+      rateLimit
+    )
+  }
+
   const payload = voteRequestSchema.safeParse(await request.json())
 
   if (!payload.success) {
@@ -94,7 +111,13 @@ export async function POST(request: Request) {
 
   try {
     const identity = resolveRequestIdentity(request)
-    const actorId = identity.userId ?? identity.anonymousId ?? payload.data.userId ?? DEFAULT_USER_ID
+    const actorId = identity.userId ?? identity.anonymousId
+    if (!actorId) {
+      return NextResponse.json(
+        { error: "Necesitás una sesión para votar.", code: "missing_identity" },
+        { status: 401 }
+      )
+    }
 
     const result = await completeBattleVote({
       battleId: payload.data.battleId,

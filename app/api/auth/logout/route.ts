@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server"
 import { withCorsHeaders } from "@/lib/cors"
-import { AUTH_USER_COOKIE, shouldUseSecureCookies } from "@/lib/identity"
-
+import { shouldUseSecureCookies } from "@/lib/identity"
 const ACCESS_TOKEN_COOKIE = "access_token"
 
 export async function OPTIONS(request: Request) {
@@ -11,18 +10,11 @@ export async function OPTIONS(request: Request) {
 export async function POST(request: Request) {
   const response = NextResponse.json({ ok: true })
 
+  const useSecureCookies = shouldUseSecureCookies(request)
   response.cookies.set(ACCESS_TOKEN_COOKIE, "", {
     httpOnly: true,
-    secure: true,
-    sameSite: "none",
-    path: "/",
-    maxAge: 0,
-  })
-
-  response.cookies.set(AUTH_USER_COOKIE, "", {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: shouldUseSecureCookies(request),
+    secure: useSecureCookies,
+    sameSite: useSecureCookies ? "none" : "lax",
     path: "/",
     maxAge: 0,
   })

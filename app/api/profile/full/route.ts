@@ -1,7 +1,7 @@
 import { z } from "zod"
 import { NextResponse } from "next/server"
 import { MissingDatabaseUrlError } from "@/lib/db"
-import { resolveRequestIdentity } from "@/lib/identity"
+import { resolveRequestIdentity } from "@/lib/request-identity"
 import { getMusicProfileState } from "@/lib/music-profile"
 
 const regenerateSchema = z.object({

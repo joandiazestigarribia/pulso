@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { resolveRequestIdentity } from "@/lib/identity"
+import { resolveRequestIdentity } from "@/lib/request-identity"
 import { trackConversionEventSafe } from "@/lib/conversion-events"
 
 export async function GET() {

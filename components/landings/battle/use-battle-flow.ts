@@ -283,7 +283,7 @@ export function useBattleFlow() {
         const response = await fetch("/api/battle", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ battleId: battle.id, winnerId, loserId, userId: battle.userId }),
+          body: JSON.stringify({ battleId: battle.id, winnerId, loserId }),
         })
 
         const result = (await response.json()) as VoteResponse | VoteErrorResponse

@@ -45,23 +45,6 @@ export function isAnonymousSessionId(value: string | null | undefined): value is
   return typeof value === "string" && value.startsWith(ANON_PREFIX)
 }
 
-export function resolveRequestIdentity(request: RequestLike): {
-  userId: string | null
-  anonymousId: string | null
-} {
-  const userId = getCookieFromRequest(request, AUTH_USER_COOKIE)
-  if (userId) {
-    return { userId, anonymousId: null }
-  }
-
-  const anonymousId = getCookieFromRequest(request, ANON_SESSION_COOKIE)
-  if (anonymousId) {
-    return { userId: null, anonymousId }
-  }
-
-  return { userId: null, anonymousId: null }
-}
-
 export function shouldUseSecureCookies(request: CookieRequestLike): boolean {
   if (process.env.NODE_ENV !== "production") {
     return false

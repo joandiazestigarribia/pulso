@@ -122,7 +122,6 @@ export function BattleSide({
             sizes="(max-width: 1024px) 100vw, 460px"
             className="h-full w-full object-cover transition-all duration-500 group-hover:grayscale-0"
             style={{ filter: isLoser ? "grayscale(100%)" : "grayscale(20%)" }}
-            unoptimized
           />
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
           <div className="pointer-events-none absolute inset-0 m-4 flex items-center justify-center rounded-[20px] border border-white/20 opacity-0 transition-opacity group-hover:opacity-100">

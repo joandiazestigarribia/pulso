@@ -15,8 +15,20 @@ const _outfit = Outfit({
 })
 
 export const metadata: Metadata = {
-  title: 'Pulso - Music Battle Arena',
-  description: 'The ultimate music duel platform. Vote for your favorite tracks in head-to-head battles.',
+  title: "Pulso - Versus Musical",
+  description: "Descubrí tu perfil musical votando canciones en duelos uno contra uno.",
+  openGraph: {
+    title: "Pulso - Versus Musical",
+    description: "Compará canciones, votá tus favoritas y desbloqueá tu perfil musical.",
+    siteName: "Pulso",
+    locale: "es_AR",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Pulso - Versus Musical",
+    description: "Compará canciones, votá tus favoritas y desbloqueá tu perfil musical.",
+  },
 }
 
 export default function RootLayout({
@@ -25,7 +37,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className={`${_spaceGrotesk.variable} ${_outfit.variable}`}>
+    <html lang="es-AR" className={`${_spaceGrotesk.variable} ${_outfit.variable}`}>
       <body className="font-sans antialiased bg-carbon text-foreground min-h-screen">
         <AuthSessionBootstrap />
         {children}

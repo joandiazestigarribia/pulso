@@ -1375,9 +1375,12 @@ export async function completeBattleVote(payload: BattleVotePayload): Promise<Ba
   return prisma.$transaction(async (tx) => {
     const battle = await tx.battle.findUnique({
       where: { id: battleId },
-      include: {
-        trackA: true,
-        trackB: true,
+      select: {
+        id: true,
+        userId: true,
+        status: true,
+        trackAId: true,
+        trackBId: true,
       },
     })
 
@@ -1398,18 +1401,25 @@ export async function completeBattleVote(payload: BattleVotePayload): Promise<Ba
       throw new VoteError("vote_does_not_match_battle", "Vote does not match battle tracks")
     }
 
-    const winner =
-      battle.trackAId === winnerId
-        ? battle.trackA
-        : battle.trackBId === winnerId
-          ? battle.trackB
-          : null
-    const loser =
-      battle.trackAId === loserId
-        ? battle.trackA
-        : battle.trackBId === loserId
-          ? battle.trackB
-          : null
+    const lockedTrackIds = [...validIds].sort()
+    await tx.$queryRaw<Array<{ id: string }>>`
+      SELECT "id"
+      FROM "Track"
+      WHERE "id" IN (${Prisma.join(lockedTrackIds)})
+      ORDER BY "id"
+      FOR UPDATE
+    `
+
+    const tracks = await tx.track.findMany({
+      where: {
+        id: {
+          in: validIds,
+        },
+      },
+    })
+    const tracksById = new Map(tracks.map((track) => [track.id, track]))
+    const winner = tracksById.get(winnerId) ?? null
+    const loser = tracksById.get(loserId) ?? null
 
     if (!winner || !loser) {
       throw new VoteError("track_not_found", "Track not found")
@@ -1475,6 +1485,8 @@ export async function completeBattleVote(payload: BattleVotePayload): Promise<Ba
         battlesCount: updatedLoser.battlesCount,
       },
     }
+  }, {
+    isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
   })
 }
 

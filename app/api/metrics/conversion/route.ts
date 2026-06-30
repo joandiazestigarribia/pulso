@@ -1,5 +1,6 @@
 import { z } from "zod"
 import { NextResponse } from "next/server"
+import { requireAdminAccess } from "@/lib/admin-auth"
 import { getConversionFunnelMetrics } from "@/lib/conversion-events"
 
 const querySchema = z.object({
@@ -7,6 +8,11 @@ const querySchema = z.object({
 })
 
 export async function GET(request: Request) {
+  const adminAccess = requireAdminAccess(request)
+  if (!adminAccess.allowed) {
+    return NextResponse.json(adminAccess.body, { status: adminAccess.status })
+  }
+
   const { searchParams } = new URL(request.url)
   const parsed = querySchema.safeParse({
     days: searchParams.get("days") ?? 7,

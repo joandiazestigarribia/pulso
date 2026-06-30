@@ -1,5 +1,6 @@
 import { z } from "zod"
 import { NextResponse } from "next/server"
+import { applyRateLimitHeaders, consumeRateLimit } from "@/lib/auth-rate-limit"
 import { MissingDatabaseUrlError } from "@/lib/db"
 import { refreshTrackPreview } from "@/lib/battle-store"
 
@@ -8,6 +9,14 @@ const previewRefreshSchema = z.object({
 })
 
 export async function POST(request: Request) {
+  const rateLimit = consumeRateLimit(request, "battle:preview-refresh", { limit: 20, windowMs: 60_000 })
+  if (!rateLimit.allowed) {
+    return applyRateLimitHeaders(
+      NextResponse.json({ error: "Demasiados intentos de actualizar previews." }, { status: 429 }),
+      rateLimit
+    )
+  }
+
   const payload = previewRefreshSchema.safeParse(await request.json())
   if (!payload.success) {
     return NextResponse.json({ error: "ID de canción inválido." }, { status: 400 })

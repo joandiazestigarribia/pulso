@@ -1,5 +1,6 @@
 import { z } from "zod"
 import { NextResponse } from "next/server"
+import { applyRateLimitHeaders, consumeRateLimit } from "@/lib/auth-rate-limit"
 import { conversionEventNames, trackConversionEventSafe } from "@/lib/conversion-events"
 
 const eventSchema = z.object({
@@ -10,6 +11,17 @@ const eventSchema = z.object({
 })
 
 export async function POST(request: Request) {
+  const rateLimit = consumeRateLimit(request, "conversion:event", { limit: 120, windowMs: 60_000 })
+  if (!rateLimit.allowed) {
+    return applyRateLimitHeaders(
+      NextResponse.json(
+        { ok: false, code: "TOO_MANY_REQUESTS", message: "Demasiados eventos en poco tiempo." },
+        { status: 429 }
+      ),
+      rateLimit
+    )
+  }
+
   const parsed = eventSchema.safeParse(await request.json())
 
   if (!parsed.success) {

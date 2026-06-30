@@ -11,3 +11,9 @@ node_modules/
 AGENTS.md
 ROADMAP.md
 .codex/skills
+docs/production-environment-checklist.md
+docs/production-environment-audit.md
+docs/final-hardening-runbook.md
+docs/functional-qa-production-like.md
+docs/quality-automation.md
+docs/release-readiness.md

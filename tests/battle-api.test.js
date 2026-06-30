@@ -61,13 +61,13 @@ test.before(async () => {
 test("GET /api/battle returns a pending battle payload", async () => {
   await seedBaselineTracks()
 
-  const request = new Request("http://localhost:3000/api/battle?userId=api-user")
+  const request = new Request("http://localhost:3000/api/battle")
   const response = await battleRoute.GET(request)
   const payload = await response.json()
 
   assert.equal(response.status, 200)
   assert.equal(payload.status, "PENDING")
-  assert.equal(payload.userId, "api-user")
+  assert.equal(payload.userId.startsWith("anon_"), true)
   assert.ok(payload.id)
   assert.notEqual(payload.trackA.id, payload.trackB.id)
 })
@@ -82,17 +82,16 @@ test("POST /api/battle accepts first vote and rejects concurrent second vote", a
     battleId: battle.id,
     winnerId,
     loserId,
-    userId: "api-concurrency-user",
   })
 
   const firstRequest = new Request("http://localhost:3000/api/battle", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", cookie: "pulso_anon_id=api-concurrency-user" },
     body,
   })
   const secondRequest = new Request("http://localhost:3000/api/battle", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", cookie: "pulso_anon_id=api-concurrency-user" },
     body,
   })
 
@@ -122,12 +121,11 @@ test("POST /api/battle marks profile unlock on the threshold vote", async () => 
   const battle = await battleStore.createPendingBattle(userId)
   const request = new Request("http://localhost:3000/api/battle", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", cookie: `pulso_anon_id=${userId}` },
     body: JSON.stringify({
       battleId: battle.id,
       winnerId: battle.trackA.id,
       loserId: battle.trackB.id,
-      userId,
     }),
   })
 

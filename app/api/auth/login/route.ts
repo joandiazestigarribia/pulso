@@ -3,8 +3,9 @@ import { consumeRateLimit } from "@/lib/auth-rate-limit"
 import { mergeAnonymousBattlesToUser } from "@/lib/auth"
 import { sanitizeAuthUser } from "@/lib/auth-user"
 import { withCorsHeaders } from "@/lib/cors"
-import { AUTH_USER_COOKIE, resolveRequestIdentity, shouldUseSecureCookies } from "@/lib/identity"
+import { resolveRequestIdentity } from "@/lib/request-identity"
 import { assertJwtConfig, getAccessTokenMaxAgeSeconds, signAuthToken } from "@/lib/jwt-auth"
+import { shouldUseSecureCookies } from "@/lib/identity"
 import { loginSchema } from "@/lib/auth-validation"
 import { AuthError, loginLocalUser } from "@/lib/local-auth"
 import { sanitizeLogData } from "@/lib/sanitize-logs"
@@ -73,18 +74,11 @@ export async function POST(request: Request) {
       user: sanitizeAuthUser(user),
     })
 
+    const useSecureCookies = shouldUseSecureCookies(request)
     response.cookies.set(ACCESS_TOKEN_COOKIE, token, {
       httpOnly: true,
-      secure: true,
-      sameSite: "none",
-      path: "/",
-      maxAge,
-    })
-
-    response.cookies.set(AUTH_USER_COOKIE, user.id, {
-      httpOnly: true,
-      sameSite: "lax",
-      secure: shouldUseSecureCookies(request),
+      secure: useSecureCookies,
+      sameSite: useSecureCookies ? "none" : "lax",
       path: "/",
       maxAge,
     })

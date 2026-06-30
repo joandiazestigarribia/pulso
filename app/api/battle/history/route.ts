@@ -1,12 +1,10 @@
 import { z } from "zod"
 import { NextResponse } from "next/server"
-import { DEFAULT_USER_ID } from "@/lib/constants"
 import { MissingDatabaseUrlError } from "@/lib/db"
-import { resolveRequestIdentity } from "@/lib/identity"
+import { resolveRequestIdentity } from "@/lib/request-identity"
 import { getBattleHistory } from "@/lib/battle-store"
 
 const historyQuerySchema = z.object({
-  userId: z.string().min(1).optional(),
   trackId: z.string().min(1).optional(),
   limit: z.coerce.number().int().positive().max(100).optional(),
 })
@@ -15,8 +13,6 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const identity = resolveRequestIdentity(request)
   const parsed = historyQuerySchema.safeParse({
-    userId:
-      searchParams.get("userId") ?? identity.userId ?? identity.anonymousId ?? DEFAULT_USER_ID,
     trackId: searchParams.get("trackId") ?? undefined,
     limit: searchParams.get("limit") ?? undefined,
   })
@@ -29,7 +25,10 @@ export async function GET(request: Request) {
   }
 
   try {
-    const history = await getBattleHistory(parsed.data)
+    const history = await getBattleHistory({
+      ...parsed.data,
+      userId: identity.userId ?? identity.anonymousId ?? undefined,
+    })
     return NextResponse.json(history)
   } catch (error) {
     if (error instanceof MissingDatabaseUrlError) {

@@ -1,6 +1,6 @@
 import type { Prisma } from "@prisma/client"
 import { prisma } from "@/lib/db"
-import { resolveRequestIdentity } from "@/lib/identity"
+import { resolveRequestIdentity } from "@/lib/request-identity"
 
 export const conversionEventNames = [
   "battle_started",

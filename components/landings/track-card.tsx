@@ -79,7 +79,6 @@ export function TrackCard({ track, side, onVote, isVoting, voteResult }: TrackCa
             sizes="(max-width: 768px) 100vw, 320px"
             className="h-full w-full object-cover"
             crossOrigin="anonymous"
-            unoptimized
           />
           <button
             onClick={() => setIsPlaying(!isPlaying)}
