@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "dev:clean": "powershell -NoProfile -ExecutionPolicy Bypass -Command \"$procs=Get-CimInstance Win32_Process | Where-Object { $_.Name -eq 'node.exe' -and ( $_.CommandLine -like '*next*dev*' -or $_.CommandLine -like '*next*start*' -or $_.CommandLine -like '*start-server.js*' ) }; if($procs){$procs | ForEach-Object { Stop-Process -Id $_.ProcessId -Force }}; npm run dev -- --port 3000\"",
+    "postinstall": "prisma generate",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
@@ -17,6 +18,7 @@
     "deezer:probe": "node scripts/deezer-catalog-probe.mjs",
     "test": "node scripts/run-tests.mjs",
     "prisma:generate": "prisma generate",
+    "prisma:migrate:deploy": "prisma migrate deploy",
     "prisma:migrate": "prisma migrate dev",
     "prisma:seed": "prisma db seed"
   },
