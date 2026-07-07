@@ -136,7 +136,6 @@ export default function BattlePage() {
                 color="#7be3ff"
                 track={battle.trackA}
                 voteLabel="Votar izquierda"
-                keyLabel="A"
                 isVoting={isVoting}
                 result={voteResult ? (voteResult.winner === battle.trackA.id ? "winner" : "loser") : null}
                 activePreviewTrackId={activePreviewTrackId}
@@ -159,7 +158,6 @@ export default function BattlePage() {
                 color="#ffb5fb"
                 track={battle.trackB}
                 voteLabel="Votar derecha"
-                keyLabel="B"
                 isVoting={isVoting}
                 result={voteResult ? (voteResult.winner === battle.trackB.id ? "winner" : "loser") : null}
                 activePreviewTrackId={activePreviewTrackId}

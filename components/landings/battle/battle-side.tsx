@@ -11,7 +11,6 @@ interface BattleSideProps {
   color: string
   track: Track
   voteLabel: string
-  keyLabel: string
   isVoting: boolean
   result: "winner" | "loser" | null
   activePreviewTrackId: string | null
@@ -39,7 +38,6 @@ export function BattleSide({
   color,
   track,
   voteLabel,
-  keyLabel,
   isVoting,
   result,
   activePreviewTrackId,

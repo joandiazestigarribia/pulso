@@ -99,10 +99,10 @@ export function useMusicDnaViewModel() {
       void navigator.clipboard
         .writeText(rawDescription)
         .then(() => {
-          setShareFeedback("Texto descriptivo copiado. Se abrió Instagram para que pegues tu publicación.")
+          setShareFeedback("Texto descriptivo copiado. Se abrio Instagram para que pegues tu publicacion.")
         })
         .catch(() => {
-          setShareFeedback("Se abrió Instagram. Copiá manualmente el texto descriptivo para publicar.")
+          setShareFeedback("Se abrio Instagram. Copia manualmente el texto descriptivo para publicar.")
         })
     }
 
@@ -112,9 +112,9 @@ export function useMusicDnaViewModel() {
   const handleCopyShare = async () => {
     try {
       await navigator.clipboard.writeText(buildDescriptionText())
-      setShareFeedback("Texto descriptivo copiado. Ya podés compartir tu perfil sonoro.")
+      setShareFeedback("Texto descriptivo copiado. Ya podes compartir tu perfil sonoro.")
     } catch {
-      setShareFeedback("No se pudo copiar el texto automáticamente.")
+      setShareFeedback("No se pudo copiar el texto automaticamente.")
     }
   }
 
