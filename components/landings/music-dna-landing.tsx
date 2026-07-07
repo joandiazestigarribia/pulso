@@ -1,8 +1,10 @@
 ﻿"use client"
 
+import { useEffect, useState } from "react"
 import Image from "next/image"
 import { Megaphone, RefreshCcw } from "lucide-react"
 import { motion } from "framer-motion"
+import { BattleResetConfirmModal } from "@/components/landings/battle/battle-ui-blocks"
 import { RadarChart } from "@/components/landings/music-dna/radar-chart"
 import { ProfileMetricsPanel } from "@/components/landings/music-dna/profile-metrics-panel"
 import { WoodActionButton } from "@/components/landings/wood-action-button"
@@ -22,8 +24,8 @@ export function MusicDnaLanding() {
   const {
     isLoading,
     profileError,
-    regenerateError,
-    isRegenerating,
+    resetError,
+    isResetting,
     isShareOpen,
     shareFeedback,
     dominantGenres,
@@ -39,10 +41,19 @@ export function MusicDnaLanding() {
     shareDescription,
     setShareFeedback,
     setIsShareOpen,
-    handleRegenerate,
+    handleResetProgress,
     handleCopyShare,
     shareToNetwork,
   } = useMusicDnaViewModel()
+  const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false)
+
+  useEffect(() => {
+    if (!isResetting) {
+      return
+    }
+
+    setIsResetConfirmOpen(false)
+  }, [isResetting])
 
   if (isLoading) {
     return (
@@ -278,12 +289,12 @@ export function MusicDnaLanding() {
                   Reiniciá tu perfil sonoro y empezá de nuevo
                 </p>
                 <WoodActionButton
-                  onClick={handleRegenerate}
-                  disabled={isRegenerating}
+                  onClick={() => setIsResetConfirmOpen(true)}
+                  disabled={isResetting}
                   variant="neonGreen"
-                  icon={<RefreshCcw className={`h-4 w-4 ${isRegenerating ? "animate-spin" : ""}`} />}
+                  icon={<RefreshCcw className={`h-4 w-4 ${isResetting ? "animate-spin" : ""}`} />}
                 >
-                  {isRegenerating ? "Reiniciando..." : "Reiniciar"}
+                  {isResetting ? "Reiniciando..." : "Reiniciar"}
                 </WoodActionButton>
               </motion.article>
             </motion.aside>
@@ -302,9 +313,16 @@ export function MusicDnaLanding() {
         onShareToNetwork={shareToNetwork}
       />
 
-      {(profileError || regenerateError) ? (
+      <BattleResetConfirmModal
+        isOpen={isResetConfirmOpen}
+        isResetting={isResetting}
+        onCancel={() => setIsResetConfirmOpen(false)}
+        onConfirm={handleResetProgress}
+      />
+
+      {(profileError || resetError) ? (
         <section className="relative z-10 mx-auto mt-4 w-[min(94%,640px)] rounded-xl border-2 border-[#ff6c7b]/45 bg-[#2a0e19]/80 px-4 py-2 text-sm font-bold text-[#ffd6dd]">
-          {regenerateError ?? profileError}
+          {resetError ?? profileError}
         </section>
       ) : null}
     </main>

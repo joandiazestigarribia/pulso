@@ -70,7 +70,7 @@ export function CampgroundHeader() {
             <Flame className="h-4 w-4 text-[#0b1129]" />
           </div>
           <Link
-            href="/battle"
+            href="/"
             className="truncate bg-gradient-to-r from-[#00f0ff] via-[#ff43f8] to-[#ffe600] bg-clip-text text-lg font-black uppercase leading-none tracking-wide text-transparent"
           >
             Pulso Campfire

@@ -6,6 +6,8 @@ const AUTH_USER_STORAGE_KEY = "pulso_auth_user"
 const SESSION_EXEMPT_PATHS = new Set([
   "/api/auth/login",
   "/api/auth/register",
+  "/api/auth/password-reset/request",
+  "/api/auth/password-reset/confirm",
   "/api/auth/me",
   "/api/auth/logout",
 ])
@@ -23,6 +25,10 @@ const authResponseSchema = z.object({
   code: z.string().optional(),
   message: z.string().optional(),
   errors: z.record(z.array(z.string())).optional(),
+})
+
+const passwordResetRequestResponseSchema = authResponseSchema.extend({
+  resetUrl: z.string().nullable().optional(),
 })
 
 export type AuthUser = z.infer<typeof authUserSchema>
@@ -177,6 +183,56 @@ export async function register(data: { email: string; password: string }) {
   }
 
   return payload
+}
+
+export async function requestPasswordReset(data: { email: string }) {
+  const response = await fetch(buildUrl("/api/auth/password-reset/request"), {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  })
+  const rawPayload = (await response.json().catch(() => null)) as unknown
+  const payload = passwordResetRequestResponseSchema.safeParse(rawPayload)
+
+  if (!payload.success) {
+    return {
+      ok: false,
+      code: "INVALID_RESPONSE",
+      message: "Respuesta inválida del servidor de autenticación.",
+      resetUrl: null,
+    }
+  }
+
+  return {
+    ...payload.data,
+    ok: response.ok && payload.data.ok,
+    resetUrl: payload.data.resetUrl ?? null,
+  }
+}
+
+export async function resetPassword(data: { token: string; password: string }) {
+  const response = await fetch(buildUrl("/api/auth/password-reset/confirm"), {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  })
+  const rawPayload = (await response.json().catch(() => null)) as unknown
+  const payload = authResponseSchema.safeParse(rawPayload)
+
+  if (!payload.success) {
+    return {
+      ok: false,
+      code: "INVALID_RESPONSE",
+      message: "Respuesta inválida del servidor de autenticación.",
+    }
+  }
+
+  return {
+    ...payload.data,
+    ok: response.ok && payload.data.ok,
+  }
 }
 
 export async function logout() {

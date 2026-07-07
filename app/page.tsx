@@ -1,8 +1,8 @@
-import Image from "next/image"
-import Link from "next/link"
-import { Lock, Music2, Play, Sparkles, Swords } from "lucide-react"
 import { CampgroundHeader } from "@/components/auth/campground-header"
 import { MUSIC_DNA_UNLOCK_THRESHOLD } from "@/lib/music-dna-config"
+import { Lock, Music2, Play, Swords } from "lucide-react"
+import Image from "next/image"
+import Link from "next/link"
 
 const homeBackgroundStyle = {
   backgroundImage: "url('/images/home/background-home.jpg')",
@@ -150,7 +150,6 @@ export default function HomePage() {
       <section className="relative z-10 mx-auto grid w-full max-w-300 content-center gap-8 px-4 pb-6 pt-22 md:px-6 md:pt-24 lg:min-h-[560px] lg:grid-cols-[minmax(0,1fr)_420px] lg:items-center">
         <div className="max-w-3xl">
           <div className="inline-flex items-center gap-2 rounded-full border border-[#00f0ff]/35 bg-[#090d25]/55 px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.16em] text-[#7be3ff] backdrop-blur-sm">
-            <Sparkles className="h-3.5 w-3.5 text-[#ffe600]" />
             Primero elegís, después descubrís tu Perfil Sonoro
           </div>
 
@@ -198,7 +197,7 @@ export default function HomePage() {
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-xs font-black uppercase tracking-[0.18em] text-[#ffb5fb]">Perfil Sonoro</p>
-                <h2 className="mt-1 text-2xl font-black uppercase leading-none text-white">En progreso</h2>
+                <h2 className="mt-1 text-2xl font-black uppercase leading-none text-white">¿Como se construye?</h2>
               </div>
               <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-black/45 shadow-[inset_0_0_0_1px_rgba(255,230,0,0.42)]">
                 <Lock className="h-5 w-5 text-[#ffe600]" />
@@ -257,9 +256,8 @@ export default function HomePage() {
           <div className="flex items-center justify-between gap-3">
             <div>
               <p className="text-xs font-black uppercase tracking-[0.18em] text-[#7be3ff]">Avatares</p>
-              <h2 className="mt-1 text-2xl font-black uppercase leading-none text-white">Tu identidad visual</h2>
+              <h2 className="mt-1 text-2xl font-black uppercase leading-none text-white">¡Conseguí el tuyo!</h2>
             </div>
-            <Sparkles className="h-5 w-5 text-[#ffe600]" />
           </div>
 
           <div className="relative mt-4 grid flex-1 grid-cols-3 items-end gap-3">

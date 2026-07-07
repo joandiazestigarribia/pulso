@@ -132,7 +132,7 @@ export function LoginForm() {
           )}
         </div>
 
-        <div className="mb-8">
+        <div className="mb-4">
           <label className="mb-2 block text-xs font-black uppercase tracking-[0.12em] text-[#ffb5fb]">
             Clave
           </label>
@@ -160,6 +160,15 @@ export function LoginForm() {
           {fieldErrors.password && (
             <p className="mt-2 text-xs font-semibold text-[#ffb3bd]">{fieldErrors.password[0]}</p>
           )}
+        </div>
+
+        <div className="mb-8 text-right">
+          <Link
+            href="/forgot-password"
+            className="text-xs font-black uppercase tracking-[0.12em] text-[#7be3ff] transition-colors hover:text-[#00f0ff]"
+          >
+            Olvidé mi clave
+          </Link>
         </div>
 
         <motion.button

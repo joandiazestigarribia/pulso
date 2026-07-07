@@ -146,7 +146,7 @@ export function MusicDnaShareModal({
             className="inline-flex items-center justify-center gap-2 rounded-xl border-2 border-white/35 bg-white/15 px-3 py-2 text-[#eaf7ff] transition hover:brightness-105"
           >
             <Copy className="h-4 w-4" />
-            Copiar link
+            Copiar texto
           </motion.button>
           <motion.button
             type="button"

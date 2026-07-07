@@ -16,9 +16,18 @@ import {
 
 export type ShareNetwork = "x" | "whatsapp" | "telegram" | "facebook" | "instagram"
 
+interface BattleResetResponse {
+  ok: boolean
+  code?: string
+  message?: string
+  data?: {
+    deletedBattles: number
+  }
+}
+
 export function useMusicDnaViewModel() {
-  const [isRegenerating, setIsRegenerating] = useState(false)
-  const [regenerateError, setRegenerateError] = useState<string | null>(null)
+  const [isResetting, setIsResetting] = useState(false)
+  const [resetError, setResetError] = useState<string | null>(null)
   const [isShareOpen, setIsShareOpen] = useState(false)
   const [shareFeedback, setShareFeedback] = useState<string | null>(null)
 
@@ -70,16 +79,17 @@ export function useMusicDnaViewModel() {
   }
 
   const buildShareText = (): string => `${shareCopy.headline}\n${shareDescription}`
+  const buildDescriptionText = (): string => shareDescription
 
   const shareToNetwork = (network: ShareNetwork) => {
     const url = encodeURIComponent(buildShareUrl())
     const text = encodeURIComponent(buildShareText())
-    const rawUrl = buildShareUrl()
-    const rawText = buildShareText()
+    const descriptionText = encodeURIComponent(buildDescriptionText())
+    const rawDescription = buildDescriptionText()
 
     const shareLinks: Record<ShareNetwork, string> = {
       x: `https://x.com/intent/tweet?text=${text}&url=${url}`,
-      whatsapp: `https://wa.me/?text=${encodeURIComponent(`${rawText} ${rawUrl}`)}`,
+      whatsapp: `https://wa.me/?text=${descriptionText}`,
       telegram: `https://t.me/share/url?url=${url}&text=${text}`,
       facebook: `https://www.facebook.com/sharer/sharer.php?u=${url}`,
       instagram: "https://www.instagram.com/",
@@ -87,12 +97,12 @@ export function useMusicDnaViewModel() {
 
     if (network === "instagram") {
       void navigator.clipboard
-        .writeText(`${rawText}\n${rawUrl}`)
+        .writeText(rawDescription)
         .then(() => {
-          setShareFeedback("Texto y link copiados. Se abriÃ³ Instagram para que pegues tu publicaciÃ³n.")
+          setShareFeedback("Texto descriptivo copiado. Se abrió Instagram para que pegues tu publicación.")
         })
         .catch(() => {
-          setShareFeedback("Se abriÃ³ Instagram. CopiÃ¡ manualmente el texto/link para publicar.")
+          setShareFeedback("Se abrió Instagram. Copiá manualmente el texto descriptivo para publicar.")
         })
     }
 
@@ -101,48 +111,47 @@ export function useMusicDnaViewModel() {
 
   const handleCopyShare = async () => {
     try {
-      await navigator.clipboard.writeText(`${buildShareText()}\n${buildShareUrl()}`)
-      setShareFeedback("Link copiado. Ya podÃ©s compartir tu perfil sonoro.")
+      await navigator.clipboard.writeText(buildDescriptionText())
+      setShareFeedback("Texto descriptivo copiado. Ya podés compartir tu perfil sonoro.")
     } catch {
-      setShareFeedback("No se pudo copiar el link automÃ¡ticamente.")
+      setShareFeedback("No se pudo copiar el texto automáticamente.")
     }
   }
 
 
 
-  const handleRegenerate = async () => {
-    if (isRegenerating) {
+  const handleResetProgress = async () => {
+    if (isResetting) {
       return
     }
 
-    setIsRegenerating(true)
-    setRegenerateError(null)
+    setIsResetting(true)
+    setResetError(null)
 
     try {
-      const response = await fetch("/api/profile/full", {
+      const response = await fetch("/api/battle/reset", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ forceRegenerate: true }),
       })
 
-      const payload = (await response.json().catch(() => ({}))) as FullProfileResponse
+      const payload = (await response.json().catch(() => ({}))) as BattleResetResponse
       if (!response.ok || payload.ok === false) {
-        setRegenerateError(payload.message ?? "No se pudo regenerar tu Perfil Sonoro en este momento.")
+        setResetError(payload.message ?? "No se pudo reiniciar tu Perfil Sonoro en este momento.")
+        return
       }
 
       await refreshProfile()
     } catch {
-      setRegenerateError("Error de red al regenerar tu Perfil Sonoro.")
+      setResetError("Error de red al reiniciar tu Perfil Sonoro.")
     } finally {
-      setIsRegenerating(false)
+      setIsResetting(false)
     }
   }
 
   return {
     isLoading,
     profileError,
-    regenerateError,
-    isRegenerating,
+    resetError,
+    isResetting,
     isShareOpen,
     shareFeedback,
     dominantGenres,
@@ -159,7 +168,7 @@ export function useMusicDnaViewModel() {
     shareDescription,
     setShareFeedback,
     setIsShareOpen,
-    handleRegenerate,
+    handleResetProgress,
     handleCopyShare,
     shareToNetwork,
   }

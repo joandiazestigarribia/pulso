@@ -19,6 +19,15 @@ export const loginSchema = z.object({
   password: z.string().min(1, "La clave es obligatoria."),
 })
 
+export const requestPasswordResetSchema = z.object({
+  email: z.string().trim().toLowerCase().email("El formato del correo no es valido."),
+})
+
+export const resetPasswordSchema = z.object({
+  token: z.string().min(1, "El token de restablecimiento es obligatorio."),
+  password: registerSchema.shape.password,
+})
+
 export function evaluatePasswordRules(password: string): {
   minLength: boolean
   maxLength: boolean

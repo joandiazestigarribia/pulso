@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { RefreshCcw, Sparkles, Volume2, X } from "lucide-react"
+import { RefreshCcw, Volume2, X } from "lucide-react"
 import { AnimatePresence, motion } from "framer-motion"
 
 interface BattleTopNoticesProps {
@@ -176,7 +176,7 @@ export function BattleSkipLimitModal({ isOpen, onClose }: BattleSkipLimitModalPr
               Solo podés saltear 5 canciones seguidas
             </h3>
             <p className="mt-3 text-sm font-semibold text-[#d8ebff]">
-              Para seguir avanzando, necesitás votar una canción en este duelo.
+              Para seguir avanzando, necesitás votar una canción en este versus.
             </p>
             <div className="mt-4 flex justify-end">
               <button
@@ -231,10 +231,6 @@ export function BattleProfileUnlockModal({
             >
               <X className="h-4 w-4" />
             </button>
-
-            <div className="absolute right-[140px] top-10 flex h-12 w-12 rotate-3 items-center justify-center rounded-2xl border-0 bg-transparent shadow-none">
-              <Sparkles className="h-6 w-6 text-[#ffe600]" />
-            </div>
 
             <p className="mt-3 text-xs font-black uppercase tracking-[0.12em] text-[#7be3ff]">
               Perfil sonoro desbloqueado

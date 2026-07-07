@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
-import { EloFeedback } from "@/components/landings/elo-feedback"
+import { VoteSavedFeedback } from "@/components/landings/vote-saved-feedback"
 import { BattleAuthPrompt } from "@/components/landings/battle/battle-auth-prompt"
 import { BattleSide } from "@/components/landings/battle/battle-side"
 import {
@@ -89,7 +89,7 @@ export default function BattlePage() {
             animate={{ rotate: 360 }}
             transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
           />
-          <span className="font-mono text-xs uppercase tracking-[0.2em] text-white/80">Cargando duelo...</span>
+          <span className="font-mono text-xs uppercase tracking-[0.2em] text-white/80">Cargando versus...</span>
         </motion.div>
       </main>
     )
@@ -101,7 +101,7 @@ export default function BattlePage() {
       <div className="pointer-events-none fixed inset-0 z-0 bg-[radial-gradient(circle_at_30%_20%,rgba(0,240,255,0.14),transparent_45%),radial-gradient(circle_at_75%_15%,rgba(255,67,248,0.2),transparent_45%),linear-gradient(180deg,rgba(8,11,26,0.74),rgba(8,11,26,0.92))]" />
 
       <AnimatePresence>
-        {voteFeedback && <EloFeedback winner={voteFeedback.winner} loser={voteFeedback.loser} />}
+        {voteFeedback && <VoteSavedFeedback />}
       </AnimatePresence>
 
       <section className="relative z-10 mx-auto w-full max-w-300 overflow-hidden rounded-[28px]">

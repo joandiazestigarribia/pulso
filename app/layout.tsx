@@ -16,7 +16,7 @@ const _outfit = Outfit({
 
 export const metadata: Metadata = {
   title: "Pulso - Versus Musical",
-  description: "Descubrí tu perfil musical votando canciones en duelos uno contra uno.",
+  description: "Descubrí tu perfil musical votando canciones en versus uno contra uno.",
   openGraph: {
     title: "Pulso - Versus Musical",
     description: "Compará canciones, votá tus favoritas y desbloqueá tu perfil musical.",

@@ -32,12 +32,12 @@ const fetchBattle = async (url: string): Promise<Battle> => {
       "error" in payload &&
       typeof (payload as { error?: unknown }).error === "string"
         ? (payload as { error: string }).error
-        : "No pudimos cargar el duelo"
+        : "No pudimos cargar el versus"
     throw new Error(message)
   }
 
   if (!isBattle(payload)) {
-    throw new Error("No pudimos cargar el duelo")
+    throw new Error("No pudimos cargar el versus")
   }
 
   return payload
@@ -390,7 +390,7 @@ export function useBattleFlow() {
       setConsecutiveSkips((prev) => prev + 1)
       await mutate()
     } catch {
-      setVoteError("No pudimos avanzar al siguiente duelo. Probá de nuevo.")
+      setVoteError("No pudimos avanzar al siguiente versus. Probá de nuevo.")
     } finally {
       setIsSkipping(false)
     }

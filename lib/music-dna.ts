@@ -251,7 +251,7 @@ export const personaCopyCatalog = {
     archetypeLabel: "Brigada Central",
     toneCopy: {
       low: "mantenés el foco en decisiones consistentes",
-      medium: "equilibrás impacto y claridad en cada duelo",
+      medium: "equilibrás impacto y claridad en cada versus",
       high: "aceleras el pulso sin salirte del plan",
     },
     templates: [
@@ -299,7 +299,7 @@ export const personaCopyCatalog = {
     templates: [
       "Tu perfil modela {genre} desde la atmósfera. {toneCopy}.",
       "Tu selección en {genre} prioriza paisaje y sensación. {toneCopy}.",
-      "En cada duelo, {genre} aparece con narrativa visual. {toneCopy}.",
+      "En cada versus, {genre} aparece con narrativa visual. {toneCopy}.",
       "Tu Perfil Sonoro orienta {genre} hacia un viaje inmersivo. {toneCopy}.",
     ],
   },
@@ -313,7 +313,7 @@ export const personaCopyCatalog = {
     templates: [
       "Tu perfil levanta {genre} con potencia frontal. {toneCopy}.",
       "Tu radar en {genre} prioriza ataque, riff y presencia. {toneCopy}.",
-      "En tus duelos, {genre} entra con filo y decisión. {toneCopy}.",
+      "En tus versus, {genre} entra con filo y decisión. {toneCopy}.",
       "Tu Perfil Sonoro consolida {genre} en modo combate. {toneCopy}.",
     ],
   },

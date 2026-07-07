@@ -205,7 +205,6 @@ export function BattleSide({
             }}
           >
             {voteLabel}
-            <span className="rounded-lg bg-black/15 px-2 text-xs">[{keyLabel}]</span>
           </button>
         </div>
       </motion.div>
