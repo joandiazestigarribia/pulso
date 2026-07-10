@@ -59,7 +59,7 @@ export async function POST(request: Request) {
 
     return createResponse(request, 200, {
       ok: true,
-      message: "Si existe una cuenta con ese correo, vas a recibir instrucciones para restablecerla.",
+      message: "Si existe una cuenta con ese correo, vas a recibir un email para restablecerla.",
       resetUrl: result.resetUrl,
     })
   } catch (error) {
@@ -68,6 +68,14 @@ export async function POST(request: Request) {
         ok: false,
         code: "AUTH_CONFIG_ERROR",
         message: "El servicio de autenticación no está configurado.",
+      })
+    }
+
+    if (error instanceof Error && error.message.includes("EMAIL_CONFIG")) {
+      return createResponse(request, 500, {
+        ok: false,
+        code: "EMAIL_CONFIG_ERROR",
+        message: "El servicio de email no esta configurado.",
       })
     }
 

@@ -116,25 +116,6 @@ export function ForgotPasswordForm() {
           <Send className="h-4 w-4" />
         </motion.button>
 
-        {resetUrl ? (
-          <div className="mt-4 rounded-xl border border-[#00ff9f]/35 bg-[#06110f]/72 p-3 text-xs font-semibold text-[#aefbd8]">
-            <p className="mb-2">Modo local: usá este link para restablecer tu clave.</p>
-            <div className="flex items-center gap-2">
-              <Link href={resetUrl} className="min-w-0 flex-1 truncate text-[#eaf7ff] underline underline-offset-2">
-                {resetUrl}
-              </Link>
-              <button
-                type="button"
-                onClick={handleCopyResetUrl}
-                className="rounded-lg border border-[#00ff9f]/45 bg-[#00ff9f]/10 p-2 text-[#aefbd8] transition-colors hover:bg-[#00ff9f]/18"
-                aria-label="Copiar link de restablecimiento"
-              >
-                <Copy className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
-        ) : null}
-
         {message ? (
           <p className="mt-4 rounded-lg border border-[#00ff9f]/35 bg-[#06110f]/72 px-3 py-2 text-center text-xs font-bold text-[#aefbd8]">
             {message}
