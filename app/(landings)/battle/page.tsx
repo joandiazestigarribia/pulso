@@ -119,13 +119,13 @@ export default function BattlePage() {
           />
         ) : null}
 
-        <section className="relative z-10 mx-auto flex w-[min(96%,1120px)] flex-1 flex-col gap-4 overflow-hidden p-4 md:p-5 lg:gap-4">
+        <section className="relative z-10 mx-auto flex w-[min(96%,1120px)] flex-1 flex-col gap-3 overflow-hidden p-3 md:gap-4 md:p-5 lg:gap-4">
           <BattleProgressBanner completedBattles={completedBattles} goalVotes={PROFILE_UI_GOAL_VOTES} />
 
           <AnimatePresence mode="wait">
             <motion.div
               key={battleKey}
-              className="m-auto flex w-full max-w-200 flex-col items-center gap-4 lg:flex-row lg:justify-center"
+              className="m-auto flex w-full max-w-200 flex-col items-center gap-3 md:gap-4 lg:flex-row lg:justify-center"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -148,8 +148,8 @@ export default function BattlePage() {
               />
 
               <div className="flex w-full flex-row items-center justify-center gap-3 lg:w-28 lg:flex-col lg:gap-4">
-                <div className="flex h-20 w-20 rotate-6 animate-[floating_3s_ease-in-out_infinite] items-center justify-center rounded-[28px] border border-[#ffe600]/70 bg-black/60 shadow-[0_0_26px_rgba(255,230,0,0.35)] md:h-24 md:w-24 md:rounded-[32px]">
-                  <span className="text-3xl font-black uppercase text-[#ffe600] md:text-4xl">VS</span>
+                <div className="flex h-16 w-16 rotate-6 animate-[floating_3s_ease-in-out_infinite] items-center justify-center rounded-[24px] border border-[#ffe600]/70 bg-black/60 shadow-[0_0_26px_rgba(255,230,0,0.35)] md:h-24 md:w-24 md:rounded-[32px]">
+                  <span className="text-2xl font-black uppercase text-[#ffe600] md:text-4xl">VS</span>
                 </div>
               </div>
 

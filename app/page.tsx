@@ -101,7 +101,7 @@ function BattleDemoCard({ track }: { track: (typeof battleDemoTracks)[number] })
   return (
     <div className="group relative">
       <div
-        className={`absolute -top-3 z-10 rounded-xl border border-white/35 bg-black/65 px-2 py-0.5 text-[9px] font-black uppercase tracking-wide backdrop-blur ${track.tone === "cyan" ? "-left-2 -rotate-6 text-[#7be3ff]" : "-right-2 rotate-6 text-[#ffb5fb]"}`}
+        className={`absolute -top-2 z-10 rounded-xl border border-white/35 bg-black/65 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wide backdrop-blur sm:-top-3 sm:px-2 sm:text-[9px] ${track.tone === "cyan" ? "-left-1 -rotate-6 text-[#7be3ff] sm:-left-2" : "-right-1 rotate-6 text-[#ffb5fb] sm:-right-2"}`}
       >
         {track.label}
       </div>
@@ -149,11 +149,11 @@ export default function HomePage() {
 
       <section className="relative z-10 mx-auto grid w-full max-w-300 content-center gap-8 px-4 pb-6 pt-22 md:px-6 md:pt-24 lg:min-h-[560px] lg:grid-cols-[minmax(0,1fr)_420px] lg:items-center">
         <div className="max-w-3xl">
-          <div className="inline-flex items-center gap-2 rounded-full border border-[#00f0ff]/35 bg-[#090d25]/55 px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.16em] text-[#7be3ff] backdrop-blur-sm">
+          <div className="inline-flex items-center gap-2 rounded-full border border-[#00f0ff]/35 bg-[#090d25]/55 px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.16em] text-[#7be3ff] backdrop-blur-sm max-md:px-5 max-md:py-2.5">
             Primero elegís, después descubrís tu Perfil Sonoro
           </div>
 
-          <h1 className="mt-5 max-w-3xl bg-gradient-to-r from-[#00f0ff] via-[#ff43f8] to-[#ffe600] bg-clip-text text-5xl font-black uppercase leading-[0.92] tracking-tight text-transparent md:text-6xl xl:text-7xl">
+          <h1 className="mt-5 max-w-3xl bg-gradient-to-r from-[#00f0ff] via-[#ff43f8] to-[#ffe600] bg-clip-text text-4xl font-black uppercase leading-[0.92] tracking-tight text-transparent sm:text-5xl md:text-6xl xl:text-7xl">
             Descubrí tu pulso musical
           </h1>
           <p className="mt-5 max-w-2xl text-base font-semibold leading-relaxed text-[#d8e9ff] md:text-lg">
@@ -181,9 +181,9 @@ export default function HomePage() {
         <aside className="lg:self-center">
           <div className="rounded-[28px] bg-[#090d25]/38 p-4 shadow-[0_10px_24px_rgba(0,0,0,0.24),0_0_28px_rgba(0,240,255,0.1)] backdrop-blur-sm">
 
-            <div className="mt-3 grid grid-cols-[1fr_44px_1fr] items-center gap-2">
+            <div className="mt-3 grid grid-cols-[minmax(0,1fr)_40px_minmax(0,1fr)] items-center gap-1.5 sm:grid-cols-[1fr_44px_1fr] sm:gap-2">
               <BattleDemoCard track={battleDemoTracks[0]} />
-              <div className="flex h-11 w-11 rotate-6 items-center justify-center rounded-2xl border border-[#ffe600]/60 bg-black/65 text-lg font-black text-[#ffe600] shadow-[0_0_22px_rgba(255,230,0,0.28)]">
+              <div className="flex h-10 w-10 rotate-6 items-center justify-center rounded-2xl border border-[#ffe600]/60 bg-black/65 text-base font-black text-[#ffe600] shadow-[0_0_22px_rgba(255,230,0,0.28)] sm:h-11 sm:w-11 sm:text-lg">
                 VS
               </div>
               <BattleDemoCard track={battleDemoTracks[1]} />
@@ -260,10 +260,10 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="relative mt-4 grid flex-1 grid-cols-3 items-end gap-3">
+          <div className="relative mt-4 grid flex-1 grid-cols-3 items-end gap-1.5 sm:gap-3">
             {avatarPreview.map((avatar) => (
               <div key={avatar.name} className="text-center">
-                <div className="relative mx-auto h-44 w-36">
+                <div className="relative mx-auto h-36 w-full max-w-28 sm:h-44 sm:w-36 sm:max-w-none">
                   <div className="absolute inset-x-5 bottom-2 h-10 rounded-full bg-black/35 blur-lg" />
                   <Image
                     src={avatar.image}
@@ -273,12 +273,12 @@ export default function HomePage() {
                     className={`${avatar.imageClassName} object-contain drop-shadow-[0_14px_16px_rgba(0,0,0,0.48)]`}
                   />
                 </div>
-                <p className="mt-2 text-[10px] font-black uppercase tracking-[0.12em] text-[#c7dbf2]">{avatar.name}</p>
+                <p className="mt-2 text-[9px] font-black uppercase tracking-[0.08em] text-[#c7dbf2] sm:text-[10px] sm:tracking-[0.12em]">{avatar.name}</p>
               </div>
             ))}
           </div>
 
-          <div className="relative mt-4 flex items-center justify-between gap-3 rounded-2xl bg-black/18 px-3 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+          <div className="relative mt-4 flex flex-col items-start gap-3 rounded-2xl bg-black/18 px-3 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-2">
               {avatarOverflow.map((avatar) => (
                 <div key={avatar.name} className="relative h-11 w-11">
@@ -292,7 +292,7 @@ export default function HomePage() {
                 </div>
               ))}
             </div>
-            <p className="text-right text-[10px] font-black uppercase tracking-[0.13em] text-[#7be3ff]">
+            <p className="text-left text-[10px] font-black uppercase tracking-[0.13em] text-[#7be3ff] sm:text-right">
               + de 15 perfiles posibles
             </p>
           </div>

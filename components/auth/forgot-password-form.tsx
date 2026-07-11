@@ -3,7 +3,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import { motion } from "framer-motion"
-import { Copy, Mail, Send } from "lucide-react"
+import { Mail, Send } from "lucide-react"
 import { requestPasswordResetSchema } from "@/lib/auth-validation"
 import { requestPasswordReset } from "@/lib/auth-client"
 
@@ -13,13 +13,11 @@ export function ForgotPasswordForm() {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({})
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [resetUrl, setResetUrl] = useState<string | null>(null)
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
     setError(null)
     setMessage(null)
-    setResetUrl(null)
     setFieldErrors({})
 
     const parsedInput = requestPasswordResetSchema.safeParse({ email })
@@ -39,24 +37,10 @@ export function ForgotPasswordForm() {
       }
 
       setMessage(response.message ?? "Si existe una cuenta con ese correo, vas a recibir instrucciones.")
-      setResetUrl(response.resetUrl ?? null)
     } catch {
       setError("Error de red al solicitar el restablecimiento.")
     } finally {
       setIsSubmitting(false)
-    }
-  }
-
-  const handleCopyResetUrl = async () => {
-    if (!resetUrl) {
-      return
-    }
-
-    try {
-      await navigator.clipboard.writeText(resetUrl)
-      setMessage("Link de restablecimiento copiado.")
-    } catch {
-      setError("No se pudo copiar el link automáticamente.")
     }
   }
 
@@ -68,7 +52,7 @@ export function ForgotPasswordForm() {
       transition={{ duration: 0.6, ease: "easeOut" }}
       className="relative mx-auto w-full max-w-md"
     >
-      <div className="rounded-[30px_16px_24px_14px] border border-[#00f0ff]/30 bg-[#111739]/82 p-7 pt-9 shadow-[0_10px_18px_rgba(0,0,0,0.28)] ring-1 ring-[#00f0ff]/15 backdrop-blur-sm">
+      <div className="rounded-[30px_16px_24px_14px] border border-[#00f0ff]/30 bg-[#111739]/82 p-5 pt-9 shadow-[0_10px_18px_rgba(0,0,0,0.28)] ring-1 ring-[#00f0ff]/15 backdrop-blur-sm sm:p-7 sm:pt-9">
         <div className="mb-5 flex justify-center">
           <span className="rounded-full bg-[#00f0ff]/25 px-5 py-2 text-xs font-black uppercase tracking-[0.16em] text-[#d7faff] ring-1 ring-[#00f0ff]/45">
             Restablecer acceso

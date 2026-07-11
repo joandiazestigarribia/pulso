@@ -63,14 +63,14 @@ export function MusicDnaShareModal({
 
   return (
     <motion.section
-      className="fixed inset-0 z-70 flex items-center justify-center bg-black/55 p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-70 flex items-center justify-center bg-black/55 p-3 backdrop-blur-sm sm:p-4"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.22, ease: "easeOut" }}
       onClick={onClose}
     >
       <motion.div
-        className="flex max-h-[calc(100vh-2rem)] w-full max-w-140 flex-col overflow-hidden rounded-3xl border-[3px] border-[#00f0ff]/35 bg-[#0f1638]/92 p-4 text-[#eaf7ff] shadow-[0_10px_30px_rgba(0,0,0,0.45)]"
+        className="flex max-h-[calc(100vh-1.5rem)] w-full max-w-140 flex-col overflow-hidden rounded-3xl border-[3px] border-[#00f0ff]/35 bg-[#0f1638]/92 p-3 text-[#eaf7ff] shadow-[0_10px_30px_rgba(0,0,0,0.45)] sm:max-h-[calc(100vh-2rem)] sm:p-4"
         initial={{ opacity: 0, y: 20, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.28, ease: "easeOut" }}
@@ -78,7 +78,7 @@ export function MusicDnaShareModal({
       >
         <div className="flex items-start justify-between gap-3 border-b-2 border-[#00f0ff]/25 pb-3">
           <div>
-            <h3 className="mt-1 bg-gradient-to-r from-[#00f0ff] via-[#ff43f8] to-[#ffe600] bg-clip-text text-2xl font-black uppercase leading-none text-transparent">
+            <h3 className="mt-1 bg-gradient-to-r from-[#00f0ff] via-[#ff43f8] to-[#ffe600] bg-clip-text text-xl font-black uppercase leading-none text-transparent sm:text-2xl">
               Compartir tu perfil sonoro
             </h3>
           </div>
@@ -95,9 +95,9 @@ export function MusicDnaShareModal({
         </div>
 
         <div className="mt-4 rounded-[18px] border-2 border-[#00f0ff]/25 bg-[#121a40]/85 p-3">
-          <div className="flex items-center gap-4">
+          <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:gap-4">
             <motion.div
-              className="relative mx-auto flex w-full max-w-42 justify-center rounded-[18px] border border-[#ff43f8]/35 bg-[#0f1638] px-2 py-3 shadow-[0_0_24px_rgba(0,240,255,0.25)]"
+              className="relative mx-auto flex w-full max-w-34 justify-center rounded-[18px] border border-[#ff43f8]/35 bg-[#0f1638] px-2 py-3 shadow-[0_0_24px_rgba(0,240,255,0.25)] sm:max-w-42"
               animate={{ y: [0, -3, 0] }}
               transition={{ duration: 3.6, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
             >
@@ -137,7 +137,7 @@ export function MusicDnaShareModal({
           </div>
         </div>
 
-        <div className="mt-4 grid grid-cols-2 gap-2 text-sm font-medium uppercase tracking-wide">
+        <div className="mt-4 grid grid-cols-1 gap-2 text-sm font-medium uppercase tracking-wide sm:grid-cols-2">
           <motion.button
             type="button"
             onClick={onCopyShare}

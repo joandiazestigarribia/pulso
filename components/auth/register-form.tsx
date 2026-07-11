@@ -88,7 +88,7 @@ export function RegisterForm() {
       className="relative mx-auto w-full max-w-md"
     >
       <motion.div
-        className="absolute -left-4 -top-4 z-10 flex h-12 w-12 rotate-[-12deg] items-center justify-center rounded-2xl bg-[#00f0ff] shadow-[0_0_22px_rgba(0,240,255,0.35)]"
+        className="absolute left-2 top-2 z-10 flex h-10 w-10 rotate-[-12deg] items-center justify-center rounded-2xl bg-[#00f0ff] shadow-[0_0_22px_rgba(0,240,255,0.35)] sm:-left-4 sm:-top-4 sm:h-12 sm:w-12"
         initial={{ scale: 0, rotate: -30 }}
         animate={{ scale: 1, rotate: -12 }}
         transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
@@ -96,7 +96,7 @@ export function RegisterForm() {
         <Zap className="h-6 w-6 text-[#0b1129]" />
       </motion.div>
 
-      <div className="rounded-[30px_16px_24px_14px] border border-[#ff43f8]/30 bg-[#111739]/82 p-7 pt-9 shadow-[0_10px_18px_rgba(0,0,0,0.28)] ring-1 ring-[#ff43f8]/15 backdrop-blur-sm">
+      <div className="rounded-[30px_16px_24px_14px] border border-[#ff43f8]/30 bg-[#111739]/82 p-5 pt-10 shadow-[0_10px_18px_rgba(0,0,0,0.28)] ring-1 ring-[#ff43f8]/15 backdrop-blur-sm sm:p-7 sm:pt-9">
         <motion.div
           className="mb-5 flex justify-center"
           initial={{ scale: 0 }}
@@ -171,7 +171,7 @@ export function RegisterForm() {
             <p className="mb-2 text-[11px] font-medium tracking-[0.08em] text-[#cde3ff]">
               La contraseña debe cumplir con estos requisitos
             </p>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               <p className="flex items-center gap-2 text-[11px] font-medium text-[#cde3ff]">
                 <span
                   className={`h-2.5 w-2.5 rounded-full ${passwordRules.minLength ? "bg-[#7dffbe]" : "bg-[#60738d]"}`}

@@ -60,7 +60,7 @@ export function BattleProgressBanner({ completedBattles, goalVotes }: BattleProg
       transition={{ duration: 0.35, ease: "easeOut" }}
     >
       <div className="mx-auto mb-3 flex w-[min(96%,820px)] flex-col gap-1.5 rounded-2xl border border-white/15 bg-black/45 px-4 py-2.5 backdrop-blur">
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
           <p className="font-mono text-xs font-black uppercase tracking-[0.12em] text-[#f8eeaf]">
             {completedBattles}/{goalVotes} canciones votadas
           </p>
@@ -108,22 +108,22 @@ export function BattleNowPlayingFooter({
 }: BattleNowPlayingFooterProps) {
   return (
     <motion.footer
-      className="relative z-20 mx-auto mb-4 flex min-h-16 w-[min(92%,860px)] items-center justify-between gap-3 rounded-[22px] border border-white/20 bg-[#111739]/74 px-3 py-2 shadow-[0_0_28px_rgba(0,0,0,0.5)] backdrop-blur md:mb-6 md:px-4"
+      className="relative z-20 mx-auto mb-4 flex min-h-16 w-[min(92%,860px)] flex-col items-stretch justify-between gap-3 rounded-[22px] border border-white/20 bg-[#111739]/74 px-3 py-2 shadow-[0_0_28px_rgba(0,0,0,0.5)] backdrop-blur sm:flex-row sm:items-center md:mb-6 md:px-4"
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35, ease: "easeOut", delay: 0.05 }}
     >
-      <div className="flex shrink-0 items-center gap-3">
+      <div className="flex min-w-0 shrink-0 items-center gap-3">
         <div className="flex h-10 w-10 rotate-3 items-center justify-center rounded-xl border border-[#00f0ff]/45 bg-black/60 shadow-[0_0_18px_rgba(0,240,255,0.32)]">
           <Volume2 className="h-5 w-5 text-[#7be3ff]" />
         </div>
         <div>
           <div className="text-[10px] font-black uppercase tracking-[0.2em] text-[#f8eeaf] md:text-xs">Reproduciendo ahora</div>
-          <div className="text-xs font-semibold text-white md:text-sm">{activePreviewTrackName}</div>
+          <div className="truncate text-xs font-semibold text-white md:text-sm">{activePreviewTrackName}</div>
         </div>
       </div>
 
-      <div className="flex shrink-0 items-center gap-2">
+      <div className="grid shrink-0 grid-cols-2 items-center gap-2 sm:flex">
         <motion.button
           type="button"
           onClick={onSkipStage}

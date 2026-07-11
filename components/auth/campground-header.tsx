@@ -63,17 +63,18 @@ export function CampgroundHeader() {
   const showRegister = !isAuthenticated && pathname !== "/register"
 
   return (
-    <header className="fixed inset-x-0 top-0 z-50 px-3 pt-3 md:px-4">
-      <div className="mx-auto flex w-full max-w-300 items-center justify-between gap-10 rounded-2xl border border-white/15 bg-[#111739]/74 px-4 py-3 backdrop-blur">
+    <header className="fixed inset-x-0 top-0 z-50 px-2 pt-2 md:px-4 md:pt-3">
+      <div className="mx-auto flex w-full max-w-300 items-center justify-between gap-2 rounded-2xl border border-white/15 bg-[#111739]/74 px-3 py-2.5 backdrop-blur md:gap-10 md:px-4 md:py-3">
         <div className="flex min-w-0 items-center gap-3">
           <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[linear-gradient(130deg,#00f0ff,#ff43f8,#ffe600)] shadow-[0_0_16px_rgba(0,240,255,0.55)]">
             <Flame className="h-4 w-4 text-[#0b1129]" />
           </div>
           <Link
             href="/"
-            className="truncate bg-gradient-to-r from-[#00f0ff] via-[#ff43f8] to-[#ffe600] bg-clip-text text-lg font-black uppercase leading-none tracking-wide text-transparent"
+            className="shrink-0 bg-gradient-to-r from-[#00f0ff] via-[#ff43f8] to-[#ffe600] bg-clip-text text-base font-black uppercase leading-none tracking-wide text-transparent md:text-lg"
           >
-            Pulso Campfire
+            <span className="md:hidden">Pulso</span>
+            <span className="hidden md:inline">Pulso Campfire</span>
           </Link>
         </div>
 
@@ -92,21 +93,23 @@ export function CampgroundHeader() {
           </Link>
         </nav>
 
-        <div className="ml-auto flex items-center gap-2">
+        <div className="ml-auto flex min-w-0 items-center gap-1.5 md:gap-2">
           {showSignIn ? (
             <Link
               href="/login"
-              className="rounded-lg border bg-gradient-to-r from-[#00ff66] to-[#00f0ff] text-black shadow-[0_10px_24px_rgba(0,0,0,0.5)] py-1.25 px-2.5 text-xs font-black uppercase tracking-wide transition-colors hover:brightness-110"
+              className="rounded-lg border bg-gradient-to-r from-[#00ff66] to-[#00f0ff] px-2 py-1.5 text-[10px] font-black uppercase tracking-wide text-black shadow-[0_10px_24px_rgba(0,0,0,0.5)] transition-colors hover:brightness-110 md:px-2.5 md:py-1.25 md:text-xs"
             >
-              Iniciar sesión
+              <span className="sm:hidden">Entrar</span>
+              <span className="hidden sm:inline">Iniciar sesión</span>
             </Link>
           ) : null}
           {showRegister ? (
             <Link
               href="/register"
-              className="rounded-lg border border-[#ff43f8]/45 bg-gradient-to-r from-[#ff2a6d] to-[#ffe600] shadow-[0_10px_24px_rgba(0,0,0,0.5)] py-1.25 px-2.5 text-xs font-black uppercase tracking-wide text-[#0b1129] transition-all hover:brightness-110"
+              className="rounded-lg border border-[#ff43f8]/45 bg-gradient-to-r from-[#ff2a6d] to-[#ffe600] px-2 py-1.5 text-[10px] font-black uppercase tracking-wide text-[#0b1129] shadow-[0_10px_24px_rgba(0,0,0,0.5)] transition-all hover:brightness-110 md:px-2.5 md:py-1.25 md:text-xs"
             >
-              Registrarse
+              <span className="sm:hidden">Registro</span>
+              <span className="hidden sm:inline">Registrarse</span>
             </Link>
           ) : null}
           {isAuthenticated ? <SignOutButton /> : null}

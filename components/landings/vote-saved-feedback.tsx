@@ -25,7 +25,7 @@ export function VoteSavedFeedback() {
           <Check className="h-5 w-5" />
         </span>
         <div>
-          <p className="text-base font-black uppercase tracking-[0.12em] text-[#f3fff8]">Voto guardado!</p>
+          <p className="text-base font-black uppercase tracking-[0.12em] text-[#f3fff8]">¡Voto guardado!</p>
           <p className="text-sm font-semibold text-[#aefbd8]">Preparando el proximo versus...</p>
         </div>
       </motion.div>

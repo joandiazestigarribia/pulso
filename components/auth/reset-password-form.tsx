@@ -67,7 +67,7 @@ export function ResetPasswordForm() {
       transition={{ duration: 0.6, ease: "easeOut" }}
       className="relative mx-auto w-full max-w-md"
     >
-      <div className="rounded-[30px_16px_24px_14px] border border-[#ff43f8]/30 bg-[#111739]/82 p-7 pt-9 shadow-[0_10px_18px_rgba(0,0,0,0.28)] ring-1 ring-[#ff43f8]/15 backdrop-blur-sm">
+      <div className="rounded-[30px_16px_24px_14px] border border-[#ff43f8]/30 bg-[#111739]/82 p-5 pt-9 shadow-[0_10px_18px_rgba(0,0,0,0.28)] ring-1 ring-[#ff43f8]/15 backdrop-blur-sm sm:p-7 sm:pt-9">
         <div className="mb-5 flex justify-center">
           <span className="rounded-full bg-[#ff43f8]/25 px-5 py-2 text-xs font-black uppercase tracking-[0.16em] text-[#ffd8ff] ring-1 ring-[#ff43f8]/45">
             Nueva clave
@@ -115,7 +115,7 @@ export function ResetPasswordForm() {
           {fieldErrors.password ? (
             <p className="mt-2 text-xs font-semibold text-[#ffb3bd]">{fieldErrors.password[0]}</p>
           ) : null}
-          <div className="mt-3 grid grid-cols-2 gap-2 rounded-xl border border-white/10 bg-[#0b102a]/70 p-3">
+          <div className="mt-3 grid grid-cols-1 gap-2 rounded-xl border border-white/10 bg-[#0b102a]/70 p-3 sm:grid-cols-2">
             {[
               ["Mínimo 8 caracteres", passwordRules.minLength],
               ["Al menos una mayúscula", passwordRules.uppercase],

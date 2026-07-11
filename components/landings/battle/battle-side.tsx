@@ -92,15 +92,15 @@ export function BattleSide({
   }, [])
 
   return (
-    <section className="group relative flex flex-1 flex-col items-center justify-center">
+    <section className="group relative flex w-full max-w-[300px] flex-none flex-col items-center justify-center md:max-w-[320px] lg:max-w-none lg:flex-1">
       <div
-        className={`absolute -top-3 z-20 rounded-xl border-2 border-white/40 bg-black/55 px-3 py-1 text-xs font-black uppercase tracking-wide shadow-[0_0_20px_rgba(250,70,255,0.35)] backdrop-blur md:-top-4 md:px-4 md:text-sm ${side === "left" ? "-left-10 -rotate-6 md:-rotate-12 text-[#7be3ff]" : "-right-10 rotate-6 md:rotate-12 text-[#ffb5fb]"}`}
+        className={`absolute -top-3 z-20 rounded-xl border-2 border-white/40 bg-black/55 px-2.5 py-1 text-[11px] font-black uppercase tracking-wide shadow-[0_0_20px_rgba(250,70,255,0.35)] backdrop-blur md:-top-4 md:px-4 md:text-sm ${side === "left" ? "left-1 -rotate-6 md:-left-10 md:-rotate-12 text-[#7be3ff]" : "right-1 rotate-6 md:-right-10 md:rotate-12 text-[#ffb5fb]"}`}
       >
         {label}
       </div>
 
       <motion.div
-        className="w-full max-w-[300px] rounded-[20px] border-2 bg-black/45 p-2.5 shadow-[0_0_22px_rgba(0,0,0,0.5)] backdrop-blur-none md:max-w-[320px] md:rounded-[22px] md:p-2.5"
+        className="min-h-[318px] w-full max-w-[300px] rounded-[20px] border-2 bg-black/45 p-2.5 shadow-[0_0_22px_rgba(0,0,0,0.5)] backdrop-blur-none md:min-h-0 md:max-w-[320px] md:rounded-[22px] md:p-2.5"
         style={{ borderColor: color, boxShadow: `0 0 26px ${color}75` }}
         initial={{ opacity: 0, y: 16 }}
         animate={
@@ -147,15 +147,15 @@ export function BattleSide({
 
         <div className="space-y-2.5">
           <div className="flex items-start justify-between gap-2">
-            <div>
-              <h2 className="bg-gradient-to-r from-[#00f0ff] via-[#ff43f8] to-[#ffe600] bg-clip-text text-base font-black uppercase leading-none tracking-tight text-transparent md:text-lg">
+            <div className="min-w-0 flex-1">
+              <h2 className="truncate bg-gradient-to-r from-[#00f0ff] via-[#ff43f8] to-[#ffe600] bg-clip-text text-base font-black uppercase leading-none tracking-tight text-transparent md:text-lg">
                 {track.name}
               </h2>
-              <p className="text-xs font-semibold text-[#d8ebff] md:text-sm">{track.artist}</p>
+              <p className="truncate text-xs font-semibold text-[#d8ebff] md:text-sm">{track.artist}</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex h-12 items-center gap-2">
             <button
               type="button"
               onClick={() => onTogglePreview(track)}
@@ -166,16 +166,16 @@ export function BattleSide({
               {isPreviewPlaying ? <Square className="h-4 w-4" /> : <Play className="h-4 w-4" />}
             </button>
 
-            <div className={`min-w-0 flex-1 rounded-lg border px-2 py-1.5 ${isPreviewPlaying ? "border-[#00f0ff]/45 bg-[#00f0ff]/10" : "border-white/20 bg-black/40"}`}>
-              <div className="mb-1 flex items-center justify-between text-[9px] font-mono uppercase tracking-[0.12em] text-white/75">
-                <span>
+            <div className={`flex h-10 min-w-0 flex-1 flex-col justify-center rounded-lg border px-2 ${isPreviewPlaying ? "border-[#00f0ff]/45 bg-[#00f0ff]/10" : "border-white/20 bg-black/40"}`}>
+              <div className="mb-1 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 text-[9px] font-mono uppercase tracking-[0.08em] text-white/75 sm:tracking-[0.12em]">
+                <span className="min-w-0 truncate whitespace-nowrap">
                   {isRefreshingPreview
                     ? "Actualizando vista previa"
                     : hasPreview
                       ? (isPreviewPlaying ? "Reproduciendo" : "Reproducí vista previa")
                       : "Sin vista previa"}
                 </span>
-                <span>
+                <span className="shrink-0 whitespace-nowrap">
                   {formatAudioTime(previewCurrentTime)} / {formatAudioTime(previewDuration)}
                 </span>
               </div>
@@ -196,7 +196,7 @@ export function BattleSide({
           <button
             onClick={onVote}
             disabled={isVoting}
-            className="flex w-full items-center justify-center gap-3 rounded-xl border-2 py-2.5 text-xs font-black uppercase tracking-[0.18em] text-black shadow-[0_10px_24px_rgba(0,0,0,0.5)] transition-all hover:brightness-110 active:translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60 md:text-sm"
+            className="flex h-10 w-full items-center justify-center gap-3 rounded-xl border-2 text-xs font-black uppercase tracking-[0.18em] text-black shadow-[0_10px_24px_rgba(0,0,0,0.5)] transition-all hover:brightness-110 active:translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60 md:h-auto md:py-2.5 md:text-sm"
             style={{
               background: `${color}`,
               borderColor: "#1a1a1a",

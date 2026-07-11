@@ -79,7 +79,7 @@ export function LoginForm() {
       className="relative mx-auto w-full max-w-md"
     >
       <motion.div
-        className="absolute -left-4 -top-4 z-10 flex h-12 w-12 rotate-[-12deg] items-center justify-center rounded-2xl bg-[#ffe600] shadow-[0_0_22px_rgba(255,230,0,0.35)]"
+        className="absolute left-2 top-2 z-10 flex h-10 w-10 rotate-[-12deg] items-center justify-center rounded-2xl bg-[#ffe600] shadow-[0_0_22px_rgba(255,230,0,0.35)] sm:-left-4 sm:-top-4 sm:h-12 sm:w-12"
         initial={{ scale: 0, rotate: -30 }}
         animate={{ scale: 1, rotate: -12 }}
         transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
@@ -89,7 +89,7 @@ export function LoginForm() {
         </svg>
       </motion.div>
 
-      <div className="rounded-[30px_16px_24px_14px] border border-[#00f0ff]/30 bg-[#111739]/82 p-7 pt-9 shadow-[0_10px_18px_rgba(0,0,0,0.28)] ring-1 ring-[#00f0ff]/15 backdrop-blur-sm">
+      <div className="rounded-[30px_16px_24px_14px] border border-[#00f0ff]/30 bg-[#111739]/82 p-5 pt-10 shadow-[0_10px_18px_rgba(0,0,0,0.28)] ring-1 ring-[#00f0ff]/15 backdrop-blur-sm sm:p-7 sm:pt-9">
         <motion.div
           className="mb-5 flex justify-center"
           initial={{ scale: 0 }}
