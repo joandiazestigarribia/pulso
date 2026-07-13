@@ -28,6 +28,7 @@ export function MusicDnaLanding() {
     isResetting,
     isShareOpen,
     shareFeedback,
+    isShareLinkLoading,
     dominantGenres,
     sonicPersona,
     sonicPersonaDisplayName,
@@ -43,6 +44,7 @@ export function MusicDnaLanding() {
     setIsShareOpen,
     handleResetProgress,
     handleCopyShare,
+    handleNativeShare,
     shareToNetwork,
   } = useMusicDnaViewModel()
   const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false)
@@ -309,6 +311,8 @@ export function MusicDnaLanding() {
         personaAssetFile={sonicPersona.assetFile}
         description={shareDescription}
         feedback={shareFeedback}
+        isShareLinkLoading={isShareLinkLoading}
+        onNativeShare={handleNativeShare}
         onCopyShare={handleCopyShare}
         onShareToNetwork={shareToNetwork}
       />
