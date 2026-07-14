@@ -108,7 +108,7 @@ export function BattleNowPlayingFooter({
 }: BattleNowPlayingFooterProps) {
   return (
     <motion.footer
-      className="relative z-20 mx-auto mb-4 flex min-h-16 w-[min(92%,860px)] flex-col items-stretch justify-between gap-3 rounded-[22px] border border-white/20 bg-[#111739]/74 px-3 py-2 shadow-[0_0_28px_rgba(0,0,0,0.5)] backdrop-blur sm:flex-row sm:items-center md:mb-6 md:px-4"
+      className="relative z-20 mx-auto mb-4 flex min-h-16 w-[min(92%,860px)] max-md:max-w-[320px] flex-col items-stretch justify-between gap-3 rounded-[22px] border border-white/20 bg-[#111739]/74 px-3 py-2 shadow-[0_0_28px_rgba(0,0,0,0.5)] backdrop-blur sm:flex-row sm:items-center md:mb-6 md:px-4"
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35, ease: "easeOut", delay: 0.05 }}

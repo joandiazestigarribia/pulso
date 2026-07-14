@@ -1,4 +1,5 @@
 import { CampgroundHeader } from "@/components/auth/campground-header"
+import { SiteFooter } from "@/components/layout/site-footer"
 import { MUSIC_DNA_UNLOCK_THRESHOLD } from "@/lib/music-dna-config"
 import { Lock, Music2, Play, Swords } from "lucide-react"
 import Image from "next/image"
@@ -317,6 +318,8 @@ export default function HomePage() {
           ))}
         </div>
       </section>
+
+      <SiteFooter />
     </main>
   )
 }

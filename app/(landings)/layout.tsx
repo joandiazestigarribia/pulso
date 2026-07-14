@@ -1,4 +1,5 @@
 import { CampgroundHeader } from "@/components/auth/campground-header"
+import { SiteFooter } from "@/components/layout/site-footer"
 
 export default function CampfireLayout({
   children,
@@ -9,6 +10,7 @@ export default function CampfireLayout({
     <div className="relative min-h-screen bg-campfire-deep overflow-hidden">
       <CampgroundHeader />
       {children}
+      <SiteFooter />
     </div>
   )
 }
