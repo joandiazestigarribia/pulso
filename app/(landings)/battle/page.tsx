@@ -6,6 +6,7 @@ import { VoteSavedFeedback } from "@/components/landings/vote-saved-feedback"
 import { BattleAuthPrompt } from "@/components/landings/battle/battle-auth-prompt"
 import { BattleSide } from "@/components/landings/battle/battle-side"
 import {
+  BattleHowToPlayModal,
   BattleNowPlayingFooter,
   BattleProfileUnlockModal,
   BattleProgressBanner,
@@ -14,6 +15,8 @@ import {
   BattleTopNotices,
 } from "@/components/landings/battle/battle-ui-blocks"
 import { PROFILE_UI_GOAL_VOTES, useBattleFlow } from "@/components/landings/battle/use-battle-flow"
+
+const BATTLE_HELP_SEEN_STORAGE_KEY = "pulso:battle-help-seen"
 
 const battleBackgroundStyle = {
   backgroundImage: "url('/images/battle/neon_campfire_background.png')",
@@ -56,6 +59,7 @@ export default function BattlePage() {
     closeSkipLimitModal,
   } = useBattleFlow()
   const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false)
+  const [isHelpModalOpen, setIsHelpModalOpen] = useState(false)
 
   useEffect(() => {
     if (!isResetting) {
@@ -64,6 +68,19 @@ export default function BattlePage() {
 
     setIsResetConfirmOpen(false)
   }, [isResetting])
+
+  useEffect(() => {
+    try {
+      if (window.localStorage.getItem(BATTLE_HELP_SEEN_STORAGE_KEY) === "true") {
+        return
+      }
+
+      window.localStorage.setItem(BATTLE_HELP_SEEN_STORAGE_KEY, "true")
+      setIsHelpModalOpen(true)
+    } catch {
+      setIsHelpModalOpen(false)
+    }
+  }, [])
 
   if (battleError) {
     return (
@@ -177,11 +194,13 @@ export default function BattlePage() {
           isResetting={isResetting}
           isSkipping={isSkipping}
           skipsRemaining={Math.max(0, maxConsecutiveSkips - consecutiveSkips)}
+          onOpenHelp={() => setIsHelpModalOpen(true)}
           onRequestReset={() => setIsResetConfirmOpen(true)}
           onSkipStage={handleSkipStage}
         />
       </section>
 
+      <BattleHowToPlayModal isOpen={isHelpModalOpen} onClose={() => setIsHelpModalOpen(false)} />
       <BattleSkipLimitModal isOpen={isSkipLimitModalOpen} onClose={closeSkipLimitModal} />
       <BattleProfileUnlockModal
         isOpen={profileUnlockNotice !== null}

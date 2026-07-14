@@ -1,5 +1,6 @@
 import Link from "next/link"
-import { RefreshCcw, Volume2, X } from "lucide-react"
+import { useEffect } from "react"
+import { HelpCircle, RefreshCcw, SkipForward, Trophy, UserRound, Volume2, X } from "lucide-react"
 import { AnimatePresence, motion } from "framer-motion"
 
 interface BattleTopNoticesProps {
@@ -94,6 +95,7 @@ interface BattleNowPlayingFooterProps {
   isResetting: boolean
   isSkipping: boolean
   skipsRemaining: number
+  onOpenHelp: () => void
   onRequestReset: () => void
   onSkipStage: () => void
 }
@@ -103,6 +105,7 @@ export function BattleNowPlayingFooter({
   isResetting,
   isSkipping,
   skipsRemaining,
+  onOpenHelp,
   onRequestReset,
   onSkipStage,
 }: BattleNowPlayingFooterProps) {
@@ -123,7 +126,19 @@ export function BattleNowPlayingFooter({
         </div>
       </div>
 
-      <div className="grid shrink-0 grid-cols-2 items-center gap-2 sm:flex">
+      <div className="grid shrink-0 grid-cols-3 items-center gap-2 sm:flex">
+        <motion.button
+          type="button"
+          onClick={onOpenHelp}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-[#00f0ff]/35 bg-[#00f0ff]/12 px-3 py-1.5 text-xs font-bold text-[#d8ebff] transition-all hover:border-[#00f0ff]/60 hover:bg-[#00f0ff]/18 hover:text-white"
+          aria-label="Abrir ayuda de batalla"
+          title="Como jugar"
+        >
+          <HelpCircle className="h-4 w-4" />
+          <span className="max-sm:hidden">Ayuda</span>
+        </motion.button>
         <motion.button
           type="button"
           onClick={onSkipStage}
@@ -143,10 +158,132 @@ export function BattleNowPlayingFooter({
           className="inline-flex items-center gap-2 rounded-xl border border-[#ff806d]/45 bg-[#2f1419]/75 px-3 py-1.5 text-xs font-bold text-[#ffd2c9] transition-all hover:border-[#ff806d]/80 hover:bg-[#3a1820] disabled:cursor-not-allowed disabled:opacity-60"
         >
           <RefreshCcw className={`h-4 w-4 ${isResetting ? "animate-spin" : ""}`} />
-          {isResetting ? "Reiniciando..." : "Reiniciar juego"}
+          <span className="sm:hidden">{isResetting ? "..." : "Reiniciar"}</span>
+          <span className="max-sm:hidden">{isResetting ? "Reiniciando..." : "Reiniciar juego"}</span>
         </motion.button>
       </div>
     </motion.footer>
+  )
+}
+
+interface BattleHowToPlayModalProps {
+  isOpen: boolean
+  onClose: () => void
+}
+
+const battleHelpItems = [
+  {
+    title: "Elegi tu favorita",
+    description: "Escucha las previews y vota por la cancion que mas te mueva en este versus.",
+    Icon: Trophy,
+  },
+  {
+    title: "Cada voto cuenta",
+    description: "Tu eleccion suma progreso para desbloquear tu Perfil Sonoro.",
+    Icon: UserRound,
+  },
+  {
+    title: "Saltear no vota",
+    description: "Saltear trae otro versus sin guardar resultado ni avanzar tu perfil. Tenes 5 salteos seguidos.",
+    Icon: SkipForward,
+  },
+]
+
+export function BattleHowToPlayModal({ isOpen, onClose }: BattleHowToPlayModalProps) {
+  useEffect(() => {
+    if (!isOpen) {
+      return
+    }
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        onClose()
+      }
+    }
+
+    window.addEventListener("keydown", onKeyDown)
+    return () => window.removeEventListener("keydown", onKeyDown)
+  }, [isOpen, onClose])
+
+  if (!isOpen) {
+    return null
+  }
+
+  return (
+    <motion.section
+      className="fixed inset-0 z-70 flex items-center justify-center bg-black/60 p-3 backdrop-blur-sm sm:p-4"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.22, ease: "easeOut" }}
+      onClick={onClose}
+    >
+      <motion.div
+        className="flex max-h-[calc(100vh-1.5rem)] w-full max-w-140 flex-col overflow-hidden rounded-3xl border-2 border-[#00f0ff]/40 bg-[#0f1638]/94 p-3 text-[#eaf7ff] shadow-[0_18px_54px_rgba(0,0,0,0.5)] sm:max-h-[calc(100vh-2rem)] sm:p-4"
+        initial={{ opacity: 0, y: 20, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.28, ease: "easeOut" }}
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="flex items-start justify-between gap-3 border-b border-[#00f0ff]/25 pb-3">
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#7be3ff]">
+              Guia rapida de versus
+            </p>
+            <h3 className="mt-1 bg-gradient-to-r from-[#00f0ff] via-[#ff43f8] to-[#ffe600] bg-clip-text text-xl font-black uppercase leading-none text-transparent sm:text-2xl">
+              Como se juega Pulso
+            </h3>
+          </div>
+          <motion.button
+            type="button"
+            onClick={onClose}
+            whileHover={{ scale: 1.06 }}
+            whileTap={{ scale: 0.94 }}
+            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/30 text-white transition hover:bg-white/15"
+            aria-label="Cerrar ayuda"
+          >
+            <X className="h-5 w-5" />
+          </motion.button>
+        </div>
+
+        <div className="mt-4 overflow-hidden rounded-3xl border border-[#00f0ff]/28 bg-[#121a40]/78 p-3 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.04)]">
+          <div className="space-y-3">
+            {battleHelpItems.map(({ title, description, Icon }) => (
+              <div
+                key={title}
+                className="flex gap-3 rounded-2xl border border-white/12 bg-black/18 px-3 py-3 shadow-[inset_0_0_0_1px_rgba(0,240,255,0.08)]"
+              >
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-[#ff43f8]/35 bg-[#111739]/90 text-[#7be3ff]">
+                  <Icon className="h-5 w-5" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-black uppercase tracking-[0.08em] text-white">{title}</p>
+                  <p className="mt-1 text-sm font-semibold leading-relaxed text-[#d8ebff]">{description}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="mt-4 rounded-2xl border border-[#ffe600]/25 bg-[#ffe600]/10 px-3 py-3">
+          <p className="text-sm font-semibold leading-relaxed text-[#fff3b0]">
+            Tip: si una preview no te alcanza para decidir, saltea sin culpa. Cuando ya tengas una favorita clara,
+            vota y el juego vuelve a disponer de salteos.
+          </p>
+        </div>
+
+        <div className="mt-4 flex justify-end">
+          <motion.button
+            type="button"
+            onClick={onClose}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className="rounded-2xl border border-[#00f0ff]/55 bg-[#00f0ff]/20 px-4 py-3 text-sm font-black uppercase tracking-wide text-white shadow-[0_0_22px_rgba(0,240,255,0.18)] transition hover:bg-[#00f0ff]/25"
+          >
+            Entendido
+          </motion.button>
+        </div>
+      </motion.div>
+    </motion.section>
   )
 }
 
