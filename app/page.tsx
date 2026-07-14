@@ -73,7 +73,7 @@ const avatarPreview = [
     imageClassName: "scale-100",
   },
   {
-    name: "Ranger Metal",
+    name: "Explorador Ranger",
     image: "/images/characters/ranger_character_asset resize.png",
     imageClassName: "scale-100",
   },
