@@ -68,14 +68,7 @@ export default async function PublicProfileSharePage({ params }: PublicProfileSh
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-[#080b1a] px-4 pb-10 pt-20 text-[#eaf7ff]">
-      <div
-        className="pointer-events-none fixed inset-0 z-0 opacity-90"
-        style={{
-          backgroundImage: "url('/images/music-dna/background-music-dna.png')",
-          backgroundPosition: "center",
-          backgroundSize: "auto",
-        }}
-      />
+      <div className="bg-scene-music-dna pointer-events-none fixed inset-0 z-0 opacity-90" />
       <div className="pointer-events-none fixed inset-0 z-0 bg-[radial-gradient(circle_at_30%_20%,rgba(0,240,255,0.14),transparent_45%),radial-gradient(circle_at_75%_15%,rgba(255,67,248,0.2),transparent_45%),linear-gradient(180deg,rgba(8,11,26,0.74),rgba(8,11,26,0.94))]" />
 
       <div className="relative z-10 mx-auto w-full max-w-3xl">

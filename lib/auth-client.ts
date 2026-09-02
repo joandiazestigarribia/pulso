@@ -116,7 +116,6 @@ async function maybeHandleUnauthorized(pathname: string, status: number): Promis
       credentials: "include",
     })
   } catch {
-    // Ignore logout network errors after session expiration.
   }
 
   if (typeof window !== "undefined") {
@@ -273,7 +272,6 @@ export function installAuthUnauthorizedInterceptor(): () => void {
       const pathname = getPathname(requestUrl)
       await maybeHandleUnauthorized(pathname, response.status)
     } catch {
-      // Ignore interceptor runtime errors to avoid blocking normal requests.
     }
 
     return response

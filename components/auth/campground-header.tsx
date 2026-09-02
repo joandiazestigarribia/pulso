@@ -71,6 +71,7 @@ export function CampgroundHeader() {
           </div>
           <Link
             href="/"
+            prefetch={false}
             className="shrink-0 bg-gradient-to-r from-[#00f0ff] via-[#ff43f8] to-[#ffe600] bg-clip-text text-base font-black uppercase leading-none tracking-wide text-transparent md:text-lg"
           >
             <span className="md:hidden">Pulso</span>
@@ -81,12 +82,14 @@ export function CampgroundHeader() {
         <nav className="hidden items-center gap-5 text-xs font-black uppercase tracking-[0.12em] md:flex">
           <Link
             href="/battle"
+            prefetch={false}
             className={resolveNavItemClass(pathname, "/battle", "cyan")}
           >
             1 vs 1
           </Link>
           <Link
             href="/music-dna"
+            prefetch={false}
             className={resolveNavItemClass(pathname, "/music-dna", "pink")}
           >
             Perfil Sonoro
@@ -97,6 +100,7 @@ export function CampgroundHeader() {
           {showSignIn ? (
             <Link
               href="/login"
+              prefetch={false}
               className="rounded-lg border bg-gradient-to-r from-[#00ff66] to-[#00f0ff] px-2 py-1.5 text-[10px] font-black uppercase tracking-wide text-black shadow-[0_10px_24px_rgba(0,0,0,0.5)] transition-colors hover:brightness-110 md:px-2.5 md:py-1.25 md:text-xs"
             >
               <span className="sm:hidden">Entrar</span>
@@ -106,6 +110,7 @@ export function CampgroundHeader() {
           {showRegister ? (
             <Link
               href="/register"
+              prefetch={false}
               className="rounded-lg border border-[#ff43f8]/45 bg-gradient-to-r from-[#ff2a6d] to-[#ffe600] px-2 py-1.5 text-[10px] font-black uppercase tracking-wide text-[#0b1129] shadow-[0_10px_24px_rgba(0,0,0,0.5)] transition-all hover:brightness-110 md:px-2.5 md:py-1.25 md:text-xs"
             >
               <span className="sm:hidden">Registro</span>

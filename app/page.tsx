@@ -4,12 +4,7 @@ import { MUSIC_DNA_UNLOCK_THRESHOLD } from "@/lib/music-dna-config"
 import { Lock, Music2, Play, Swords } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
-
-const homeBackgroundStyle = {
-  backgroundImage: "url('/images/home/background-home.jpg')",
-  backgroundPosition: "center",
-  backgroundSize: "contain",
-} as const
+import { preloadSceneBackground } from "@/lib/preload-scene-background"
 
 const productLoop = [
   {
@@ -114,14 +109,14 @@ function BattleDemoCard({ track }: { track: (typeof battleDemoTracks)[number] })
             src={track.image}
             alt={`${track.title} cover`}
             fill
-            sizes="180px"
+            sizes="(max-width: 639px) 128px, 180px"
             className="object-cover grayscale transition-transform duration-300 group-hover:scale-105 group-hover:grayscale-0"
           />
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/75 via-black/5 to-transparent" />
         </div>
-        <h3 className="mt-1.5 truncate bg-gradient-to-r from-[#00f0ff] via-[#ff43f8] to-[#ffe600] bg-clip-text text-[10px] font-black uppercase leading-none text-transparent">
+        <p className="mt-1.5 truncate bg-gradient-to-r from-[#00f0ff] via-[#ff43f8] to-[#ffe600] bg-clip-text text-[10px] font-black uppercase leading-none text-transparent">
           {track.title}
-        </h3>
+        </p>
         <p className="mt-0.5 truncate text-[10px] font-semibold text-[#d8e9ff]">{track.artist}</p>
         <div className="mt-1.5 flex items-center gap-1.5 rounded-lg border border-white/20 bg-black/35 p-1">
           <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md border border-white/25 bg-black/45">
@@ -142,9 +137,11 @@ function BattleDemoCard({ track }: { track: (typeof battleDemoTracks)[number] })
 }
 
 export default function HomePage() {
+  preloadSceneBackground("/images/home/background-home.avif")
+
   return (
     <main className="relative min-h-screen overflow-hidden bg-[#080b1a] text-[#eaf7ff] selection:bg-[#ff43f8] selection:text-black">
-      <div className="pointer-events-none fixed inset-0 z-0 opacity-90" style={homeBackgroundStyle} />
+      <div className="bg-scene-home pointer-events-none fixed inset-0 z-0 opacity-90" />
       <div className="pointer-events-none fixed inset-0 z-0 bg-[radial-gradient(circle_at_30%_20%,rgba(0,240,255,0.14),transparent_45%),radial-gradient(circle_at_75%_15%,rgba(255,67,248,0.2),transparent_45%),linear-gradient(180deg,rgba(8,11,26,0.72),rgba(8,11,26,0.94))]" />
       <CampgroundHeader />
 
@@ -171,6 +168,7 @@ export default function HomePage() {
             </Link>
             <Link
               href="/music-dna"
+              prefetch={false}
               className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#ff43f8]/45 bg-[#ff43f8]/15 px-5 py-3 text-sm font-black uppercase tracking-wide text-[#ffd6fb] shadow-[0_0_24px_rgba(255,67,248,0.18)] transition-all hover:border-[#ffb5fb]/75 hover:bg-[#ff43f8]/25 hover:text-white"
             >
               Ver Perfil Sonoro
@@ -270,7 +268,7 @@ export default function HomePage() {
                     src={avatar.image}
                     alt={`${avatar.name} avatar`}
                     fill
-                    sizes="180px"
+                    sizes="(max-width: 639px) 112px, 144px"
                     className={`${avatar.imageClassName} object-contain drop-shadow-[0_14px_16px_rgba(0,0,0,0.48)]`}
                   />
                 </div>

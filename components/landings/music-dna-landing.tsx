@@ -14,12 +14,6 @@ import { MUSIC_DNA_UNLOCK_THRESHOLD } from "@/lib/music-dna-config"
 
 const PROFILE_ACCESS_MIN_BATTLES = MUSIC_DNA_UNLOCK_THRESHOLD
 
-const musicDnaBackgroundStyle = {
-  backgroundImage: "url('/images/music-dna/background-music-dna.png')",
-  backgroundPosition: "center",
-  backgroundSize: "auto",
-} as const
-
 export function MusicDnaLanding() {
   const {
     isLoading,
@@ -60,7 +54,7 @@ export function MusicDnaLanding() {
   if (isLoading) {
     return (
       <main className="relative mx-auto flex min-h-screen w-full max-w-7xl items-center justify-center overflow-hidden px-4 pb-8 pt-24">
-        <div className="pointer-events-none fixed inset-0 z-0 opacity-90" style={musicDnaBackgroundStyle} />
+        <div className="bg-scene-music-dna pointer-events-none fixed inset-0 z-0 opacity-90" />
         <div className="pointer-events-none fixed inset-0 z-0 bg-[radial-gradient(circle_at_30%_20%,rgba(0,240,255,0.14),transparent_45%),radial-gradient(circle_at_75%_15%,rgba(255,67,248,0.2),transparent_45%),linear-gradient(180deg,rgba(8,11,26,0.74),rgba(8,11,26,0.92))]" />
         <motion.div
           className="relative z-10 flex items-center gap-3 rounded-2xl border-2 border-[#00f0ff]/40 bg-[#120a26]/80 px-5 py-3 text-sm font-bold text-[#eaf7ff]"
@@ -84,7 +78,7 @@ export function MusicDnaLanding() {
 
     return (
       <main className="relative mx-auto flex min-h-screen w-full max-w-7xl items-center justify-center overflow-hidden px-4 pb-8 pt-24">
-        <div className="pointer-events-none fixed inset-0 z-0 opacity-90" style={musicDnaBackgroundStyle} />
+        <div className="bg-scene-music-dna pointer-events-none fixed inset-0 z-0 opacity-90" />
         <div className="pointer-events-none fixed inset-0 z-0 bg-[radial-gradient(circle_at_30%_20%,rgba(0,240,255,0.14),transparent_45%),radial-gradient(circle_at_75%_15%,rgba(255,67,248,0.2),transparent_45%),linear-gradient(180deg,rgba(8,11,26,0.74),rgba(8,11,26,0.92))]" />
         <motion.section
           className="relative z-10 w-full max-w-lg rounded-3xl border border-[#00f0ff]/35 bg-[#0b1230]/78 px-6 py-7 text-center shadow-[0_24px_60px_rgba(0,0,0,0.42)] backdrop-blur-sm"
@@ -109,7 +103,7 @@ export function MusicDnaLanding() {
 
   return (
     <main className="relative min-h-screen w-full overflow-hidden bg-[#080b1a] pb-8 pt-15 text-[#eaf7ff] md:px-4">
-      <div className="pointer-events-none fixed inset-0 z-0 opacity-90" style={musicDnaBackgroundStyle} />
+      <div className="bg-scene-music-dna pointer-events-none fixed inset-0 z-0 opacity-90" />
       <motion.section
         className="relative z-10 mx-auto mt-5 max-w-300 overflow-hidden rounded-[28px] bg-[#090d25]/45 text-[#eaf7ff] backdrop-blur-sm"
         initial={{ opacity: 0, y: 14 }}

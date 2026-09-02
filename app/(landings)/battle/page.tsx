@@ -18,12 +18,6 @@ import { PROFILE_UI_GOAL_VOTES, useBattleFlow } from "@/components/landings/batt
 
 const BATTLE_HELP_SEEN_STORAGE_KEY = "pulso:battle-help-seen"
 
-const battleBackgroundStyle = {
-  backgroundImage: "url('/images/battle/neon_campfire_background.png')",
-  backgroundPosition: "center",
-  backgroundSize: "contain",
-} as const
-
 export default function BattlePage() {
   const {
     battle,
@@ -85,7 +79,7 @@ export default function BattlePage() {
   if (battleError) {
     return (
       <main className="relative mx-auto flex min-h-screen w-full max-w-7xl items-center justify-center overflow-hidden px-4 pb-8 pt-24">
-        <div className="pointer-events-none fixed inset-0 z-0 opacity-90" style={battleBackgroundStyle} />
+        <div className="bg-scene-battle pointer-events-none fixed inset-0 z-0 opacity-90" />
         <div className="relative z-10 rounded-2xl border-2 border-[#ff4ef5]/45 bg-[#2a0e19]/80 px-5 py-3 text-sm font-bold text-[#ffd6dd]">
           {battleError instanceof Error
             ? battleError.message
@@ -98,7 +92,7 @@ export default function BattlePage() {
   if (!battle) {
     return (
       <main className="relative mx-auto flex min-h-screen w-full max-w-7xl items-center justify-center overflow-hidden px-4 pb-8 pt-24">
-        <div className="pointer-events-none fixed inset-0 z-0 opacity-90" style={battleBackgroundStyle} />
+        <div className="bg-scene-battle pointer-events-none fixed inset-0 z-0 opacity-90" />
         <div className="pointer-events-none fixed inset-0 z-0 bg-[radial-gradient(circle_at_30%_20%,rgba(0,240,255,0.14),transparent_45%),radial-gradient(circle_at_75%_15%,rgba(255,67,248,0.2),transparent_45%),linear-gradient(180deg,rgba(8,11,26,0.74),rgba(8,11,26,0.92))]" />
         <motion.div className="relative z-10 flex flex-col items-center gap-4" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
           <motion.div
@@ -114,7 +108,7 @@ export default function BattlePage() {
 
   return (
     <main className="relative mx-auto w-full max-w-7xl overflow-hidden px-4 pb-8 pt-24 text-[#eaf7ff] selection:bg-[#ff4ef5] selection:text-black">
-      <div className="pointer-events-none fixed inset-0 z-0 opacity-90" style={battleBackgroundStyle} />
+      <div className="bg-scene-battle pointer-events-none fixed inset-0 z-0 opacity-90" />
       <div className="pointer-events-none fixed inset-0 z-0 bg-[radial-gradient(circle_at_30%_20%,rgba(0,240,255,0.14),transparent_45%),radial-gradient(circle_at_75%_15%,rgba(255,67,248,0.2),transparent_45%),linear-gradient(180deg,rgba(8,11,26,0.74),rgba(8,11,26,0.92))]" />
 
       <AnimatePresence>

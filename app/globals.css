@@ -1,4 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Playpen+Sans:wght@100..800&display=swap');
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
@@ -152,7 +151,37 @@
 }
 
 .font-sonic-persona {
-  font-family: 'Playpen Sans', sans-serif;
+  font-family: var(--font-sonic), sans-serif;
+}
+
+.bg-scene-home {
+  background-image: url('/images/home/background-home.webp');
+  background-image: image-set(
+    url('/images/home/background-home.avif') type('image/avif'),
+    url('/images/home/background-home.webp') type('image/webp')
+  );
+  background-position: center;
+  background-size: contain;
+}
+
+.bg-scene-battle {
+  background-image: url('/images/battle/neon_campfire_background.webp');
+  background-image: image-set(
+    url('/images/battle/neon_campfire_background.avif') type('image/avif'),
+    url('/images/battle/neon_campfire_background.webp') type('image/webp')
+  );
+  background-position: center;
+  background-size: contain;
+}
+
+.bg-scene-music-dna {
+  background-image: url('/images/music-dna/background-music-dna.webp');
+  background-image: image-set(
+    url('/images/music-dna/background-music-dna.avif') type('image/avif'),
+    url('/images/music-dna/background-music-dna.webp') type('image/webp')
+  );
+  background-position: center;
+  background-size: auto;
 }
 
 .expanded {

@@ -1,5 +1,5 @@
 import type { Metadata } from "next"
-import { Space_Grotesk, Outfit } from "next/font/google"
+import { Space_Grotesk, Outfit, Playpen_Sans } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import { AuthSessionBootstrap } from "@/components/auth/auth-session-bootstrap"
 import "./globals.css"
@@ -14,6 +14,12 @@ const _spaceGrotesk = Space_Grotesk({
 const _outfit = Outfit({
   subsets: ["latin"],
   variable: "--font-sans",
+})
+
+const _playpenSans = Playpen_Sans({
+  subsets: ["latin"],
+  variable: "--font-sonic",
+  preload: false,
 })
 
 export const metadata: Metadata = {
@@ -60,7 +66,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="es-AR" className={`${_spaceGrotesk.variable} ${_outfit.variable}`}>
+    <html lang="es-AR" className={`${_spaceGrotesk.variable} ${_outfit.variable} ${_playpenSans.variable}`}>
       <body className="font-sans antialiased bg-carbon text-foreground min-h-screen">
         <AuthSessionBootstrap />
         {children}

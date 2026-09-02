@@ -23,7 +23,7 @@ export function SiteFooter() {
           <div className="flex items-center gap-2.5">
             <Flame className="h-3.5 w-3.5 text-[#7bb7ff] sm:h-4 sm:w-4" />
             <span className="text-sm font-black lowercase tracking-tight text-white sm:text-base">pulso campfire</span>
-            <span className="text-xs font-bold text-white/35 sm:text-sm">{currentYear}</span>
+            <span className="text-xs font-bold text-white/60 sm:text-sm">{currentYear}</span>
           </div>
 
           <nav
@@ -34,6 +34,7 @@ export function SiteFooter() {
               <Link
                 key={link.href}
                 href={link.href}
+                prefetch={false}
                 className="text-xs font-black lowercase text-white/65 transition-colors hover:text-white sm:text-sm sm:text-white/70"
               >
                 {link.label}

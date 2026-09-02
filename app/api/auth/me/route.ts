@@ -16,7 +16,10 @@ export async function GET(request: Request) {
   const token = getAuthTokenFromRequest(request)
 
   if (!token) {
-    return createErrorResponse(request, 401, "UNAUTHORIZED", "Falta el token de autenticación.")
+    return withCorsHeaders(
+      request,
+      NextResponse.json({ ok: false, code: "UNAUTHENTICATED", message: "No hay sesión activa." })
+    )
   }
 
   try {

@@ -19,6 +19,5 @@ export async function trackClientEvent(payload: ClientEventPayload): Promise<voi
       body: JSON.stringify(payload),
     })
   } catch {
-    // Analytics errors should never block user flow.
   }
 }
