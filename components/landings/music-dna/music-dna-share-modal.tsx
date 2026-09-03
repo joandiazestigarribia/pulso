@@ -30,6 +30,8 @@ const SOCIAL_SHARE_ACTIONS: SocialShareAction[] = [
   { network: "instagram", label: "Instagram", Icon: Instagram },
 ]
 
+const SHARER_NAME_MAX_LENGTH = 60
+
 interface MusicDnaShareModalProps {
   isOpen: boolean
   onClose: () => void
@@ -38,6 +40,8 @@ interface MusicDnaShareModalProps {
   description: string
   feedback: string | null
   isShareLinkLoading: boolean
+  sharerName: string
+  onSharerNameChange: (value: string) => void
   onNativeShare: () => void
   onCopyShare: () => void
   onShareToNetwork: (network: ShareNetwork) => void | Promise<void>
@@ -51,6 +55,8 @@ export function MusicDnaShareModal({
   description,
   feedback,
   isShareLinkLoading,
+  sharerName,
+  onSharerNameChange,
   onNativeShare,
   onCopyShare,
   onShareToNetwork,
@@ -169,6 +175,27 @@ export function MusicDnaShareModal({
         </div>
 
         <div className="mt-4 space-y-3">
+          <div className="rounded-2xl border border-white/12 bg-black/14 px-3 py-3">
+            <label
+              htmlFor="share-sharer-name"
+              className="mb-1.5 block text-[10px] font-black uppercase tracking-[0.16em] text-[#7be3ff]"
+            >
+              Tu nombre (opcional)
+            </label>
+            <input
+              id="share-sharer-name"
+              type="text"
+              value={sharerName}
+              onChange={(event) => onSharerNameChange(event.target.value.slice(0, SHARER_NAME_MAX_LENGTH))}
+              placeholder="Ej: Joan"
+              maxLength={SHARER_NAME_MAX_LENGTH}
+              className="w-full rounded-xl border border-white/18 bg-white/8 px-3 py-2 text-sm font-semibold text-[#eaf7ff] placeholder:text-[#8fa3c4] focus:border-[#00f0ff]/55 focus:outline-none"
+            />
+            <p className="mt-1.5 text-[11px] font-medium text-[#8fa3c4]">
+              Aparece en tu perfil compartido para que sepan que es tuyo.
+            </p>
+          </div>
+
           <motion.button
             type="button"
             onClick={() => void onNativeShare()}

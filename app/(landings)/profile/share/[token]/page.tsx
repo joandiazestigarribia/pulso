@@ -24,8 +24,12 @@ export async function generateMetadata({ params }: PublicProfileSharePageProps):
   }
 
   const origin = getSiteOrigin()
-  const title = `${share.personaName} | Perfil Sonoro Pulso`
-  const description = `Mi Perfil Sonoro en Pulso es ${share.personaName}.`
+  const title = share.sharerName
+    ? `${share.sharerName} es ${share.personaName} | Perfil Sonoro Pulso`
+    : `${share.personaName} | Perfil Sonoro Pulso`
+  const description = share.sharerName
+    ? `El Perfil Sonoro de ${share.sharerName} en Pulso es ${share.personaName}.`
+    : `Mi Perfil Sonoro en Pulso es ${share.personaName}.`
   const imageUrl = buildProfileShareImageUrl(origin, token)
 
   return {

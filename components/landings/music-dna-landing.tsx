@@ -22,6 +22,8 @@ export function MusicDnaLanding() {
     isResetting,
     isShareOpen,
     shareFeedback,
+    sharerName,
+    setSharerName,
     isShareLinkLoading,
     dominantGenres,
     sonicPersona,
@@ -306,6 +308,8 @@ export function MusicDnaLanding() {
         description={shareDescription}
         feedback={shareFeedback}
         isShareLinkLoading={isShareLinkLoading}
+        sharerName={sharerName}
+        onSharerNameChange={setSharerName}
         onNativeShare={handleNativeShare}
         onCopyShare={handleCopyShare}
         onShareToNetwork={shareToNetwork}

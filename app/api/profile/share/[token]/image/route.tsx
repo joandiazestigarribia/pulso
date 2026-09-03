@@ -1,5 +1,3 @@
-import { readFile } from "node:fs/promises"
-import path from "node:path"
 import { ImageResponse } from "next/og"
 import { NextResponse } from "next/server"
 import { getPublicProfileShare } from "@/lib/profile-share"
@@ -10,17 +8,23 @@ interface ShareImageRouteContext {
   }>
 }
 
-async function getPersonaImageData(assetFile: string): Promise<string | null> {
+async function getPersonaImageData(assetFile: string, origin: string): Promise<string | null> {
   try {
-    const imagePath = path.join(process.cwd(), "public", "images", "characters", assetFile)
-    const image = await readFile(imagePath)
-    return `data:image/png;base64,${image.toString("base64")}`
+    const imageUrl = new URL(`/images/characters/${encodeURIComponent(assetFile)}`, origin)
+    const response = await fetch(imageUrl)
+    if (!response.ok) {
+      return null
+    }
+
+    const contentType = response.headers.get("content-type") ?? "image/png"
+    const buffer = Buffer.from(await response.arrayBuffer())
+    return `data:${contentType};base64,${buffer.toString("base64")}`
   } catch {
     return null
   }
 }
 
-export async function GET(_request: Request, { params }: ShareImageRouteContext) {
+export async function GET(request: Request, { params }: ShareImageRouteContext) {
   const { token } = await params
   const share = await getPublicProfileShare(token)
   if (!share) {
@@ -34,7 +38,8 @@ export async function GET(_request: Request, { params }: ShareImageRouteContext)
     )
   }
 
-  const personaImage = await getPersonaImageData(share.personaAssetFile)
+  const origin = process.env.NEXT_PUBLIC_APP_URL ?? new URL(request.url).origin
+  const personaImage = await getPersonaImageData(share.personaAssetFile, origin)
   const genreText = (share.dominantGenres.length > 0 ? share.dominantGenres.slice(0, 3) : ["Perfil mixto"]).join(" / ")
 
   return new ImageResponse(
@@ -158,6 +163,12 @@ export async function GET(_request: Request, { params }: ShareImageRouteContext)
               </div>
             </div>
 
+            {share.sharerName ? (
+              <div style={{ color: "#FFE600", fontSize: 26, fontWeight: 800, marginTop: 24 }}>
+                {`Perfil de ${share.sharerName}`}
+              </div>
+            ) : null}
+
             <div style={{ color: "#D8EBFF", fontSize: 34, fontWeight: 800, marginTop: 48 }}>
               Descubri mi card completa en Pulso
             </div>
@@ -193,7 +204,7 @@ export async function GET(_request: Request, { params }: ShareImageRouteContext)
                 pulsoapp.ar/profile/share
               </div>
               <div style={{ color: "rgba(255,255,255,0.82)", fontSize: 22, fontWeight: 800, marginLeft: "auto" }}>
-                {share.generatedFromVotes} VOTOS ANALIZADOS
+                {`${share.generatedFromVotes} VOTOS ANALIZADOS`}
               </div>
             </div>
           </div>

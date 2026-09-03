@@ -42,6 +42,9 @@ export function useMusicDnaViewModel() {
   const [isShareOpen, setIsShareOpen] = useState(false)
   const [shareFeedback, setShareFeedback] = useState<string | null>(null)
   const [shareUrl, setShareUrl] = useState<string | null>(null)
+  const [shareImageUrl, setShareImageUrl] = useState<string | null>(null)
+  const [shareUrlSharerName, setShareUrlSharerName] = useState<string | null>(null)
+  const [sharerName, setSharerName] = useState("")
   const [isShareLinkLoading, setIsShareLinkLoading] = useState(false)
 
   const { data: profileResponse, mutate: refreshProfile, isLoading } = useSWR<FullProfileResponse>(
@@ -84,12 +87,19 @@ export function useMusicDnaViewModel() {
   const shareDescription =
     shareCopy.description || "Tu selección combina energía, ritmo y estilo con una firma sonora única."
 
-  const buildShareTitle = (): string => `Mi Perfil Sonoro en Pulso: ${sonicPersonaDisplayName}`
+  const buildShareTitle = (): string => {
+    const trimmedName = sharerName.trim()
+    return trimmedName
+      ? `${trimmedName} descubrió su Perfil Sonoro en Pulso: ${sonicPersonaDisplayName}`
+      : `Mi Perfil Sonoro en Pulso: ${sonicPersonaDisplayName}`
+  }
 
-  const ensureShareLink = useCallback(async (): Promise<{ url: string } | null> => {
-    if (shareUrl) {
+  const ensureShareLink = useCallback(async (): Promise<{ url: string; imageUrl: string } | null> => {
+    const normalizedName = sharerName.trim() || null
+    if (shareUrl && shareImageUrl && shareUrlSharerName === normalizedName) {
       return {
         url: shareUrl,
+        imageUrl: shareImageUrl,
       }
     }
 
@@ -97,6 +107,8 @@ export function useMusicDnaViewModel() {
     try {
       const response = await fetch("/api/profile/share", {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sharerName: normalizedName }),
       })
       const payload = (await response.json().catch(() => ({}))) as ProfileShareResponse
       if (!response.ok || payload.ok === false || !payload.data?.url) {
@@ -105,8 +117,11 @@ export function useMusicDnaViewModel() {
       }
 
       setShareUrl(payload.data.url)
+      setShareImageUrl(payload.data.imageUrl)
+      setShareUrlSharerName(normalizedName)
       return {
         url: payload.data.url,
+        imageUrl: payload.data.imageUrl,
       }
     } catch {
       setShareFeedback("Error de red al preparar el link publico del perfil.")
@@ -114,7 +129,7 @@ export function useMusicDnaViewModel() {
     } finally {
       setIsShareLinkLoading(false)
     }
-  }, [shareUrl])
+  }, [shareImageUrl, shareUrl, shareUrlSharerName, sharerName])
 
   useEffect(() => {
     if (!isShareOpen || shareUrl || isShareLinkLoading) {
@@ -124,26 +139,57 @@ export function useMusicDnaViewModel() {
     void ensureShareLink()
   }, [ensureShareLink, isShareLinkLoading, isShareOpen, shareUrl])
 
+  const shareToInstagram = async (imageUrl: string, url: string, title: string) => {
+    try {
+      const response = await fetch(imageUrl)
+      if (response.ok) {
+        const blob = await response.blob()
+        const file = new File([blob], "perfil-sonoro-pulso.png", { type: blob.type || "image/png" })
+
+        if (typeof navigator.canShare === "function" && navigator.canShare({ files: [file] })) {
+          await navigator.share({ files: [file], title, text: title })
+          setShareFeedback("Elegí Instagram en el panel para compartir tu perfil.")
+          return
+        }
+      }
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") {
+        return
+      }
+    }
+
+    try {
+      await navigator.clipboard.writeText(`${title}\n${url}`)
+      setShareFeedback("Copiamos el texto. Abrí Instagram y pegalo en tu publicación o historia.")
+    } catch {
+      setShareFeedback("Abrí Instagram y compartilo manualmente: no pudimos copiar el link.")
+    }
+
+    window.open("https://www.instagram.com/", "_blank", "noopener,noreferrer")
+  }
+
   const shareToNetwork = async (network: ShareNetwork) => {
     const shareLink = await ensureShareLink()
     if (!shareLink) {
       return
     }
 
-    const url = encodeURIComponent(shareLink.url)
-    const title = encodeURIComponent(buildShareTitle())
-    const message = encodeURIComponent(`${buildShareTitle()}\n${shareLink.url}`)
-
-    const shareLinks: Record<ShareNetwork, string> = {
-      x: `https://x.com/intent/tweet?text=${title}&url=${url}`,
-      whatsapp: `https://wa.me/?text=${message}`,
-      telegram: `https://t.me/share/url?url=${url}&text=${title}`,
-      facebook: `https://www.facebook.com/sharer/sharer.php?u=${url}`,
-      instagram: "https://www.instagram.com/",
-    }
+    const title = buildShareTitle()
 
     if (network === "instagram") {
-      setShareFeedback("Instagram se abrio en una nueva pestaña. Copia el enlace si queres pegarlo manualmente.")
+      await shareToInstagram(shareLink.imageUrl, shareLink.url, title)
+      return
+    }
+
+    const url = encodeURIComponent(shareLink.url)
+    const encodedTitle = encodeURIComponent(title)
+    const message = encodeURIComponent(`${title}\n${shareLink.url}`)
+
+    const shareLinks: Record<Exclude<ShareNetwork, "instagram">, string> = {
+      x: `https://x.com/intent/tweet?text=${encodedTitle}&url=${url}`,
+      whatsapp: `https://wa.me/?text=${message}`,
+      telegram: `https://t.me/share/url?url=${url}&text=${encodedTitle}`,
+      facebook: `https://www.facebook.com/sharer/sharer.php?u=${url}`,
     }
 
     window.open(shareLinks[network], "_blank", "noopener,noreferrer")
@@ -225,6 +271,8 @@ export function useMusicDnaViewModel() {
     isShareOpen,
     shareFeedback,
     shareUrl,
+    sharerName,
+    setSharerName,
     isShareLinkLoading,
     dominantGenres,
     sonicPersona,

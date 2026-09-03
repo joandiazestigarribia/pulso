@@ -1,4 +1,4 @@
-import { createHmac, timingSafeEqual } from "node:crypto"
+import { assertDatabaseConfigured, prisma } from "@/lib/db"
 import type { FullProfileData } from "@/lib/music-dna"
 import {
   getDominantGenres,
@@ -8,18 +8,12 @@ import {
 } from "@/lib/music-dna"
 import { getMusicProfileState } from "@/lib/music-profile"
 
-const SHARE_TOKEN_VERSION = "v1"
-const DEFAULT_SHARE_SECRET = "pulso-local-share-secret"
-
-interface ShareTokenPayload {
-  version: typeof SHARE_TOKEN_VERSION
-  userId: string
-  createdAt: string
-}
+const SHARER_NAME_MAX_LENGTH = 60
 
 export interface PublicProfileShare {
   token: string
   userId: string
+  sharerName: string | null
   personaName: string
   personaAssetFile: string
   headline: string
@@ -27,107 +21,57 @@ export interface PublicProfileShare {
   completedBattlesCount: number
   generatedFromVotes: number
   dominantGenres: string[]
-  updatedAt: string | null
+  createdAt: string
 }
 
-function getShareSecret(): string {
-  const secret = process.env.PROFILE_SHARE_SECRET ?? process.env.NEXTAUTH_SECRET
-  if (secret) {
-    return secret
+interface ProfileShareRecord {
+  id: string
+  userId: string
+  sharerName: string | null
+  personaName: string
+  personaAssetFile: string
+  headline: string
+  description: string
+  completedBattlesCount: number
+  generatedFromVotes: number
+  dominantGenres: unknown
+  createdAt: Date
+}
+
+function mapRecordToPublicShare(record: ProfileShareRecord): PublicProfileShare {
+  return {
+    token: record.id,
+    userId: record.userId,
+    sharerName: record.sharerName,
+    personaName: record.personaName,
+    personaAssetFile: record.personaAssetFile,
+    headline: record.headline,
+    description: record.description,
+    completedBattlesCount: record.completedBattlesCount,
+    generatedFromVotes: record.generatedFromVotes,
+    dominantGenres: Array.isArray(record.dominantGenres) ? (record.dominantGenres as string[]) : [],
+    createdAt: record.createdAt.toISOString(),
   }
-
-  if (process.env.NODE_ENV === "production") {
-    throw new Error("PROFILE_SHARE_SECRET or NEXTAUTH_SECRET is required to sign profile share links.")
-  }
-
-  return DEFAULT_SHARE_SECRET
 }
 
-function base64UrlEncode(value: string): string {
-  return Buffer.from(value, "utf8").toString("base64url")
-}
-
-function base64UrlDecode(value: string): string {
-  return Buffer.from(value, "base64url").toString("utf8")
-}
-
-function signPayload(encodedPayload: string): string {
-  return createHmac("sha256", getShareSecret()).update(`${SHARE_TOKEN_VERSION}.${encodedPayload}`).digest("base64url").slice(0, 32)
-}
-
-function signLegacyPayload(encodedPayload: string): string {
-  return createHmac("sha256", getShareSecret()).update(encodedPayload).digest("base64url")
-}
-
-function isSafeEqual(left: string, right: string): boolean {
-  const leftBuffer = Buffer.from(left)
-  const rightBuffer = Buffer.from(right)
-
-  if (leftBuffer.length !== rightBuffer.length) {
-    return false
-  }
-
-  return timingSafeEqual(leftBuffer, rightBuffer)
-}
-
-function parseShareToken(token: string): ShareTokenPayload | null {
-  const [version, encodedPayload, signature] = token.split(".")
-  if (version !== SHARE_TOKEN_VERSION || !encodedPayload || !signature) {
+function sanitizeSharerName(sharerName: string | null | undefined): string | null {
+  const trimmed = sharerName?.trim()
+  if (!trimmed) {
     return null
   }
 
-  const expectedSignature = signPayload(encodedPayload)
-  const expectedLegacySignature = signLegacyPayload(encodedPayload)
-  if (!isSafeEqual(signature, expectedSignature) && !isSafeEqual(signature, expectedLegacySignature)) {
-    return null
-  }
-
-  try {
-    const decodedPayload = base64UrlDecode(encodedPayload)
-    if (!decodedPayload.startsWith("{")) {
-      if (decodedPayload.length === 0) {
-        return null
-      }
-
-      return {
-        version: SHARE_TOKEN_VERSION,
-        userId: decodedPayload,
-        createdAt: new Date(0).toISOString(),
-      }
-    }
-
-    const payload = JSON.parse(decodedPayload) as Partial<ShareTokenPayload>
-    if (payload.version !== SHARE_TOKEN_VERSION || typeof payload.userId !== "string" || payload.userId.length === 0) {
-      return null
-    }
-
-    return {
-      version: SHARE_TOKEN_VERSION,
-      userId: payload.userId,
-      createdAt: typeof payload.createdAt === "string" ? payload.createdAt : new Date(0).toISOString(),
-    }
-  } catch {
-    return null
-  }
+  return trimmed.slice(0, SHARER_NAME_MAX_LENGTH)
 }
 
-export function createProfileShareToken(userId: string): string {
-  const encodedPayload = base64UrlEncode(userId)
-  const signature = signPayload(encodedPayload)
-
-  return `${SHARE_TOKEN_VERSION}.${encodedPayload}.${signature}`
-}
-
-export function resolveUserIdFromShareToken(token: string): string | null {
-  return parseShareToken(token)?.userId ?? null
-}
-
-export async function getPublicProfileShare(token: string): Promise<PublicProfileShare | null> {
-  const userId = resolveUserIdFromShareToken(token)
-  if (!userId) {
-    return null
-  }
-
+/**
+ * Snapshots the user's current persona/copy into a permanent row so the public
+ * link keeps showing exactly what was true at share time, even if the account's
+ * live profile later changes or resets below the unlock threshold.
+ */
+export async function createProfileShare(
+  userId: string,
+  sharerName?: string | null
+): Promise<PublicProfileShare | null> {
   const profileState = (await getMusicProfileState(userId)) as FullProfileData
   if (!profileState.unlocked || !profileState.profile) {
     return null
@@ -143,18 +87,32 @@ export async function getPublicProfileShare(token: string): Promise<PublicProfil
     userId,
   })
 
-  return {
-    token,
-    userId,
-    personaName,
-    personaAssetFile: sonicPersona.assetFile,
-    headline: shareCopy.headline,
-    description: shareCopy.description,
-    completedBattlesCount: profileState.completedBattlesCount,
-    generatedFromVotes: profileState.profile.generatedFromVotes,
-    dominantGenres,
-    updatedAt: profileState.profile.updatedAt,
+  assertDatabaseConfigured()
+  const created = await prisma.profileShare.create({
+    data: {
+      userId,
+      sharerName: sanitizeSharerName(sharerName),
+      personaName,
+      personaAssetFile: sonicPersona.assetFile,
+      headline: shareCopy.headline,
+      description: shareCopy.description,
+      completedBattlesCount: profileState.completedBattlesCount,
+      generatedFromVotes: profileState.profile.generatedFromVotes,
+      dominantGenres,
+    },
+  })
+
+  return mapRecordToPublicShare(created)
+}
+
+export async function getPublicProfileShare(token: string): Promise<PublicProfileShare | null> {
+  assertDatabaseConfigured()
+  const record = await prisma.profileShare.findUnique({ where: { id: token } })
+  if (!record) {
+    return null
   }
+
+  return mapRecordToPublicShare(record)
 }
 
 export function buildProfileShareUrl(origin: string, token: string): string {

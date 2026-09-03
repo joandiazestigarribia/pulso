@@ -20,6 +20,11 @@ export function PublicMusicDnaCard({ share, compact = false }: PublicMusicDnaCar
         <h1 className="mt-1 bg-linear-to-r from-[#00f0ff] via-[#ff43f8] to-[#ffe600] bg-clip-text text-2xl font-black uppercase leading-none text-transparent sm:text-4xl">
           Perfil sonoro
         </h1>
+        {share.sharerName ? (
+          <p className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-[#ffe600]/35 bg-[#ffe600]/10 px-3 py-1 text-xs font-bold text-[#ffe600]">
+            Perfil de {share.sharerName}
+          </p>
+        ) : null}
       </div>
 
       <div className="mt-4 rounded-[22px] border-2 border-[#00f0ff]/25 bg-[#121a40]/85 p-3 sm:p-4">

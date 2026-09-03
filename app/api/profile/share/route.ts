@@ -1,15 +1,22 @@
 import { NextResponse } from "next/server"
 import { MissingDatabaseUrlError } from "@/lib/db"
-import {
-  buildProfileShareImageUrl,
-  buildProfileShareUrl,
-  createProfileShareToken,
-  getPublicProfileShare,
-} from "@/lib/profile-share"
+import { buildProfileShareImageUrl, buildProfileShareUrl, createProfileShare } from "@/lib/profile-share"
 import { resolveRequestIdentity } from "@/lib/request-identity"
+
+const SHARER_NAME_MAX_LENGTH = 60
 
 function getRequestOrigin(request: Request): string {
   return process.env.NEXT_PUBLIC_APP_URL ?? new URL(request.url).origin
+}
+
+async function readSharerName(request: Request): Promise<string | null> {
+  const body = (await request.json().catch(() => null)) as { sharerName?: unknown } | null
+  const sharerName = body?.sharerName
+  if (typeof sharerName !== "string") {
+    return null
+  }
+
+  return sharerName.trim().slice(0, SHARER_NAME_MAX_LENGTH) || null
 }
 
 export async function POST(request: Request) {
@@ -26,8 +33,8 @@ export async function POST(request: Request) {
   }
 
   try {
-    const token = createProfileShareToken(identity.userId)
-    const share = await getPublicProfileShare(token)
+    const sharerName = await readSharerName(request)
+    const share = await createProfileShare(identity.userId, sharerName)
     if (!share) {
       return NextResponse.json(
         {
@@ -40,6 +47,7 @@ export async function POST(request: Request) {
     }
 
     const origin = getRequestOrigin(request)
+    const token = share.token
 
     return NextResponse.json({
       ok: true,
