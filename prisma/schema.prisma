@@ -134,6 +134,7 @@ model ProfileShare {
   userId                String
   sharerName            String?
   personaName           String
+  personaCodename       String  @default("SO-00")
   personaAssetFile      String
   headline              String
   description           String

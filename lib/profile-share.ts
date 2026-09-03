@@ -15,6 +15,7 @@ export interface PublicProfileShare {
   userId: string
   sharerName: string | null
   personaName: string
+  personaCodename: string
   personaAssetFile: string
   headline: string
   description: string
@@ -29,6 +30,7 @@ interface ProfileShareRecord {
   userId: string
   sharerName: string | null
   personaName: string
+  personaCodename: string
   personaAssetFile: string
   headline: string
   description: string
@@ -44,6 +46,7 @@ function mapRecordToPublicShare(record: ProfileShareRecord): PublicProfileShare 
     userId: record.userId,
     sharerName: record.sharerName,
     personaName: record.personaName,
+    personaCodename: record.personaCodename,
     personaAssetFile: record.personaAssetFile,
     headline: record.headline,
     description: record.description,
@@ -93,6 +96,7 @@ export async function createProfileShare(
       userId,
       sharerName: sanitizeSharerName(sharerName),
       personaName,
+      personaCodename: sonicPersona.codename,
       personaAssetFile: sonicPersona.assetFile,
       headline: shareCopy.headline,
       description: shareCopy.description,
