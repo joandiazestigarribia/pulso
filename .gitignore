@@ -17,3 +17,5 @@ docs/final-hardening-runbook.md
 docs/functional-qa-production-like.md
 docs/quality-automation.md
 docs/release-readiness.md
+.tmp-test/
+*.tsbuildinfo
