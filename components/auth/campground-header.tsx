@@ -94,6 +94,13 @@ export function CampgroundHeader() {
           >
             Perfil Sonoro
           </Link>
+          <Link
+            href="/guess"
+            prefetch={false}
+            className={resolveNavItemClass(pathname, "/guess", "yellow")}
+          >
+            ¿Me conocés?
+          </Link>
         </nav>
 
         <div className="ml-auto flex min-w-0 items-center gap-1.5 md:gap-2">
