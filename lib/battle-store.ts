@@ -376,7 +376,7 @@ function isExpiredDeezerPreview(previewUrl: string): boolean {
   return nowUnix >= expiryUnix - DEEZER_PREVIEW_EXPIRY_SAFETY_SECONDS
 }
 
-function hasPlayablePreview(track: Pick<Track, "previewUrl" | "previewSource">): boolean {
+export function hasPlayablePreview(track: Pick<Track, "previewUrl" | "previewSource">): boolean {
   if (typeof track.previewUrl !== "string" || track.previewUrl.trim().length === 0) {
     return false
   }
@@ -749,7 +749,7 @@ function selectCrossBucketPair(previewTracks: Track[]): { trackA: Track; trackB:
   return { trackA, trackB: weightedRandomTrack(secondPool) }
 }
 
-function toTrack(track: {
+export function toTrack(track: {
   id: string
   catalogBucket: string
   name: string

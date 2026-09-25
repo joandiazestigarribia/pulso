@@ -39,6 +39,11 @@ enum UserRole {
   ADMIN
 }
 
+enum PlaylistStatus {
+  DRAFT
+  PUBLISHED
+}
+
 model User {
   id               String            @id
   email            String?           @unique
@@ -50,6 +55,8 @@ model User {
   mergeAudits      MergeAudit[]
   conversionEvents ConversionEvent[]
   profileShares    ProfileShare[]
+  playlists        Playlist[]
+  playlistAttempts PlaylistAttempt[]
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
 }
@@ -77,6 +84,9 @@ model Track {
 
   battlesAsA Battle[] @relation("BattleTrackA")
   battlesAsB Battle[] @relation("BattleTrackB")
+  playlistTracks       PlaylistTrack[]
+  guessRoundsAsCorrect GuessRound[]    @relation("GuessRoundCorrectTrack")
+  guessRoundsAsDecoy   GuessRound[]    @relation("GuessRoundDecoyTrack")
 }
 
 model CatalogCurationRule {
@@ -174,4 +184,76 @@ model ConversionEvent {
   @@index([eventName, createdAt])
   @@index([userId, createdAt])
   @@index([anonymousId, createdAt])
+}
+
+model Playlist {
+  id          String            @id @default(cuid())
+  ownerUserId String
+  title       String
+  status      PlaylistStatus    @default(DRAFT)
+  roundCount  Int               @default(15)
+  publishedAt DateTime?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  owner       User              @relation(fields: [ownerUserId], references: [id], onDelete: Cascade)
+  tracks      PlaylistTrack[]
+  rounds      GuessRound[]
+  attempts    PlaylistAttempt[]
+
+  @@index([ownerUserId, createdAt])
+}
+
+model PlaylistTrack {
+  id         String   @id @default(cuid())
+  playlistId String
+  trackId    String
+  position   Int
+  createdAt  DateTime @default(now())
+  playlist   Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+  track      Track    @relation(fields: [trackId], references: [id], onDelete: Restrict)
+
+  @@unique([playlistId, trackId])
+  @@index([playlistId, position])
+}
+
+model GuessRound {
+  id             String   @id @default(cuid())
+  playlistId     String
+  roundIndex     Int
+  correctTrackId String
+  decoyTrackId   String
+  createdAt      DateTime @default(now())
+  playlist       Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+  correctTrack   Track    @relation("GuessRoundCorrectTrack", fields: [correctTrackId], references: [id], onDelete: Restrict)
+  decoyTrack     Track    @relation("GuessRoundDecoyTrack", fields: [decoyTrackId], references: [id], onDelete: Restrict)
+
+  @@unique([playlistId, roundIndex])
+}
+
+model PlaylistAttempt {
+  id           String                  @id @default(cuid())
+  playlistId   String
+  playerUserId String
+  nickname     String
+  score        Int                     @default(0)
+  totalRounds  Int
+  completedAt  DateTime?
+  createdAt    DateTime                @default(now())
+  playlist     Playlist                @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+  player       User                    @relation(fields: [playerUserId], references: [id], onDelete: Cascade)
+  answers      PlaylistAttemptAnswer[]
+
+  @@unique([playlistId, playerUserId])
+  @@index([playlistId, score])
+}
+
+model PlaylistAttemptAnswer {
+  id            String          @id @default(cuid())
+  attemptId     String
+  roundIndex    Int
+  chosenTrackId String
+  correct       Boolean
+  attempt       PlaylistAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+
+  @@unique([attemptId, roundIndex])
 }

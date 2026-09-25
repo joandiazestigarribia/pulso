@@ -54,11 +54,23 @@ export async function mergeAnonymousBattlesToUser(params: {
       data: { userId: targetUserId },
     })
 
-    const remainingBattles = await tx.battle.count({
-      where: { userId: anonymousId },
+    await tx.playlist.updateMany({
+      where: { ownerUserId: anonymousId },
+      data: { ownerUserId: targetUserId },
     })
 
-    if (remainingBattles === 0) {
+    await tx.playlistAttempt.updateMany({
+      where: { playerUserId: anonymousId },
+      data: { playerUserId: targetUserId },
+    })
+
+    const [remainingBattles, remainingPlaylists, remainingAttempts] = await Promise.all([
+      tx.battle.count({ where: { userId: anonymousId } }),
+      tx.playlist.count({ where: { ownerUserId: anonymousId } }),
+      tx.playlistAttempt.count({ where: { playerUserId: anonymousId } }),
+    ])
+
+    if (remainingBattles === 0 && remainingPlaylists === 0 && remainingAttempts === 0) {
       await tx.user.deleteMany({
         where: { id: anonymousId },
       })

@@ -275,7 +275,7 @@ function toItunesBattleTrack(item: ItunesTrackResult, bucketOverride?: CatalogBu
   }
 }
 
-function toDeezerBattleTrack(item: DeezerTrackResult, bucketOverride?: CatalogBucket): Track | null {
+export function toDeezerBattleTrack(item: DeezerTrackResult, bucketOverride?: CatalogBucket): Track | null {
   if (!item.id || !item.title || !item.artist?.name) {
     return null
   }
@@ -328,7 +328,7 @@ function pickPreferredTrack(current: Track, candidate: Track): Track {
   return candidate.year > current.year ? candidate : current
 }
 
-function shuffleTracks<T>(items: T[]): T[] {
+export function shuffleTracks<T>(items: T[]): T[] {
   const cloned = [...items]
   for (let index = cloned.length - 1; index > 0; index -= 1) {
     const swapIndex = Math.floor(Math.random() * (index + 1))
@@ -536,6 +536,64 @@ export async function fetchDeezerBattleTracks(limit = 120): Promise<Track[]> {
     return selectBalancedBucketTracks(Array.from(deduped.values()), limit)
   } catch {
     return []
+  }
+}
+
+export async function searchDeezerTracks(query: string, limit = 20): Promise<Track[]> {
+  const trimmedQuery = query.trim()
+  if (!trimmedQuery) {
+    return []
+  }
+
+  try {
+    const url = `${DEEZER_API_URL}/search?q=${encodeURIComponent(trimmedQuery)}&limit=${limit}`
+    const response = await fetch(url, { cache: "no-store" })
+    if (!response.ok) {
+      return []
+    }
+
+    const payload = (await response.json()) as DeezerPlaylistTracksResponse
+    const deduped = new Map<string, Track>()
+
+    for (const item of payload.data ?? []) {
+      const mapped = toDeezerBattleTrack(item)
+      if (!mapped || !mapped.previewUrl || !isTrackAllowedByManualCuration(mapped)) {
+        continue
+      }
+
+      if (!deduped.has(mapped.id)) {
+        deduped.set(mapped.id, mapped)
+      }
+    }
+
+    return Array.from(deduped.values()).slice(0, limit)
+  } catch {
+    return []
+  }
+}
+
+export async function fetchDeezerTrackById(deezerId: string): Promise<Track | null> {
+  const safeDeezerId = deezerId.trim()
+  if (!/^\d+$/.test(safeDeezerId)) {
+    return null
+  }
+
+  try {
+    const url = `${DEEZER_API_URL}/track/${encodeURIComponent(safeDeezerId)}`
+    const response = await fetch(url, { cache: "no-store" })
+    if (!response.ok) {
+      return null
+    }
+
+    const payload = (await response.json()) as DeezerTrackResult
+    const mapped = toDeezerBattleTrack(payload)
+    if (!mapped || !mapped.previewUrl || !isTrackAllowedByManualCuration(mapped)) {
+      return null
+    }
+
+    return mapped
+  } catch {
+    return null
   }
 }
 
