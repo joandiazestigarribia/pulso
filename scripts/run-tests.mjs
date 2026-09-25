@@ -34,6 +34,7 @@ const files = [
   "mock-data",
   "catalog-providers",
   "battle-store",
+  "guess-store",
   "db",
   "identity",
   "request-identity",

@@ -16,6 +16,7 @@
     "lib/mock-data.ts",
     "lib/catalog-providers.ts",
     "lib/battle-store.ts",
+    "lib/guess-store.ts",
     "lib/identity.ts",
     "lib/auth.ts",
     "lib/conversion-events.ts",
