@@ -5,6 +5,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { ListMusic, Plus } from "lucide-react"
 import { motion } from "framer-motion"
+import { GUESS_ROUND_COUNT } from "@/lib/guess-config"
 
 interface PlaylistSummary {
   id: string
@@ -24,7 +25,7 @@ const HOW_IT_WORKS_STEPS = [
   {
     label: "02",
     title: "Publicala",
-    description: "Se generan 15 rondas y te damos un link para compartir.",
+    description: `Se generan ${GUESS_ROUND_COUNT} rondas y te damos un link para compartir.`,
   },
   {
     label: "03",

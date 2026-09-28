@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useRef, useState } from "react"
 
-/** Shows transient "copied" feedback after a clipboard action, with timeout cleanup. */
 export function useCopyFeedback(resetAfterMs = 2000) {
   const [copied, setCopied] = useState(false)
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)

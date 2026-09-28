@@ -193,6 +193,9 @@ export async function GET(_request: Request, { params }: ImageRouteContext) {
     {
       height: 630,
       width: 1200,
+      headers: {
+        "Cache-Control": "public, max-age=3600, s-maxage=86400, stale-while-revalidate=86400",
+      },
       fonts: [
         { name: "Outfit", data: outfitRegular, weight: 500, style: "normal" },
         { name: "Outfit", data: outfitBold, weight: 800, style: "normal" },

@@ -1365,6 +1365,19 @@ export async function getCatalogDiagnostics(): Promise<CatalogDiagnosticsReport>
   }
 }
 
+function isRetryableSerializationFailure(error: unknown): boolean {
+  if (!(error instanceof Prisma.PrismaClientKnownRequestError)) {
+    return false
+  }
+
+  if (error.code === "P2034") {
+    return true
+  }
+
+  const metaCode = error.meta?.code
+  return error.code === "P2010" && metaCode === "40001"
+}
+
 export async function completeBattleVote(payload: BattleVotePayload): Promise<BattleVoteResult> {
   assertDatabaseConfigured()
   const { battleId, userId, winnerId, loserId } = payload
@@ -1372,7 +1385,8 @@ export async function completeBattleVote(payload: BattleVotePayload): Promise<Ba
     throw new VoteError("vote_same_track", "winnerId and loserId must be different")
   }
 
-  return prisma.$transaction(async (tx) => {
+  const runVoteTransaction = (): Promise<BattleVoteResult> =>
+    prisma.$transaction(async (tx) => {
     const battle = await tx.battle.findUnique({
       where: { id: battleId },
       select: {
@@ -1488,6 +1502,19 @@ export async function completeBattleVote(payload: BattleVotePayload): Promise<Ba
   }, {
     isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
   })
+
+  try {
+    return await runVoteTransaction()
+  } catch (error) {
+    // A concurrent Serializable transaction can fail with 40001/P2034; Prisma does
+    // not retry it, so retry once. The retry then sees the battle as COMPLETED and
+    // the caller gets the proper battle_already_completed (409) result.
+    if (!isRetryableSerializationFailure(error)) {
+      throw error
+    }
+
+    return runVoteTransaction()
+  }
 }
 
 export async function getBattleHistory(params: {

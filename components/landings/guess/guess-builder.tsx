@@ -6,9 +6,8 @@ import Link from "next/link"
 import { Plus, Search, Trash2 } from "lucide-react"
 import { motion } from "framer-motion"
 import type { Track } from "@/lib/mock-data"
+import { GUESS_MAX_PLAYLIST_TRACKS, GUESS_ROUND_COUNT } from "@/lib/guess-config"
 import { GuessPublishConfirmModal } from "@/components/landings/guess/guess-ui-blocks"
-
-const MAX_PLAYLIST_TRACKS = 30
 
 interface PlaylistTrackSummary {
   id: string
@@ -132,7 +131,7 @@ export function GuessBuilder({ playlistId }: GuessBuilderProps) {
     })
   }
 
-  const isAtTrackLimit = (playlist?.tracks.length ?? 0) >= MAX_PLAYLIST_TRACKS
+  const isAtTrackLimit = (playlist?.tracks.length ?? 0) >= GUESS_MAX_PLAYLIST_TRACKS
 
   const handleAddTrack = async (track: Track) => {
     if (pendingTrackId || isAtTrackLimit) {
@@ -155,7 +154,7 @@ export function GuessBuilder({ playlistId }: GuessBuilderProps) {
 
       setAddTrackError(
         status === 422
-          ? `Llegaste al máximo de ${MAX_PLAYLIST_TRACKS} canciones.`
+          ? `Llegaste al máximo de ${GUESS_MAX_PLAYLIST_TRACKS} canciones.`
           : "No pudimos agregar la canción. Probá de nuevo."
       )
     } catch {
@@ -227,7 +226,7 @@ export function GuessBuilder({ playlistId }: GuessBuilderProps) {
       if (status >= 400 || !body) {
         setPublishError(
           status === 422
-            ? `Necesitás ${playlist?.roundCount ?? 15} canciones con preview de audio para publicar.`
+            ? `Necesitás ${playlist?.roundCount ?? GUESS_ROUND_COUNT} canciones con preview de audio para publicar.`
             : "No pudimos publicar la lista. Probá de nuevo."
         )
         setIsConfirmOpen(false)
@@ -372,7 +371,7 @@ export function GuessBuilder({ playlistId }: GuessBuilderProps) {
 
       <div className="rounded-2xl border border-white/15 bg-black/35 p-4">
         <p className="mb-3 text-xs font-black uppercase tracking-[0.12em] text-[#7be3ff]">
-          Tu lista ({playlist.tracks.length}/{MAX_PLAYLIST_TRACKS})
+          Tu lista ({playlist.tracks.length}/{GUESS_MAX_PLAYLIST_TRACKS})
         </p>
         <p className="mb-3 text-xs font-semibold text-white/55">
           Elegí las que más te representan, no hace falta agregar todo lo que encuentres.

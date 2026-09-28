@@ -2,7 +2,16 @@
 const test = require("node:test")
 const assert = require("node:assert/strict")
 const { prisma } = require("../.tmp-test/lib/db")
-const { createDraftPlaylist, publishPlaylist, PlaylistError } = require("../.tmp-test/lib/guess-store")
+const {
+  createDraftPlaylist,
+  getCurrentRound,
+  getLeaderboard,
+  publishPlaylist,
+  PlaylistError,
+  startAttempt,
+  submitAnswer,
+} = require("../.tmp-test/lib/guess-store")
+const { mergeAnonymousBattlesToUser } = require("../.tmp-test/lib/auth")
 
 const PREVIEW_URL = "https://tests.invalid/preview.mp3"
 
@@ -41,6 +50,21 @@ async function makeTrack(id, overrides = {}) {
 
 async function addToPlaylist(playlistId, trackId, position) {
   await prisma.playlistTrack.create({ data: { playlistId, trackId, position } })
+}
+
+async function createPublishedPlaylist(ownerId, decoyCount = 5) {
+  const playlist = await createDraftPlaylist(ownerId, "QA playlist")
+
+  for (let index = 0; index < 15; index += 1) {
+    const track = await makeTrack(`${ownerId}_list_${index}`)
+    await addToPlaylist(playlist.id, track.id, index)
+  }
+
+  for (let index = 0; index < decoyCount; index += 1) {
+    await makeTrack(`${ownerId}_decoy_${index}`)
+  }
+
+  return publishPlaylist(playlist.id, ownerId)
 }
 
 test.before(async () => {
@@ -137,6 +161,201 @@ test("publishPlaylist falls back to any available track when no same-bucket deco
   for (const round of rounds) {
     assert.ok(!listTrackIds.includes(round.decoyTrackId))
   }
+})
+
+test("submitAnswer persists sequential answers and completes the attempt", async () => {
+  await wipeGuessTestData()
+  const ownerId = "owner_play_flow"
+  const playlist = await createPublishedPlaylist(ownerId)
+  const playerId = "anon_aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+  await startAttempt(playlist.id, playerId, "Player")
+
+  let expectedScore = 0
+
+  for (let roundIndex = 0; roundIndex < playlist.roundCount; roundIndex += 1) {
+    const state = await getCurrentRound(playlist.id, playerId)
+    assert.equal(state.status, "in_progress")
+    assert.equal(state.round.roundIndex, roundIndex)
+    assert.equal(state.round.totalRounds, playlist.roundCount)
+    assert.notEqual(state.round.cardA.id, state.round.cardB.id)
+
+    const result = await submitAnswer(playlist.id, playerId, roundIndex, state.round.cardA.id)
+    if (result.correct) {
+      expectedScore += 1
+    }
+
+    assert.equal(result.score, expectedScore)
+    assert.equal(result.totalRounds, playlist.roundCount)
+    assert.equal(result.isFinished, roundIndex === playlist.roundCount - 1)
+    assert.ok(result.correctTrackId === state.round.cardA.id || result.correctTrackId === state.round.cardB.id)
+  }
+
+  const finalState = await getCurrentRound(playlist.id, playerId)
+  assert.equal(finalState.status, "completed")
+  assert.equal(finalState.summary.score, expectedScore)
+  assert.equal(finalState.summary.totalRounds, playlist.roundCount)
+  assert.ok(finalState.summary.attemptId)
+
+  const attempts = await prisma.playlistAttempt.findMany({ where: { playlistId: playlist.id } })
+  assert.equal(attempts.length, 1)
+  assert.equal(attempts[0].score, expectedScore)
+  assert.ok(attempts[0].completedAt)
+})
+
+test("submitAnswer rejects out-of-sequence, duplicate and invalid choices", async () => {
+  await wipeGuessTestData()
+  const ownerId = "owner_sequence_guard"
+  const playlist = await createPublishedPlaylist(ownerId)
+  const playerId = "anon_bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+  await startAttempt(playlist.id, playerId, "Sequence")
+
+  const state = await getCurrentRound(playlist.id, playerId)
+  const firstChoice = state.round.cardA.id
+  const secondChoice = state.round.cardB.id
+
+  await assert.rejects(
+    () => submitAnswer(playlist.id, playerId, 1, firstChoice),
+    (error) => error instanceof PlaylistError && error.code === "round_out_of_sequence"
+  )
+  await assert.rejects(
+    () => submitAnswer(playlist.id, playerId, 0, "not-a-card"),
+    (error) => error instanceof PlaylistError && error.code === "invalid_choice"
+  )
+
+  await submitAnswer(playlist.id, playerId, 0, firstChoice)
+
+  await assert.rejects(
+    () => submitAnswer(playlist.id, playerId, 0, secondChoice),
+    (error) => error instanceof PlaylistError && error.code === "round_out_of_sequence"
+  )
+})
+
+test("owners cannot start or play their own published playlist", async () => {
+  await wipeGuessTestData()
+  const ownerId = "owner_self_play"
+  const playlist = await createPublishedPlaylist(ownerId)
+
+  await assert.rejects(
+    () => startAttempt(playlist.id, ownerId, "Owner"),
+    (error) => error instanceof PlaylistError && error.code === "owner_cannot_play"
+  )
+  await assert.rejects(
+    () => getCurrentRound(playlist.id, ownerId),
+    (error) => error instanceof PlaylistError && error.code === "owner_cannot_play"
+  )
+})
+
+test("getLeaderboard orders completed attempts by score and exposes attempt ids", async () => {
+  await wipeGuessTestData()
+  const ownerId = "owner_leaderboard"
+  const playlist = await createPublishedPlaylist(ownerId)
+  const lowScorer = "anon_cccccccc-cccc-4ccc-8ccc-cccccccccccc"
+  const highScorer = "anon_dddddddd-dddd-4ddd-8ddd-dddddddddddd"
+
+  await startAttempt(playlist.id, lowScorer, "Low")
+  await startAttempt(playlist.id, highScorer, "High")
+
+  await prisma.playlistAttempt.update({
+    where: { playlistId_playerUserId: { playlistId: playlist.id, playerUserId: lowScorer } },
+    data: { score: 4, completedAt: new Date("2026-01-01T10:00:00.000Z") },
+  })
+  await prisma.playlistAttempt.update({
+    where: { playlistId_playerUserId: { playlistId: playlist.id, playerUserId: highScorer } },
+    data: { score: 12, completedAt: new Date("2026-01-01T11:00:00.000Z") },
+  })
+
+  const leaderboard = await getLeaderboard(playlist.id)
+  assert.deepEqual(
+    leaderboard.map((entry) => entry.nickname),
+    ["High", "Low"]
+  )
+  assert.equal(leaderboard[0].score, 12)
+  assert.equal(leaderboard[0].percentage, 80)
+  assert.ok(leaderboard[0].attemptId)
+  assert.notEqual(leaderboard[0].attemptId, leaderboard[1].attemptId)
+})
+
+test("merge moves anonymous playlist attempts to the authenticated user", async () => {
+  await wipeGuessTestData()
+  const ownerId = "owner_merge_happy"
+  const playlist = await createPublishedPlaylist(ownerId)
+  const anonymousId = "anon_eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee"
+  const targetUserId = "auth_merge_play_attempt"
+
+  await startAttempt(playlist.id, anonymousId, "Anon")
+
+  const result = await mergeAnonymousBattlesToUser({ anonymousId, targetUserId })
+  assert.equal(result.status, "MERGED")
+  assert.equal(result.movedAttempts, 1)
+  assert.equal(result.movedPlaylists, 0)
+
+  const attempts = await prisma.playlistAttempt.findMany({ where: { playlistId: playlist.id } })
+  assert.equal(attempts.length, 1)
+  assert.equal(attempts[0].playerUserId, targetUserId)
+  assert.equal(attempts[0].nickname, "Anon")
+
+  const anonymousUser = await prisma.user.findUnique({ where: { id: anonymousId } })
+  assert.equal(anonymousUser, null)
+})
+
+test("merge resolves an attempt conflict in favor of the most advanced attempt", async () => {
+  await wipeGuessTestData()
+  const ownerId = "owner_merge_conflict"
+  const playlist = await createPublishedPlaylist(ownerId)
+  const anonymousId = "anon_ffffffff-ffff-4fff-8fff-ffffffffffff"
+  const targetUserId = "auth_merge_conflict"
+
+  await startAttempt(playlist.id, anonymousId, "Anon Completed")
+  await startAttempt(playlist.id, targetUserId, "User In Progress")
+
+  await prisma.playlistAttempt.update({
+    where: { playlistId_playerUserId: { playlistId: playlist.id, playerUserId: anonymousId } },
+    data: { score: 9, completedAt: new Date("2026-01-02T10:00:00.000Z") },
+  })
+
+  const result = await mergeAnonymousBattlesToUser({ anonymousId, targetUserId })
+  assert.equal(result.status, "MERGED")
+  assert.equal(result.movedAttempts, 1)
+  assert.equal(result.movedBattles, 0)
+
+  const attempts = await prisma.playlistAttempt.findMany({ where: { playlistId: playlist.id } })
+  assert.equal(attempts.length, 1)
+  assert.equal(attempts[0].playerUserId, targetUserId)
+  assert.equal(attempts[0].nickname, "Anon Completed")
+  assert.equal(attempts[0].score, 9)
+  assert.ok(attempts[0].completedAt)
+
+  const audits = await prisma.mergeAudit.findMany({ where: { targetUserId } })
+  assert.equal(audits.length, 1)
+  assert.equal(audits[0].movedAttempts, 1)
+  assert.equal(audits[0].status, "MERGED")
+})
+
+test("merge keeps the target attempt when it is the most advanced", async () => {
+  await wipeGuessTestData()
+  const ownerId = "owner_merge_keep_target"
+  const playlist = await createPublishedPlaylist(ownerId)
+  const anonymousId = "anon_99999999-9999-4999-8999-999999999999"
+  const targetUserId = "auth_merge_keep_target"
+
+  await startAttempt(playlist.id, anonymousId, "Anon In Progress")
+  await startAttempt(playlist.id, targetUserId, "User Completed")
+
+  await prisma.playlistAttempt.update({
+    where: { playlistId_playerUserId: { playlistId: playlist.id, playerUserId: targetUserId } },
+    data: { score: 15, completedAt: new Date("2026-01-03T10:00:00.000Z") },
+  })
+
+  const result = await mergeAnonymousBattlesToUser({ anonymousId, targetUserId })
+  assert.equal(result.movedAttempts, 0)
+
+  const attempts = await prisma.playlistAttempt.findMany({ where: { playlistId: playlist.id } })
+  assert.equal(attempts.length, 1)
+  assert.equal(attempts[0].playerUserId, targetUserId)
+  assert.equal(attempts[0].nickname, "User Completed")
+
+  const anonymousUser = await prisma.user.findUnique({ where: { id: anonymousId } })
+  assert.equal(anonymousUser, null)
 })
 
 test.after(async () => {

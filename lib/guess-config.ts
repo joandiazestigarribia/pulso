@@ -1,0 +1,2 @@
+export const GUESS_ROUND_COUNT = 15
+export const GUESS_MAX_PLAYLIST_TRACKS = 30

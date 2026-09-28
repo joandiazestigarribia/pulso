@@ -4,6 +4,7 @@ import { applyRateLimitHeaders, consumeRateLimit } from "@/lib/auth-rate-limit"
 import { MissingDatabaseUrlError } from "@/lib/db"
 import { ANON_SESSION_COOKIE, buildAnonSessionId, shouldUseSecureCookies } from "@/lib/identity"
 import { resolveRequestIdentity } from "@/lib/request-identity"
+import { readJsonBody } from "@/lib/read-json-body"
 import { PlaylistError, playlistErrorStatus, startAttempt } from "@/lib/guess-store"
 
 interface RouteContext {
@@ -28,7 +29,12 @@ export async function POST(request: Request, { params }: RouteContext) {
     )
   }
 
-  const payload = startSchema.safeParse(await request.json())
+  const rawBody = await readJsonBody(request)
+  if (!rawBody.ok) {
+    return NextResponse.json({ error: "JSON inválido." }, { status: 400 })
+  }
+
+  const payload = startSchema.safeParse(rawBody.data)
   if (!payload.success) {
     return NextResponse.json({ error: payload.error.flatten().fieldErrors }, { status: 400 })
   }

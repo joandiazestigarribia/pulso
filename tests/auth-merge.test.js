@@ -59,7 +59,7 @@ test.before(async () => {
 
 test("mergeAnonymousBattlesToUser moves anonymous history to authenticated user", async () => {
   await seedBaselineTracks()
-  const anonymousId = "anon_merge_test"
+  const anonymousId = "anon_11111111-1111-4111-8111-111111111111"
   const targetUserId = "auth_merge_user"
 
   const battle = await createPendingBattle(anonymousId)
@@ -84,6 +84,8 @@ test("mergeAnonymousBattlesToUser moves anonymous history to authenticated user"
 
   assert.equal(mergeResult.merged, true)
   assert.equal(mergeResult.movedBattles, 1)
+  assert.equal(mergeResult.movedPlaylists, 0)
+  assert.equal(mergeResult.movedAttempts, 0)
   assert.equal(mergeResult.status, "MERGED")
   assert.ok(mergeResult.auditId)
   assert.ok(migratedBattle)
@@ -95,7 +97,7 @@ test("mergeAnonymousBattlesToUser moves anonymous history to authenticated user"
 
 test("mergeAnonymousBattlesToUser is idempotent for repeated merge attempts", async () => {
   await seedBaselineTracks()
-  const anonymousId = "anon_idempotent"
+  const anonymousId = "anon_22222222-2222-4222-8222-222222222222"
   const targetUserId = "auth_idempotent"
 
   const battle = await createPendingBattle(anonymousId)

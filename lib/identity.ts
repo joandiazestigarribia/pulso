@@ -1,6 +1,8 @@
 export const AUTH_USER_COOKIE = "pulso_user_id"
 export const ANON_SESSION_COOKIE = "pulso_anon_id"
 const ANON_PREFIX = "anon_"
+const ANON_UUID_PATTERN = /^anon_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+const ANON_LEGACY_PATTERN = /^anon_\d{10,}-[a-z0-9]+$/i
 
 type RequestLike = Request | { headers: Headers }
 type CookieRequestLike = { headers: Headers; url?: string }
@@ -42,7 +44,11 @@ export function buildAnonSessionId(): string {
 }
 
 export function isAnonymousSessionId(value: string | null | undefined): value is string {
-  return typeof value === "string" && value.startsWith(ANON_PREFIX)
+  if (typeof value !== "string") {
+    return false
+  }
+
+  return ANON_UUID_PATTERN.test(value) || ANON_LEGACY_PATTERN.test(value)
 }
 
 export function shouldUseSecureCookies(request: CookieRequestLike): boolean {

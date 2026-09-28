@@ -12,6 +12,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { GUESS_ROUND_COUNT } from "@/lib/guess-config"
+import { useFocusTrap } from "@/components/landings/guess/use-focus-trap"
 import type { GuessLeaderboardEntry } from "@/components/landings/guess/use-guess-flow"
 
 interface PreviewTrack {
@@ -69,17 +71,27 @@ interface GuessNicknameModalProps {
 export function GuessNicknameModal({ title, isSubmitting, error, onSubmit }: GuessNicknameModalProps) {
   const [nickname, setNickname] = useState("")
   const prefersReducedMotion = useReducedMotion()
+  const dialogRef = useFocusTrap(true)
 
   return (
-    <section className="fixed inset-0 z-70 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+    <section
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="guess-nickname-title"
+      className="fixed inset-0 z-70 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
+    >
       <motion.div
+        ref={dialogRef}
         className="w-full max-w-120 rounded-3xl border-2 border-[#00f0ff]/40 bg-[#0f1638]/95 p-5 text-[#eaf7ff] shadow-[0_18px_54px_rgba(0,0,0,0.5)]"
         initial={prefersReducedMotion ? false : { opacity: 0, y: 16, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: prefersReducedMotion ? 0 : 0.25, ease: "easeOut" }}
       >
         <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#7be3ff]">¿Cuánto conocés a tu amigo?</p>
-        <h3 className="mt-1 bg-gradient-to-r from-[#00f0ff] via-[#ff43f8] to-[#ffe600] bg-clip-text text-xl font-black uppercase leading-tight text-transparent">
+        <h3
+          id="guess-nickname-title"
+          className="mt-1 bg-gradient-to-r from-[#00f0ff] via-[#ff43f8] to-[#ffe600] bg-clip-text text-xl font-black uppercase leading-tight text-transparent"
+        >
           {title}
         </h3>
         <p className="mt-3 text-sm font-semibold text-[#d8ebff]">
@@ -152,6 +164,7 @@ const guessHelpItems = [
 
 export function GuessHowToPlayModal({ isOpen, onClose }: GuessHowToPlayModalProps) {
   const prefersReducedMotion = useReducedMotion()
+  const dialogRef = useFocusTrap(isOpen)
 
   useEffect(() => {
     if (!isOpen) {
@@ -174,6 +187,9 @@ export function GuessHowToPlayModal({ isOpen, onClose }: GuessHowToPlayModalProp
 
   return (
     <motion.section
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="guess-help-title"
       className="fixed inset-0 z-70 flex items-center justify-center bg-black/60 p-3 backdrop-blur-sm sm:p-4"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -181,6 +197,7 @@ export function GuessHowToPlayModal({ isOpen, onClose }: GuessHowToPlayModalProp
       onClick={onClose}
     >
       <motion.div
+        ref={dialogRef}
         className="flex max-h-[calc(100vh-1.5rem)] w-full max-w-140 flex-col overflow-hidden rounded-3xl border-2 border-[#00f0ff]/40 bg-[#0f1638]/94 p-3 text-[#eaf7ff] shadow-[0_18px_54px_rgba(0,0,0,0.5)] sm:max-h-[calc(100vh-2rem)] sm:p-4"
         initial={prefersReducedMotion ? false : { opacity: 0, y: 20, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -190,13 +207,17 @@ export function GuessHowToPlayModal({ isOpen, onClose }: GuessHowToPlayModalProp
         <div className="flex items-start justify-between gap-3 border-b border-[#00f0ff]/25 pb-3">
           <div>
             <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#7be3ff]">Guía rápida</p>
-            <h3 className="mt-1 bg-gradient-to-r from-[#00f0ff] via-[#ff43f8] to-[#ffe600] bg-clip-text text-xl font-black uppercase leading-none text-transparent sm:text-2xl">
+            <h3
+              id="guess-help-title"
+              className="mt-1 bg-gradient-to-r from-[#00f0ff] via-[#ff43f8] to-[#ffe600] bg-clip-text text-xl font-black uppercase leading-none text-transparent sm:text-2xl"
+            >
               ¿Cuánto lo conocés?
             </h3>
           </div>
           <motion.button
             type="button"
             onClick={onClose}
+            autoFocus
             whileHover={prefersReducedMotion ? undefined : { scale: 1.06 }}
             whileTap={prefersReducedMotion ? undefined : { scale: 0.94 }}
             className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/30 text-white transition hover:bg-white/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00f0ff]"
@@ -243,10 +264,10 @@ export function GuessHowToPlayModal({ isOpen, onClose }: GuessHowToPlayModalProp
 
 interface GuessLeaderboardTableProps {
   entries: GuessLeaderboardEntry[] | null
-  highlightNickname?: string
+  highlightAttemptId?: string
 }
 
-export function GuessLeaderboardTable({ entries, highlightNickname }: GuessLeaderboardTableProps) {
+export function GuessLeaderboardTable({ entries, highlightAttemptId }: GuessLeaderboardTableProps) {
   if (entries === null) {
     return <p className="text-center text-sm font-semibold text-white/70">Cargando ranking...</p>
   }
@@ -271,11 +292,11 @@ export function GuessLeaderboardTable({ entries, highlightNickname }: GuessLeade
         </TableHeader>
         <TableBody>
           {entries.map((entry, index) => {
-            const isHighlighted = highlightNickname && entry.nickname === highlightNickname
+            const isHighlighted = highlightAttemptId !== undefined && entry.attemptId === highlightAttemptId
 
             return (
               <TableRow
-                key={`${entry.nickname}-${entry.completedAt}-${index}`}
+                key={entry.attemptId}
                 className={`border-white/10 ${isHighlighted ? "bg-[#00f0ff]/10" : "hover:bg-white/5"}`}
               >
                 <TableCell className="font-mono font-black text-[#f8eeaf]">{index + 1}</TableCell>
@@ -326,29 +347,52 @@ export function GuessPublishConfirmModal({
   onConfirm,
 }: GuessPublishConfirmModalProps) {
   const prefersReducedMotion = useReducedMotion()
+  const dialogRef = useFocusTrap(isOpen)
+
+  useEffect(() => {
+    if (!isOpen || isPublishing) {
+      return
+    }
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        onCancel()
+      }
+    }
+
+    window.addEventListener("keydown", onKeyDown)
+    return () => window.removeEventListener("keydown", onKeyDown)
+  }, [isOpen, isPublishing, onCancel])
 
   return (
     <AnimatePresence>
       {isOpen ? (
         <motion.section
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="guess-publish-title"
           className="fixed inset-0 z-70 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
         >
           <motion.div
+            ref={dialogRef}
             className="w-full max-w-130 rounded-3xl border-[3px] border-[#ff806d]/35 bg-[#0f1638]/94 p-4 text-[#eaf7ff] shadow-[0_10px_30px_rgba(0,0,0,0.45)]"
             initial={prefersReducedMotion ? false : { y: 10, scale: 0.98, opacity: 0 }}
             animate={{ y: 0, scale: 1, opacity: 1 }}
             exit={prefersReducedMotion ? undefined : { y: 10, scale: 0.98, opacity: 0 }}
           >
             <p className="text-xs font-black uppercase tracking-[0.12em] text-[#ffd2c9]">Publicar lista</p>
-            <h3 className="mt-1 bg-gradient-to-r from-[#ff806d] via-[#ff43f8] to-[#ffe600] bg-clip-text text-lg font-black uppercase leading-tight text-transparent">
+            <h3
+              id="guess-publish-title"
+              className="mt-1 bg-gradient-to-r from-[#ff806d] via-[#ff43f8] to-[#ffe600] bg-clip-text text-lg font-black uppercase leading-tight text-transparent"
+            >
               Después de esto no se puede editar
             </h3>
             <p className="mt-2 text-sm font-semibold text-[#d8ebff]">
-              Se generan las 15 rondas y quedan fijas para que el ranking sea justo entre todos tus amigos. Así se
-              van a ver un par de rondas de ejemplo:
+              Se generan las {GUESS_ROUND_COUNT} rondas y quedan fijas para que el ranking sea justo entre todos tus
+              amigos. Así se van a ver un par de rondas de ejemplo:
             </p>
 
             <div className="mt-3 space-y-2">
@@ -374,6 +418,7 @@ export function GuessPublishConfirmModal({
                 type="button"
                 onClick={onCancel}
                 disabled={isPublishing}
+                autoFocus
                 className="rounded-lg border border-[#7be3ff]/35 bg-[#0d1636]/72 px-3 py-2 text-xs font-black uppercase tracking-wide text-[#d8ebff] transition-colors hover:border-[#00f0ff]/55 hover:text-[#eaf7ff] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00f0ff] disabled:cursor-not-allowed disabled:opacity-60"
               >
                 Seguir editando

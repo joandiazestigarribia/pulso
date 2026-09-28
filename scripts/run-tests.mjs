@@ -34,6 +34,7 @@ const files = [
   "mock-data",
   "catalog-providers",
   "battle-store",
+  "guess-config",
   "guess-store",
   "db",
   "identity",
@@ -60,4 +61,4 @@ for (const file of files) {
   copyFileSync(from, `.tmp-test/node_modules/@/lib/${file}.js`)
 }
 
-run("node", ["--test", "--test-concurrency=1", "tests/**/*.test.js"])
+run("node", ["--test", "--test-concurrency=1", "tests/"])

@@ -1,11 +1,10 @@
 import { Prisma, type Track as PrismaTrack } from "@prisma/client"
 import { assertDatabaseConfigured, prisma } from "@/lib/db"
+import { GUESS_MAX_PLAYLIST_TRACKS, GUESS_ROUND_COUNT } from "@/lib/guess-config"
 import type { Track } from "@/lib/mock-data"
 import { hasPlayablePreview, toTrack } from "@/lib/battle-store"
 import { fetchDeezerTrackById, shuffleTracks } from "@/lib/catalog-providers"
 
-const ROUND_COUNT = 15
-const MAX_PLAYLIST_TRACKS = 30
 const DECOY_CANDIDATE_POOL_SIZE = 40
 const DECOY_TOP_CANDIDATES = 8
 
@@ -29,7 +28,6 @@ export interface PlaylistTrackSummary {
 }
 
 export interface PlaylistDetail extends PlaylistSummary {
-  ownerUserId: string
   tracks: PlaylistTrackSummary[]
 }
 
@@ -49,6 +47,7 @@ export interface GuessRoundPayload {
 }
 
 export interface GuessAttemptSummary {
+  attemptId: string
   nickname: string
   score: number
   totalRounds: number
@@ -70,6 +69,7 @@ export interface GuessAnswerResult {
 }
 
 export interface LeaderboardEntry {
+  attemptId: string
   nickname: string
   score: number
   totalRounds: number
@@ -164,12 +164,14 @@ function toPlaylistSummary(
 }
 
 function toAttemptSummary(attempt: {
+  id: string
   nickname: string
   score: number
   totalRounds: number
   completedAt: Date | null
 }): GuessAttemptSummary {
   return {
+    attemptId: attempt.id,
     nickname: attempt.nickname,
     score: attempt.score,
     totalRounds: attempt.totalRounds,
@@ -187,7 +189,7 @@ export async function createDraftPlaylist(ownerUserId: string, title: string): P
     data: {
       ownerUserId,
       title: trimmedTitle,
-      roundCount: ROUND_COUNT,
+      roundCount: GUESS_ROUND_COUNT,
     },
   })
 
@@ -235,7 +237,6 @@ export async function getOwnedPlaylistDetail(playlistId: string, ownerUserId: st
 
   return {
     ...toPlaylistSummary(playlist, playlist.tracks.length, eligibleTrackCount),
-    ownerUserId: playlist.ownerUserId,
     tracks: playlist.tracks.map((playlistTrack) => ({
       id: playlistTrack.id,
       position: playlistTrack.position,
@@ -268,11 +269,11 @@ export async function addTrackToPlaylist(
   await requireDraftPlaylist(playlistId, ownerUserId)
 
   const currentTrackCount = await prisma.playlistTrack.count({ where: { playlistId } })
-  if (currentTrackCount >= MAX_PLAYLIST_TRACKS) {
+  if (currentTrackCount >= GUESS_MAX_PLAYLIST_TRACKS) {
     throw new PlaylistError(
       "playlist_track_limit_reached",
-      `Playlist already has the maximum of ${MAX_PLAYLIST_TRACKS} tracks`,
-      { maxTracks: MAX_PLAYLIST_TRACKS }
+      `Playlist already has the maximum of ${GUESS_MAX_PLAYLIST_TRACKS} tracks`,
+      { maxTracks: GUESS_MAX_PLAYLIST_TRACKS }
     )
   }
 
@@ -308,11 +309,29 @@ export async function addTrackToPlaylist(
     update: trackFields,
   })
 
-  const existingCount = await prisma.playlistTrack.count({ where: { playlistId } })
-  await prisma.playlistTrack.upsert({
-    where: { playlistId_trackId: { playlistId, trackId: candidate.id } },
-    create: { playlistId, trackId: candidate.id, position: existingCount },
-    update: {},
+  // position uses max + 1 so removals never make a new track collide with an existing one.
+  // The playlist row lock keeps concurrent adds from exceeding the track cap.
+  await prisma.$transaction(async (tx) => {
+    await tx.$queryRaw`SELECT "id" FROM "Playlist" WHERE "id" = ${playlistId} FOR UPDATE`
+
+    const lockedTrackCount = await tx.playlistTrack.count({ where: { playlistId } })
+    if (lockedTrackCount >= GUESS_MAX_PLAYLIST_TRACKS) {
+      throw new PlaylistError(
+        "playlist_track_limit_reached",
+        `Playlist already has the maximum of ${GUESS_MAX_PLAYLIST_TRACKS} tracks`,
+        { maxTracks: GUESS_MAX_PLAYLIST_TRACKS }
+      )
+    }
+
+    const lastPosition = await tx.playlistTrack.aggregate({
+      where: { playlistId },
+      _max: { position: true },
+    })
+    await tx.playlistTrack.upsert({
+      where: { playlistId_trackId: { playlistId, trackId: candidate.id } },
+      create: { playlistId, trackId: candidate.id, position: (lastPosition._max.position ?? -1) + 1 },
+      update: {},
+    })
   })
 
   return getOwnedPlaylistDetail(playlistId, ownerUserId)
@@ -361,30 +380,48 @@ function pickFromScoredPool(
   return randomItem(topPool)
 }
 
+interface DecoyPools {
+  sameBucket: Map<string, PrismaTrack[]>
+  anyBucket: PrismaTrack[] | null
+}
+
+function createDecoyPools(): DecoyPools {
+  return { sameBucket: new Map(), anyBucket: null }
+}
+
 async function pickDecoyTrack(
   correctTrack: PrismaTrack,
   excludedTrackIds: string[],
-  usedDecoyIds: Set<string>
+  usedDecoyIds: Set<string>,
+  pools: DecoyPools
 ): Promise<PrismaTrack> {
-  const sameBucketPool = await prisma.track.findMany({
-    where: {
-      id: { notIn: excludedTrackIds },
-      catalogBucket: correctTrack.catalogBucket,
-      previewUrl: { not: null },
-    },
-    take: DECOY_CANDIDATE_POOL_SIZE,
-  })
+  let sameBucketPool = pools.sameBucket.get(correctTrack.catalogBucket)
+  if (!sameBucketPool) {
+    sameBucketPool = await prisma.track.findMany({
+      where: {
+        id: { notIn: excludedTrackIds },
+        catalogBucket: correctTrack.catalogBucket,
+        previewUrl: { not: null },
+      },
+      take: DECOY_CANDIDATE_POOL_SIZE,
+    })
+    pools.sameBucket.set(correctTrack.catalogBucket, sameBucketPool)
+  }
+
   const validSameBucket = sameBucketPool.filter((track) => hasPlayablePreview(track))
   const fromSameBucket = pickFromScoredPool(validSameBucket, correctTrack, usedDecoyIds)
   if (fromSameBucket) {
     return fromSameBucket
   }
 
-  const anyBucketPool = await prisma.track.findMany({
-    where: { id: { notIn: excludedTrackIds }, previewUrl: { not: null } },
-    take: DECOY_CANDIDATE_POOL_SIZE * 2,
-  })
-  const validAnyBucket = anyBucketPool.filter((track) => hasPlayablePreview(track))
+  if (!pools.anyBucket) {
+    pools.anyBucket = await prisma.track.findMany({
+      where: { id: { notIn: excludedTrackIds }, previewUrl: { not: null } },
+      take: DECOY_CANDIDATE_POOL_SIZE * 2,
+    })
+  }
+
+  const validAnyBucket = pools.anyBucket.filter((track) => hasPlayablePreview(track))
   const fromAnyBucket = pickFromScoredPool(validAnyBucket, correctTrack, usedDecoyIds)
   if (fromAnyBucket) {
     return fromAnyBucket
@@ -447,10 +484,11 @@ export async function previewPublishRounds(
 
   const sample = shuffleTracks(eligibleTracks).slice(0, sampleSize)
   const usedDecoyIds = new Set<string>()
+  const pools = createDecoyPools()
   const pairs: RoundPreviewPair[] = []
 
   for (const correctTrack of sample) {
-    const decoy = await pickDecoyTrack(correctTrack, listTrackIds, usedDecoyIds)
+    const decoy = await pickDecoyTrack(correctTrack, listTrackIds, usedDecoyIds, pools)
     usedDecoyIds.add(decoy.id)
     pairs.push({ correctTrack: toTrack(correctTrack), decoyTrack: toTrack(decoy) })
   }
@@ -464,22 +502,31 @@ export async function publishPlaylist(playlistId: string, ownerUserId: string): 
 
   const correctTracks = shuffleTracks(eligibleTracks).slice(0, roundCount)
   const usedDecoyIds = new Set<string>()
+  const pools = createDecoyPools()
   const rounds: { roundIndex: number; correctTrackId: string; decoyTrackId: string }[] = []
 
   for (let roundIndex = 0; roundIndex < correctTracks.length; roundIndex += 1) {
     const correctTrack = correctTracks[roundIndex]
-    const decoy = await pickDecoyTrack(correctTrack, listTrackIds, usedDecoyIds)
+    const decoy = await pickDecoyTrack(correctTrack, listTrackIds, usedDecoyIds, pools)
     usedDecoyIds.add(decoy.id)
     rounds.push({ roundIndex, correctTrackId: correctTrack.id, decoyTrackId: decoy.id })
   }
 
-  await prisma.$transaction([
-    prisma.guessRound.createMany({ data: rounds.map((round) => ({ playlistId, ...round })) }),
-    prisma.playlist.update({
-      where: { id: playlistId },
-      data: { status: "PUBLISHED", publishedAt: new Date() },
-    }),
-  ])
+  try {
+    await prisma.$transaction([
+      prisma.guessRound.createMany({ data: rounds.map((round) => ({ playlistId, ...round })) }),
+      prisma.playlist.update({
+        where: { id: playlistId },
+        data: { status: "PUBLISHED", publishedAt: new Date() },
+      }),
+    ])
+  } catch (error) {
+    // A concurrent publish already created the rounds for this playlist.
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      throw new PlaylistError("playlist_not_draft", "Playlist is already published")
+    }
+    throw error
+  }
 
   return getOwnedPlaylistDetail(playlistId, ownerUserId)
 }
@@ -669,6 +716,7 @@ export async function getLeaderboard(playlistToken: string): Promise<Leaderboard
   })
 
   return attempts.map((attempt) => ({
+    attemptId: attempt.id,
     nickname: attempt.nickname,
     score: attempt.score,
     totalRounds: attempt.totalRounds,

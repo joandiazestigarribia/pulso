@@ -11,6 +11,7 @@ export interface GuessRoundPayload {
 }
 
 export interface GuessAttemptSummary {
+  attemptId: string
   nickname: string
   score: number
   totalRounds: number
@@ -19,6 +20,7 @@ export interface GuessAttemptSummary {
 }
 
 export interface GuessLeaderboardEntry {
+  attemptId: string
   nickname: string
   score: number
   totalRounds: number
@@ -58,6 +60,8 @@ export function useGuessFlow(playlistId: string) {
   const [phase, setPhase] = useState<GuessPhase>({ kind: "loading" })
   const [leaderboard, setLeaderboard] = useState<GuessLeaderboardEntry[] | null>(null)
   const [nicknameError, setNicknameError] = useState<string | null>(null)
+  const [answerError, setAnswerError] = useState<string | null>(null)
+  const [failedPickTrackId, setFailedPickTrackId] = useState<string | null>(null)
   const [isSubmittingNickname, setIsSubmittingNickname] = useState(false)
   const [isAnswering, setIsAnswering] = useState(false)
 
@@ -147,6 +151,7 @@ export function useGuessFlow(playlistId: string) {
 
       const { round } = phase
       setIsAnswering(true)
+      setAnswerError(null)
 
       try {
         const { status, body } = await fetchJson<AnswerResponse>(`/api/guess/${playlistId}/round`, {
@@ -156,10 +161,12 @@ export function useGuessFlow(playlistId: string) {
         })
 
         if (status >= 400 || !body) {
-          setPhase({ kind: "error", message: "No pudimos guardar tu respuesta." })
+          setFailedPickTrackId(chosenTrackId)
+          setAnswerError("No pudimos guardar tu respuesta. Probá de nuevo.")
           return
         }
 
+        setFailedPickTrackId(null)
         setPhase({
           kind: "revealing",
           round,
@@ -173,7 +180,8 @@ export function useGuessFlow(playlistId: string) {
         await new Promise((resolve) => setTimeout(resolve, revealDurationMs))
         await loadCurrentRound()
       } catch {
-        setPhase({ kind: "error", message: "Error de red al guardar tu respuesta." })
+        setFailedPickTrackId(chosenTrackId)
+        setAnswerError("Error de red al guardar tu respuesta.")
       } finally {
         setIsAnswering(false)
       }
@@ -181,13 +189,23 @@ export function useGuessFlow(playlistId: string) {
     [phase, isAnswering, playlistId, loadCurrentRound]
   )
 
+  const retryPick = useCallback(() => {
+    if (!failedPickTrackId) {
+      return
+    }
+
+    void submitPick(failedPickTrackId)
+  }, [failedPickTrackId, submitPick])
+
   return {
     phase,
     leaderboard,
     nicknameError,
+    answerError,
     isSubmittingNickname,
     isAnswering,
     submitNickname,
     submitPick,
+    retryPick,
   }
 }

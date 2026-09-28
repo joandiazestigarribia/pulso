@@ -162,6 +162,8 @@ model MergeAudit {
   sourceAnonymousId String?
   targetUserId      String
   movedBattles      Int              @default(0)
+  movedPlaylists    Int              @default(0)
+  movedAttempts     Int              @default(0)
   status            MergeAuditStatus
   createdAt         DateTime         @default(now())
   user              User             @relation(fields: [targetUserId], references: [id], onDelete: Cascade)

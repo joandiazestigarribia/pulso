@@ -22,8 +22,17 @@ interface GuessPlayScreenProps {
 }
 
 export function GuessPlayScreen({ playlistId, playlistTitle, shareUrl }: GuessPlayScreenProps) {
-  const { phase, leaderboard, nicknameError, isSubmittingNickname, isAnswering, submitNickname, submitPick } =
-    useGuessFlow(playlistId)
+  const {
+    phase,
+    leaderboard,
+    nicknameError,
+    answerError,
+    isSubmittingNickname,
+    isAnswering,
+    submitNickname,
+    submitPick,
+    retryPick,
+  } = useGuessFlow(playlistId)
   const prefersReducedMotion = useReducedMotion()
   const { copied: isShareUrlCopied, markCopied } = useCopyFeedback()
   const [isHelpOpen, setIsHelpOpen] = useState(false)
@@ -126,7 +135,7 @@ export function GuessPlayScreen({ playlistId, playlistTitle, shareUrl }: GuessPl
     return (
       <div className="mx-auto w-full max-w-160 space-y-5">
         <GuessResultCard playlistTitle={playlistTitle} summary={phase.summary} shareUrl={shareUrl} />
-        <GuessLeaderboardTable entries={leaderboard} highlightNickname={phase.summary.nickname} />
+        <GuessLeaderboardTable entries={leaderboard} highlightAttemptId={phase.summary.attemptId} />
       </div>
     )
   }
@@ -161,6 +170,20 @@ export function GuessPlayScreen({ playlistId, playlistTitle, shareUrl }: GuessPl
           Cómo se juega
         </button>
       )}
+
+      {answerError ? (
+        <div className="flex w-full max-w-200 flex-col items-start gap-2 rounded-xl border border-[#ff6c7b]/45 bg-[#2a0e19]/80 px-4 py-2 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-xs font-semibold text-[#ffd6dd]">{answerError}</p>
+          <button
+            type="button"
+            onClick={retryPick}
+            disabled={isAnswering}
+            className="rounded-lg border border-[#ff806d]/45 bg-[#2f1419]/75 px-3 py-1.5 text-xs font-black uppercase tracking-wide text-[#ffd2c9] transition-all hover:border-[#ff806d]/80 hover:bg-[#3a1820] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ff806d] disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            Reintentar
+          </button>
+        </div>
+      ) : null}
 
       <AnimatePresence mode="wait">
         <motion.div
